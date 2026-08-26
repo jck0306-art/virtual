@@ -27,44 +27,21 @@ export function renderEvents(currentGroup) {
             <div class="p-4 space-y-3">
               <div class="flex items-center justify-between">
                 <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  나눔 수량: ${ev.total || 0}개
+                  나눔 총 ${ev.total || 0}개
                 </span>
-                <span class="text-[11px] text-slate-400">
-                  당첨 <strong class="text-pink-400">${winners.length}</strong> / 신청 ${applicants.length}명
+                <span class="text-xs text-slate-400">
+                  당첨 <strong class="text-pink-400 font-bold">${winners.length}</strong> / 신청 <strong class="text-slate-200">${applicants.length}</strong>명
                 </span>
               </div>
-              <h4 class="text-sm font-bold text-white">${ev.name}</h4>
+              
+              <h4 class="text-base font-bold text-white">${ev.name}</h4>
               <p class="text-xs text-slate-400 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/80">${ev.memo || '메모 없음'}</p>
 
-              <!-- 신청자 및 당첨자 관리 박스 -->
-              <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-800 space-y-2">
-                <div class="flex justify-between items-center text-xs font-bold">
-                  <span class="text-slate-300">신청자 / 당첨자 명단</span>
-                  <button onclick="window.openApplicantAddPrompt(${idx})" class="text-[10px] px-2 py-0.5 rounded bg-purple-600 hover:bg-purple-500 text-white font-bold transition">
-                    + 신청자 추가
-                  </button>
-                </div>
-                
-                <div class="max-h-36 overflow-y-auto space-y-1.5 pr-1">
-                  ${applicants.length === 0 ? `
-                    <p class="text-[11px] text-slate-600 py-2 text-center">신청자가 없습니다.</p>
-                  ` : applicants.map((app, appIdx) => `
-                    <div class="flex items-center justify-between text-xs p-1.5 rounded-lg bg-slate-900 border ${app.isWinner ? 'border-pink-500/40 bg-pink-950/20' : 'border-slate-800'}">
-                      <div class="flex items-center gap-2">
-                        <button onclick="window.toggleWinner(${idx}, ${appIdx})" class="text-[10px] px-1.5 py-0.5 rounded font-bold transition ${app.isWinner ? 'bg-pink-600 text-white' : 'bg-slate-800 text-slate-500 hover:text-slate-300'}">
-                          ${app.isWinner ? '★ 당첨' : '미선정'}
-                        </button>
-                        <span class="font-semibold ${app.isWinner ? 'text-pink-300' : 'text-slate-300'}">${app.name}</span>
-                        ${app.tag ? `<span class="text-[10px] text-slate-500">(${app.tag})</span>` : ''}
-                      </div>
-                      <button onclick="window.deleteApplicant(${idx}, ${appIdx})" class="text-slate-600 hover:text-rose-400 p-0.5">
-                        <i class="fa-solid fa-xmark text-xs"></i>
-                      </button>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-
+              <!-- 50인 대응 명단 관리 버튼 -->
+              <button onclick="window.openApplicantManageModal(${idx})" class="w-full py-2.5 rounded-xl bg-purple-600/20 hover:bg-purple-600 border border-purple-500/40 hover:text-white text-purple-300 text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm">
+                <i class="fa-solid fa-users-viewfinder text-sm"></i>
+                <span>신청자 & 당첨자 관리 (${applicants.length}명)</span>
+              </button>
             </div>
           </div>
           <div class="px-4 pb-3 pt-1 border-t border-slate-800/60 flex justify-end gap-2 text-xs">
@@ -77,6 +54,7 @@ export function renderEvents(currentGroup) {
   }
 }
 
+// 이벤트 기본정보 등록/수정 모달
 export function openEventModal(idx, currentGroup) {
   document.getElementById('edit-event-idx').value = idx;
   document.getElementById('event-file-input').value = '';
@@ -116,49 +94,156 @@ export function saveEvent(currentGroup, onRender) {
 
   if (idx >= 0) {
     const existing = cloudData.events[currentGroup][idx];
-    cloudData.events[currentGroup][idx] = { 
-      ...existing, 
-      name, 
-      total, 
-      memo, 
-      img 
-    };
+    cloudData.events[currentGroup][idx] = { ...existing, name, total, memo, img };
   } else {
-    cloudData.events[currentGroup].unshift({ 
-      name, 
-      total, 
-      memo, 
-      img, 
-      applicants: [] 
-    });
+    cloudData.events[currentGroup].unshift({ name, total, memo, img, applicants: [] });
   }
 
   window.closeModals();
   syncData(onRender);
 }
 
-export function openApplicantAddPrompt(eventIdx, currentGroup, onRender) {
-  const name = prompt('신청자 이름(또는 닉네임)을 입력하세요:');
-  if (!name || !name.trim()) return;
-  const tag = prompt('신청자 연락처나 폼 번호/X(트위터) 아이디 (선택):') || '';
+// 50인 전용 대형 신청자/당첨자 관리 모달 열기
+let currentManagingEventIdx = -1;
+let currentAppFilter = 'all'; // 'all' | 'winner'
 
+export function openApplicantManageModal(eventIdx, currentGroup) {
+  currentManagingEventIdx = eventIdx;
   const ev = cloudData.events[currentGroup][eventIdx];
   if (!ev.applicants) ev.applicants = [];
-  ev.applicants.push({ name: name.trim(), tag: tag.trim(), isWinner: false });
 
-  syncData(onRender);
+  document.getElementById('app-modal-event-name').innerText = ev.name;
+  renderApplicantListTable(currentGroup);
+  document.getElementById('applicant-manage-modal').classList.replace('hidden', 'flex');
 }
 
-export function toggleWinner(eventIdx, appIdx, currentGroup, onRender) {
-  const ev = cloudData.events[currentGroup][eventIdx];
-  ev.applicants[appIdx].isWinner = !ev.applicants[appIdx].isWinner;
-  syncData(onRender);
+export function renderApplicantListTable(currentGroup) {
+  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  const listEl = document.getElementById('app-table-body');
+  const searchKeyword = (document.getElementById('app-search-input')?.value || '').trim().toLowerCase();
+  
+  let apps = ev.applicants || [];
+  const winnersCount = apps.filter(a => a.isWinner).length;
+  
+  document.getElementById('app-stats-summary').innerHTML = `
+    신청 총 <strong class="text-white">${apps.length}</strong>명 · 당첨 <strong class="text-pink-400">${winnersCount}</strong>명
+  `;
+
+  // 필터링 및 검색
+  let filtered = apps.map((a, originalIdx) => ({ ...a, originalIdx }));
+  if (currentAppFilter === 'winner') {
+    filtered = filtered.filter(a => a.isWinner);
+  }
+  if (searchKeyword) {
+    filtered = filtered.filter(a => a.name.toLowerCase().includes(searchKeyword) || (a.tag && a.tag.toLowerCase().includes(searchKeyword)));
+  }
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-xs text-slate-500">해당하는 신청자가 없습니다.</td></tr>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map((a, i) => `
+    <tr class="border-b border-slate-800/60 hover:bg-slate-800/40 text-xs transition">
+      <td class="py-2.5 px-3 text-slate-500 text-center w-12">${i + 1}</td>
+      <td class="py-2.5 px-3 font-semibold ${a.isWinner ? 'text-pink-300 font-bold' : 'text-slate-200'}">
+        ${a.name}
+      </td>
+      <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${a.tag || '-'}</td>
+      <td class="py-2.5 px-3 text-right space-x-1.5 w-36">
+        <button onclick="window.toggleWinnerFromModal(${a.originalIdx})" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
+          a.isWinner ? 'bg-pink-600 text-white shadow-sm' : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700'
+        }">
+          ${a.isWinner ? '★ 당첨' : '선정'}
+        </button>
+        <button onclick="window.deleteApplicantFromModal(${a.originalIdx})" class="p-1 text-slate-500 hover:text-rose-400 transition">
+          <i class="fa-solid fa-trash text-[11px]"></i>
+        </button>
+      </td>
+    </tr>
+  `).join('');
 }
 
-export function deleteApplicant(eventIdx, appIdx, currentGroup, onRender) {
+// 명단 모달 내 개별 기능들
+export function setAppFilter(filterType, currentGroup) {
+  currentAppFilter = filterType;
+  const btnAll = document.getElementById('btn-filter-all');
+  const btnWin = document.getElementById('btn-filter-win');
+  if (filterType === 'all') {
+    btnAll.className = "px-3 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white";
+    btnWin.className = "px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white";
+  } else {
+    btnWin.className = "px-3 py-1 rounded-lg text-xs font-bold bg-pink-600 text-white";
+    btnAll.className = "px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white";
+  }
+  renderApplicantListTable(currentGroup);
+}
+
+export function toggleWinnerFromModal(originalIdx, currentGroup, onRender) {
+  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  ev.applicants[originalIdx].isWinner = !ev.applicants[originalIdx].isWinner;
+  syncData(() => {
+    renderApplicantListTable(currentGroup);
+    onRender();
+  });
+}
+
+export function deleteApplicantFromModal(originalIdx, currentGroup, onRender) {
   if (!confirm('이 신청자를 명단에서 삭제하시겠습니까?')) return;
-  cloudData.events[currentGroup][eventIdx].applicants.splice(appIdx, 1);
-  syncData(onRender);
+  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  ev.applicants.splice(originalIdx, 1);
+  syncData(() => {
+    renderApplicantListTable(currentGroup);
+    onRender();
+  });
+}
+
+// 텍스트 일괄 등록 (네이버폼/구글폼 줄바꿈 복사 붙여넣기 50명 한번에 등록)
+export function addBulkApplicants(currentGroup, onRender) {
+  const rawText = prompt("엑셀이나 폼에서 복사한 신청자 명단을 줄바꿈으로 붙여넣으세요:\n(형식 예: 이름 또는 '이름, 연락처')");
+  if (!rawText || !rawText.trim()) return;
+
+  const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  if (!ev.applicants) ev.applicants = [];
+
+  lines.forEach(line => {
+    const parts = line.split(/[,/\t]/).map(p => p.trim());
+    const name = parts[0];
+    const tag = parts.slice(1).join(' ') || '';
+    if (name) {
+      ev.applicants.push({ name, tag, isWinner: false });
+    }
+  });
+
+  alert(`${lines.length}명의 신청자가 등록되었습니다!`);
+  syncData(() => {
+    renderApplicantListTable(currentGroup);
+    onRender();
+  });
+}
+
+// 랜덤 당첨자 n명 자동 추첨 기능
+export function drawRandomWinners(currentGroup, onRender) {
+  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  const apps = ev.applicants || [];
+  if (apps.length === 0) return alert('추첨할 신청자가 없습니다.');
+
+  const countStr = prompt(`현재 총 ${apps.length}명 중 몇 명을 랜덤 추첨할까요?`, '5');
+  const count = parseInt(countStr);
+  if (!count || count <= 0) return;
+
+  // 전체 초기화 후 랜덤 선정
+  apps.forEach(a => a.isWinner = false);
+  const shuffled = [...apps].sort(() => 0.5 - Math.random());
+  const selected = shuffled.slice(0, Math.min(count, apps.length));
+  selected.forEach(s => s.isWinner = true);
+
+  alert(`랜덤 추첨 완료! 총 ${selected.length}명이 당첨자로 선정되었습니다.`);
+  syncData(() => {
+    renderApplicantListTable(currentGroup);
+    onRender();
+  });
 }
 
 export function deleteEvent(idx, currentGroup, onRender) {
