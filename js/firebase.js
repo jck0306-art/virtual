@@ -55,7 +55,7 @@ export const DEFAULT_DATA = {
 let db = null;
 let isFirebaseReady = false;
 
-if (firebaseConfig.apiKey !== "내_API_KEY") {
+if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "내_API_KEY") {
   try {
     firebase.initializeApp(firebaseConfig);
     db = firebase.firestore();
@@ -65,37 +65,52 @@ if (firebaseConfig.apiKey !== "내_API_KEY") {
   }
 }
 
-export let cloudData = JSON.parse(localStorage.getItem('v_archive_cloud_data_v6')) || DEFAULT_DATA;
+export let cloudData = JSON.parse(localStorage.getItem('v_archive_cloud_data_v7')) || DEFAULT_DATA;
 
-function ensureDataStructure() {
+export function ensureDataStructure() {
+  if (!cloudData.groups) cloudData.groups = DEFAULT_DATA.groups;
+  if (!cloudData.albums) cloudData.albums = { plave: [], wego6: [] };
+  if (!cloudData.goods) cloudData.goods = { plave: [], wego6: [] };
+  if (!cloudData.photocards) cloudData.photocards = { plave: [], wego6: [] };
   if (!cloudData.events) cloudData.events = { plave: [], wego6: [] };
   if (!cloudData.deliveries) cloudData.deliveries = { plave: [], wego6: [] };
+
+  ['plave', 'wego6'].forEach(k => {
+    if (!cloudData.albums[k]) cloudData.albums[k] = [];
+    if (!cloudData.goods[k]) cloudData.goods[k] = [];
+    if (!cloudData.photocards[k]) cloudData.photocards[k] = [];
+    if (!cloudData.events[k]) cloudData.events[k] = [];
+    if (!cloudData.deliveries[k]) cloudData.deliveries[k] = [];
+  });
 }
 
 export function initFirebase(onDataUpdate) {
+  ensureDataStructure();
   if (isFirebaseReady) {
-    db.collection('fandom_archive').doc('main_data_v6').onSnapshot(doc => {
+    db.collection('fandom_archive').doc('main_data_v7').onSnapshot(doc => {
       if (doc.exists) {
         cloudData = doc.data();
         ensureDataStructure();
-        onDataUpdate();
       } else {
-        db.collection('fandom_archive').doc('main_data_v6').set(DEFAULT_DATA);
+        db.collection('fandom_archive').doc('main_data_v7').set(DEFAULT_DATA);
       }
+      onDataUpdate();
     });
   } else {
-    ensureDataStructure();
     const statusEl = document.getElementById('cloud-status');
-    if (statusEl) statusEl.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> 로컬 모드`;
+    if (statusEl) {
+      statusEl.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> 로컬 모드`;
+      statusEl.className = "text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1";
+    }
     onDataUpdate();
   }
 }
 
 export function syncData(onRender) {
   ensureDataStructure();
-  localStorage.setItem('v_archive_cloud_data_v6', JSON.stringify(cloudData));
+  localStorage.setItem('v_archive_cloud_data_v7', JSON.stringify(cloudData));
   if (isFirebaseReady) {
-    db.collection('fandom_archive').doc('main_data_v6').set(cloudData);
+    db.collection('fandom_archive').doc('main_data_v7').set(cloudData);
   }
   if (onRender) onRender();
 }
