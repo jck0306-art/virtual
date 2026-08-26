@@ -15,14 +15,14 @@
     .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
     .tab-active-plave { background: linear-gradient(135deg, #6366F1, #A855F7); color: white; }
     .tab-active-wego6 { background: linear-gradient(135deg, #06B6D4, #3B82F6); color: white; }
-    .subtab-active { background: #334155; color: #38BDF8; border-bottom: 2px solid #38BDF8; }
+    .menu-active { background: #334155; color: #38BDF8; font-weight: 700; border-bottom: 2px solid #38BDF8; }
     .calendar-dark-filter { filter: invert(0.88) hue-rotate(180deg) contrast(0.95); }
   </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-20">
 
-  <!-- 상단 그룹 스위처 헤더 -->
-  <header class="sticky top-0 z-40 bg-slate-950/80 backdrop-blur-md border-b border-slate-800">
+  <!-- 1. 최상단 네비게이션 헤더 -->
+  <header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800">
     <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-compact-disc text-indigo-400 text-xl"></i>
@@ -44,29 +44,53 @@
         </button>
       </div>
     </div>
+
+    <!-- 2. 전체 기능 메뉴바 (탭 메뉴화) -->
+    <nav class="max-w-5xl mx-auto px-4 flex gap-1 overflow-x-auto text-xs border-t border-slate-800/80 pt-1">
+      <button id="nav-profile" onclick="switchMenu('profile')" class="px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-users text-indigo-400"></i> 멤버 프로필
+      </button>
+      <button id="nav-calendar" onclick="switchMenu('calendar')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+        <i class="fa-brands fa-google text-indigo-400"></i> 구글 캘린더
+      </button>
+      <button id="nav-albums" onclick="switchMenu('albums')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-compact-disc text-amber-400"></i> 발매 앨범
+      </button>
+      <button id="nav-goods" onclick="switchMenu('goods')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-box-open text-emerald-400"></i> 굿즈 관리
+      </button>
+      <button id="nav-photocards" onclick="switchMenu('photocards')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-id-badge text-pink-400"></i> 포카 도감
+      </button>
+      <button id="nav-events" onclick="switchMenu('events')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-gift text-purple-400"></i> 나눔 & 이벤트
+      </button>
+    </nav>
   </header>
 
-  <main class="max-w-5xl mx-auto px-4 mt-6 space-y-8">
+  <main class="max-w-5xl mx-auto px-4 mt-6 space-y-6">
 
-    <!-- 1. 그룹 인트로 배너 -->
-    <section id="group-hero" class="relative overflow-hidden rounded-3xl p-6 md:p-8 glass shadow-2xl transition-all duration-300">
-      <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <!-- 상단 심플 인트로 배너 -->
+    <section id="group-hero" class="relative overflow-hidden rounded-3xl p-5 md:p-6 glass shadow-xl">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <span id="group-badge" class="px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+          <span id="group-badge" class="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
             Virtual Idol Group
           </span>
-          <h1 id="group-title" class="text-3xl md:text-4xl font-black mt-2 tracking-tight text-white">PLAVE</h1>
-          <p id="group-fandom" class="text-xs md:text-sm text-slate-400 mt-1">공식 팬덤명: <span class="text-indigo-300 font-semibold">PLLI</span></p>
+          <h1 id="group-title" class="text-2xl md:text-3xl font-black mt-1 text-white">PLAVE</h1>
+          <p id="group-fandom" class="text-xs text-slate-400 mt-0.5">공식 팬덤명: <span class="text-indigo-300 font-semibold">PLLI</span></p>
         </div>
         <div id="quick-links" class="flex flex-wrap gap-2"></div>
       </div>
     </section>
 
-    <!-- 2. 멤버 프로필 섹션 -->
-    <section>
-      <div class="flex items-center justify-between mb-4">
+    <!-- ================= 메뉴별 독립 뷰 ================= -->
+
+    <!-- [메뉴 1] 멤버 프로필 뷰 -->
+    <section id="menu-view-profile" class="space-y-4">
+      <div class="flex justify-between items-center">
         <div>
-          <h2 class="text-lg font-bold flex items-center gap-2 text-white">
+          <h2 class="text-base font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-users text-indigo-400"></i> 멤버 프로필
           </h2>
           <p class="text-xs text-slate-400 mt-0.5">카드 우측 상단의 ✏️ 버튼을 눌러 포지션과 생일을 수정할 수 있습니다.</p>
@@ -75,86 +99,82 @@
       <div id="member-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5"></div>
     </section>
 
-    <!-- 3. 서브 탭 네비게이션 -->
-    <section class="glass rounded-3xl p-5 md:p-6 shadow-xl space-y-6">
-      <div class="flex border-b border-slate-800 gap-2 overflow-x-auto pb-1 text-xs font-bold">
-        <button id="subtab-calendar" onclick="switchSubTab('calendar')" class="px-4 py-2.5 rounded-t-xl transition subtab-active flex items-center gap-2">
-          <i class="fa-brands fa-google text-indigo-400"></i> 구글 캘린더
-        </button>
-        <button id="subtab-albums" onclick="switchSubTab('albums')" class="px-4 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-2">
-          <i class="fa-solid fa-compact-disc text-amber-400"></i> 발매 앨범
-        </button>
-        <button id="subtab-goods" onclick="switchSubTab('goods')" class="px-4 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-2">
-          <i class="fa-solid fa-box-open text-emerald-400"></i> 굿즈 관리
-        </button>
-        <button id="subtab-photocards" onclick="switchSubTab('photocards')" class="px-4 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-2">
-          <i class="fa-solid fa-id-badge text-pink-400"></i> 포카 도감
+    <!-- [메뉴 2] 구글 캘린더 뷰 -->
+    <section id="menu-view-calendar" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-bold text-white" id="calendar-header-title">구글 캘린더</h3>
+          <p class="text-xs text-slate-400 mt-0.5">앱에서 등록한 라이브 방송/스케줄이 실시간으로 반영됩니다.</p>
+        </div>
+        <button onclick="openCalendarModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-gear text-indigo-400"></i> 캘린더 URL 설정
         </button>
       </div>
-
-      <!-- 3-1. 캘린더 패널 -->
-      <div id="panel-calendar" class="space-y-4">
-        <div class="flex justify-between items-center">
-          <h3 class="text-sm font-bold text-white flex items-center gap-2">
-            <span id="calendar-header-title">구글 캘린더</span>
-          </h3>
-          <button onclick="openCalendarModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition">
-            <i class="fa-solid fa-gear text-indigo-400"></i> 캘린더 URL 설정
+      <div class="relative w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 min-h-[520px]">
+        <div id="calendar-empty" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10 bg-slate-900/90">
+          <p class="text-sm font-bold text-white">연결된 구글 캘린더가 없습니다.</p>
+          <button onclick="openCalendarModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
+            캘린더 URL 연결하기
           </button>
         </div>
-        <div class="relative w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 min-h-[500px]">
-          <div id="calendar-empty" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10 bg-slate-900/90">
-            <p class="text-sm font-bold text-white">연결된 구글 캘린더가 없습니다.</p>
-            <button onclick="openCalendarModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
-              캘린더 URL 연결하기
-            </button>
-          </div>
-          <iframe id="google-calendar-iframe" src="" class="w-full h-[550px] border-0 rounded-2xl calendar-dark-filter" frameborder="0" scrolling="no"></iframe>
-        </div>
+        <iframe id="google-calendar-iframe" src="" class="w-full h-[540px] border-0 rounded-2xl calendar-dark-filter" frameborder="0" scrolling="no"></iframe>
       </div>
+    </section>
 
-      <!-- 3-2. 발매 앨범 패널 -->
-      <div id="panel-albums" class="hidden space-y-4">
-        <div class="flex justify-between items-center">
-          <div>
-            <h3 class="text-sm font-bold text-white">디스코그래피 / 앨범 보관함</h3>
-            <p class="text-[11px] text-slate-400">앨범 커버 사진과 수록곡 정보를 직접 업로드하여 관리합니다.</p>
-          </div>
-          <button onclick="openAlbumModal()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
-            <i class="fa-solid fa-plus"></i> 앨범 추가
-          </button>
+    <!-- [메뉴 3] 발매 앨범 뷰 -->
+    <section id="menu-view-albums" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-bold text-white">디스코그래피 / 앨범 보관함</h3>
+          <p class="text-xs text-slate-400 mt-0.5">커버 사진과 수록곡 정보를 관리합니다.</p>
         </div>
-        <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+        <button onclick="openAlbumModal()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i> 앨범 추가
+        </button>
       </div>
+      <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </section>
 
-      <!-- 3-3. 발매 굿즈 패널 -->
-      <div id="panel-goods" class="hidden space-y-4">
-        <div class="flex justify-between items-center">
-          <div>
-            <h3 class="text-sm font-bold text-white">공식 & 콜라보 굿즈 보관함</h3>
-            <p class="text-[11px] text-slate-400">사진을 직접 업로드하고 가격, 보유 상태를 기록합니다.</p>
-          </div>
-          <button onclick="openGoodsModal()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
-            <i class="fa-solid fa-plus"></i> 굿즈 등록
-          </button>
+    <!-- [메뉴 4] 굿즈 관리 뷰 -->
+    <section id="menu-view-goods" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-bold text-white">공식 & 콜라보 굿즈 보관함</h3>
+          <p class="text-xs text-slate-400 mt-0.5">사진, 가격, 보유/미보유 상태를 기록합니다.</p>
         </div>
-        <div id="goods-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+        <button onclick="openGoodsModal()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i> 굿즈 등록
+        </button>
       </div>
+      <div id="goods-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </section>
 
-      <!-- 3-4. 포카 관리 패널 -->
-      <div id="panel-photocards" class="hidden space-y-4">
-        <div class="flex flex-wrap justify-between items-center gap-2">
-          <div>
-            <h3 class="text-sm font-bold text-white">포토카드 도감 & 체크리스트</h3>
-            <p class="text-[11px] text-slate-400">내 갤러리에서 포카 사진을 직접 올려 도감을 완성하세요.</p>
-          </div>
-          <button onclick="openPhotocardModal()" class="text-xs bg-pink-600 hover:bg-pink-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
-            <i class="fa-solid fa-plus"></i> 새 포카 추가
-          </button>
+    <!-- [메뉴 5] 포카 도감 뷰 -->
+    <section id="menu-view-photocards" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-bold text-white">포토카드 도감 & 체크리스트</h3>
+          <p class="text-xs text-slate-400 mt-0.5">보유/미보유 상태를 선택해 도감을 채워보세요.</p>
         </div>
-        <div id="photocard-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5"></div>
+        <button onclick="openPhotocardModal()" class="text-xs bg-pink-600 hover:bg-pink-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i> 새 포카 추가
+        </button>
       </div>
+      <div id="photocard-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5"></div>
+    </section>
 
+    <!-- [메뉴 6] 나눔 & 이벤트 관리 뷰 (신규) -->
+    <section id="menu-view-events" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-bold text-white">현장 나눔 & 팬 이벤트 관리</h3>
+          <p class="text-xs text-slate-400 mt-0.5">콘서트/팝업/생카 현장 나눔 물품 및 배부 현황을 체크합니다.</p>
+        </div>
+        <button onclick="openEventModal()" class="text-xs bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i> 나눔/이벤트 등록
+        </button>
+      </div>
+      <div id="event-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
     </section>
 
   </main>
@@ -221,9 +241,7 @@
       <input type="hidden" id="edit-album-idx" value="-1" />
       <div>
         <label class="text-xs text-slate-400 block mb-1">앨범 커버 이미지</label>
-        <div class="flex items-center gap-2">
-          <input id="album-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-slate-800 rounded-lg border border-slate-700 p-1" />
-        </div>
+        <input id="album-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-slate-800 rounded-lg border border-slate-700 p-1" />
         <input type="hidden" id="album-img-base64" />
         <div id="album-preview-wrap" class="mt-2 hidden">
           <img id="album-img-preview" src="" class="w-16 h-16 object-cover rounded-lg border border-slate-700" />
@@ -334,17 +352,69 @@
     </div>
   </div>
 
+  <!-- 나눔 & 이벤트 등록/수정 모달 (신규) -->
+  <div id="event-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4">
+      <h3 id="event-modal-title" class="text-base font-bold text-white">나눔 & 이벤트 등록</h3>
+      <input type="hidden" id="edit-event-idx" value="-1" />
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">품목/이벤트 사진</label>
+        <input id="event-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer bg-slate-800 rounded-lg border border-slate-700 p-1" />
+        <input type="hidden" id="event-img-base64" />
+        <div id="event-preview-wrap" class="mt-2 hidden">
+          <img id="event-img-preview" src="" class="w-16 h-16 object-cover rounded-lg border border-slate-700" />
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">이벤트/나눔 이름 *</label>
+        <input id="event-name" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="예: 콘서트 투명 포카 나눔, 생카 럭키드로우" />
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">준비 수량</label>
+          <input id="event-total" type="number" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="예: 100" />
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">배부/완료 수량</label>
+          <input id="event-done" type="number" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="예: 0" />
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">진행 일시</label>
+          <input id="event-date" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="예: 2026.09.12 14:00" />
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">진행 상태</label>
+          <select id="event-status" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500">
+            <option value="준비중">준비중</option>
+            <option value="진행중">진행중</option>
+            <option value="종료">종료</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">장소 / 배부 조건 / 메모</label>
+        <input id="event-memo" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="예: KSPO D구역 벤치 뒤 / 플리 1기 인증" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
+        <button onclick="saveEvent()" class="px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 rounded-lg text-white font-bold">저장하기</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ==========================================
-    // 1. Firebase 설정
+    // 1. Firebase Firestore 설정
     // ==========================================
     const firebaseConfig = {
       apiKey: "AIzaSyBQ0zSJleSHBjmecj1Qe-kmhLu-GDYXWE8",
-       authDomain: "license-mgmt-157ed.firebaseapp.com",
-       projectId: "license-mgmt-157ed",
-       storageBucket: "license-mgmt-157ed.firebasestorage.app",
-       messagingSenderId: "20449962943",
-       appId: "1:20449962943:web:35d36af2eb555d23760f0a"
+      authDomain: "license-mgmt-157ed.firebaseapp.com",
+      projectId: "license-mgmt-157ed",
+      storageBucket: "license-mgmt-157ed.firebasestorage.app",
+      messagingSenderId: "20449962943",
+      appId: "1:20449962943:web:35d36af2eb555d23760f0a"
     };
 
     let db = null;
@@ -399,14 +469,15 @@
       },
       albums: { plave: [], wego6: [] },
       goods: { plave: [], wego6: [] },
-      photocards: { plave: [], wego6: [] }
+      photocards: { plave: [], wego6: [] },
+      events: { plave: [], wego6: [] }
     };
 
     let currentGroup = 'plave';
-    let currentSubTab = 'calendar';
-    let cloudData = JSON.parse(localStorage.getItem('v_archive_cloud_data_v4')) || DEFAULT_DATA;
+    let currentMenu = 'profile';
+    let cloudData = JSON.parse(localStorage.getItem('v_archive_cloud_data_v5')) || DEFAULT_DATA;
 
-    // 이미지 파일 압축 및 Base64 인코딩 유틸 (DB 용량 최적화)
+    // 이미지 파일 압축 및 Base64 인코딩
     function processImageFile(file, maxWidth, callback) {
       if (!file) return callback('');
       const reader = new FileReader();
@@ -432,40 +503,44 @@
       reader.readAsDataURL(file);
     }
 
-    // 파일 인풋 이벤트 리스너 등록
     function setupFileListeners() {
-      // 앨범 이미지 리스너
+      // 앨범
       document.getElementById('album-file-input').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          processImageFile(file, 600, function(base64) {
+        if (e.target.files[0]) {
+          processImageFile(e.target.files[0], 600, base64 => {
             document.getElementById('album-img-base64').value = base64;
             document.getElementById('album-img-preview').src = base64;
             document.getElementById('album-preview-wrap').classList.remove('hidden');
           });
         }
       });
-
-      // 굿즈 이미지 리스너
+      // 굿즈
       document.getElementById('goods-file-input').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          processImageFile(file, 600, function(base64) {
+        if (e.target.files[0]) {
+          processImageFile(e.target.files[0], 600, base64 => {
             document.getElementById('goods-img-base64').value = base64;
             document.getElementById('goods-img-preview').src = base64;
             document.getElementById('goods-preview-wrap').classList.remove('hidden');
           });
         }
       });
-
-      // 포카 이미지 리스너
+      // 포카
       document.getElementById('pc-file-input').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-          processImageFile(file, 500, function(base64) {
+        if (e.target.files[0]) {
+          processImageFile(e.target.files[0], 500, base64 => {
             document.getElementById('pc-img-base64').value = base64;
             document.getElementById('pc-img-preview').src = base64;
             document.getElementById('pc-preview-wrap').classList.remove('hidden');
+          });
+        }
+      });
+      // 나눔/이벤트
+      document.getElementById('event-file-input').addEventListener('change', function(e) {
+        if (e.target.files[0]) {
+          processImageFile(e.target.files[0], 600, base64 => {
+            document.getElementById('event-img-base64').value = base64;
+            document.getElementById('event-img-preview').src = base64;
+            document.getElementById('event-preview-wrap').classList.remove('hidden');
           });
         }
       });
@@ -474,25 +549,24 @@
     function initDatabase() {
       setupFileListeners();
       if (isFirebaseReady) {
-        db.collection('fandom_archive').doc('main_data_v4').onSnapshot(doc => {
+        db.collection('fandom_archive').doc('main_data_v5').onSnapshot(doc => {
           if (doc.exists) {
             cloudData = doc.data();
             render();
           } else {
-            db.collection('fandom_archive').doc('main_data_v4').set(DEFAULT_DATA);
+            db.collection('fandom_archive').doc('main_data_v5').set(DEFAULT_DATA);
           }
         });
       } else {
-        document.getElementById('cloud-status').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> 로컬 저장 모드`;
-        document.getElementById('cloud-status').className = "text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1";
+        document.getElementById('cloud-status').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> 로컬 모드`;
         render();
       }
     }
 
     function syncData() {
-      localStorage.setItem('v_archive_cloud_data_v4', JSON.stringify(cloudData));
+      localStorage.setItem('v_archive_cloud_data_v5', JSON.stringify(cloudData));
       if (isFirebaseReady) {
-        db.collection('fandom_archive').doc('main_data_v4').set(cloudData);
+        db.collection('fandom_archive').doc('main_data_v5').set(cloudData);
       }
       render();
     }
@@ -511,18 +585,19 @@
       render();
     }
 
-    function switchSubTab(tab) {
-      currentSubTab = tab;
-      const tabs = ['calendar', 'albums', 'goods', 'photocards'];
-      tabs.forEach(t => {
-        const btn = document.getElementById(`subtab-${t}`);
-        const panel = document.getElementById(`panel-${t}`);
-        if (t === tab) {
-          btn.className = "px-4 py-2.5 rounded-t-xl transition subtab-active flex items-center gap-2";
-          panel.classList.remove('hidden');
+    // 상단 네비게이션 메뉴 전환
+    function switchMenu(menuKey) {
+      currentMenu = menuKey;
+      const menus = ['profile', 'calendar', 'albums', 'goods', 'photocards', 'events'];
+      menus.forEach(m => {
+        const btn = document.getElementById(`nav-${m}`);
+        const view = document.getElementById(`menu-view-${m}`);
+        if (m === menuKey) {
+          btn.className = "px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap";
+          view.classList.remove('hidden');
         } else {
-          btn.className = "px-4 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-2";
-          panel.classList.add('hidden');
+          btn.className = "px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap";
+          view.classList.add('hidden');
         }
       });
       render();
@@ -531,7 +606,7 @@
     function render() {
       const g = cloudData.groups[currentGroup];
 
-      // 헤더 & 프로필
+      // 인트로 배너
       document.getElementById('group-title').innerText = g.name;
       document.getElementById('group-badge').innerText = g.company;
       document.getElementById('group-fandom').innerHTML = `공식 팬덤: <span class="font-bold text-white">${g.fandom}</span>`;
@@ -542,12 +617,12 @@
         </a>
       `).join('');
 
+      // [1] 멤버 프로필
       document.getElementById('member-grid').innerHTML = g.members.map((m, idx) => `
         <div class="relative bg-slate-900/90 border border-slate-800 rounded-2xl p-3.5 text-center hover:border-slate-600 transition shadow-lg flex flex-col justify-between items-center group">
           <button onclick="openMemberModal(${idx})" class="absolute top-2.5 right-2.5 text-slate-500 hover:text-indigo-400 p-1 rounded transition opacity-60 group-hover:opacity-100" title="수정">
             <i class="fa-solid fa-pen text-xs"></i>
           </button>
-          
           <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-2 mt-1 shadow-inner" style="background: ${m.color}22; border: 1px solid ${m.color}55;">
             ${m.emoji || '✨'}
           </div>
@@ -561,7 +636,7 @@
         </div>
       `).join('');
 
-      // 1. 구글 캘린더
+      // [2] 구글 캘린더
       const calFrame = document.getElementById('google-calendar-iframe');
       const calEmpty = document.getElementById('calendar-empty');
       document.getElementById('calendar-header-title').innerText = `${g.name.split(' ')[0]} 구글 캘린더`;
@@ -582,11 +657,11 @@
         calFrame.src = '';
       }
 
-      // 2. 앨범 리스트 (직접 업로드 이미지 지원)
+      // [3] 앨범
       const albums = (cloudData.albums && cloudData.albums[currentGroup]) || [];
       const albumGrid = document.getElementById('album-grid');
       if (albums.length === 0) {
-        albumGrid.innerHTML = `<p class="text-xs text-slate-500 py-6 col-span-3 text-center">등록된 발매 앨범이 없습니다. '앨범 추가'를 눌러 등록해보세요.</p>`;
+        albumGrid.innerHTML = `<p class="text-xs text-slate-500 py-10 col-span-3 text-center">등록된 발매 앨범이 없습니다.</p>`;
       } else {
         albumGrid.innerHTML = albums.map((a, idx) => `
           <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between group">
@@ -608,22 +683,18 @@
               </div>
             </div>
             <div class="px-4 pb-3 pt-1 border-t border-slate-800/60 flex justify-end gap-2 text-xs">
-              <button onclick="openAlbumModal(${idx})" class="text-slate-400 hover:text-indigo-400 flex items-center gap-1">
-                <i class="fa-solid fa-pen text-[10px]"></i> 수정
-              </button>
-              <button onclick="deleteAlbum(${idx})" class="text-slate-500 hover:text-rose-400 flex items-center gap-1">
-                <i class="fa-solid fa-trash text-[10px]"></i> 삭제
-              </button>
+              <button onclick="openAlbumModal(${idx})" class="text-slate-400 hover:text-indigo-400 flex items-center gap-1"><i class="fa-solid fa-pen text-[10px]"></i> 수정</button>
+              <button onclick="deleteAlbum(${idx})" class="text-slate-500 hover:text-rose-400 flex items-center gap-1"><i class="fa-solid fa-trash text-[10px]"></i> 삭제</button>
             </div>
           </div>
         `).join('');
       }
 
-      // 3. 굿즈 리스트 (직접 업로드 이미지 지원)
+      // [4] 굿즈
       const goods = (cloudData.goods && cloudData.goods[currentGroup]) || [];
       const goodsGrid = document.getElementById('goods-grid');
       if (goods.length === 0) {
-        goodsGrid.innerHTML = `<p class="text-xs text-slate-500 py-6 col-span-3 text-center">등록된 굿즈가 없습니다. '굿즈 등록'을 눌러 소장품을 기록해보세요.</p>`;
+        goodsGrid.innerHTML = `<p class="text-xs text-slate-500 py-10 col-span-3 text-center">등록된 굿즈가 없습니다.</p>`;
       } else {
         goodsGrid.innerHTML = goods.map((gItem, idx) => `
           <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between group">
@@ -640,7 +711,6 @@
               <div class="p-4">
                 <div class="flex items-center justify-between gap-2 mb-2">
                   <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">${gItem.cat || '굿즈'}</span>
-                  <!-- 보유 / 미보유 토글 -->
                   <button onclick="toggleGoodsOwned(${idx})" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full border transition flex items-center gap-1 ${
                     gItem.owned ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'
                   }">
@@ -653,34 +723,25 @@
               </div>
             </div>
             <div class="px-4 pb-3 pt-1 border-t border-slate-800/60 flex justify-end gap-2 text-xs">
-              <button onclick="openGoodsModal(${idx})" class="text-slate-400 hover:text-indigo-400 flex items-center gap-1">
-                <i class="fa-solid fa-pen text-[10px]"></i> 수정
-              </button>
-              <button onclick="deleteGoods(${idx})" class="text-slate-500 hover:text-rose-400 flex items-center gap-1">
-                <i class="fa-solid fa-trash text-[10px]"></i> 삭제
-              </button>
+              <button onclick="openGoodsModal(${idx})" class="text-slate-400 hover:text-indigo-400 flex items-center gap-1"><i class="fa-solid fa-pen text-[10px]"></i> 수정</button>
+              <button onclick="deleteGoods(${idx})" class="text-slate-500 hover:text-rose-400 flex items-center gap-1"><i class="fa-solid fa-trash text-[10px]"></i> 삭제</button>
             </div>
           </div>
         `).join('');
       }
 
-      // 4. 포토카드 리스트 (직접 업로드 이미지 지원)
+      // [5] 포카
       const pcs = (cloudData.photocards && cloudData.photocards[currentGroup]) || [];
       const pcGrid = document.getElementById('photocard-grid');
       if (pcs.length === 0) {
-        pcGrid.innerHTML = `<p class="text-xs text-slate-500 py-6 col-span-5 text-center">등록된 포토카드가 없습니다. '새 포카 추가'를 눌러 도감을 만들어보세요.</p>`;
+        pcGrid.innerHTML = `<p class="text-xs text-slate-500 py-10 col-span-5 text-center">등록된 포토카드가 없습니다.</p>`;
       } else {
         pcGrid.innerHTML = pcs.map((pc, idx) => `
           <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between relative group">
             <div class="absolute top-2 right-2 z-10 flex gap-1 bg-slate-950/70 p-1 rounded-lg backdrop-blur-sm">
-              <button onclick="openPhotocardModal(${idx})" class="text-slate-400 hover:text-indigo-400 text-xs p-1">
-                <i class="fa-solid fa-pen"></i>
-              </button>
-              <button onclick="deletePhotocard(${idx})" class="text-slate-400 hover:text-rose-400 text-xs p-1">
-                <i class="fa-solid fa-trash"></i>
-              </button>
+              <button onclick="openPhotocardModal(${idx})" class="text-slate-400 hover:text-indigo-400 text-xs p-1"><i class="fa-solid fa-pen"></i></button>
+              <button onclick="deletePhotocard(${idx})" class="text-slate-400 hover:text-rose-400 text-xs p-1"><i class="fa-solid fa-trash"></i></button>
             </div>
-
             <div>
               ${pc.img ? `
                 <div class="w-full aspect-[2/3] bg-slate-950 overflow-hidden relative">
@@ -692,14 +753,11 @@
                   <span class="text-[10px] text-slate-500">사진 없음</span>
                 </div>
               `}
-
               <div class="p-3 text-center">
                 <h5 class="text-xs font-bold text-white">${pc.member}</h5>
                 <p class="text-[11px] text-slate-400 mt-0.5 line-clamp-1">${pc.version}</p>
               </div>
             </div>
-
-            <!-- 보유 / 미보유 선택 버튼 -->
             <div class="p-2 pt-0">
               <button onclick="togglePcCollected(${idx})" class="w-full py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border ${
                 pc.collected 
@@ -713,9 +771,72 @@
           </div>
         `).join('');
       }
+
+      // [6] 나눔 & 이벤트 관리 (신규 렌더링)
+      const evts = (cloudData.events && cloudData.events[currentGroup]) || [];
+      const eventGrid = document.getElementById('event-grid');
+      if (evts.length === 0) {
+        eventGrid.innerHTML = `<p class="text-xs text-slate-500 py-10 col-span-3 text-center">등록된 나눔/이벤트가 없습니다. '나눔/이벤트 등록'을 눌러보세요.</p>`;
+      } else {
+        eventGrid.innerHTML = evts.map((ev, idx) => {
+          const total = Number(ev.total) || 0;
+          const done = Number(ev.done) || 0;
+          const percent = total > 0 ? Math.min(100, Math.round((done / total) * 100)) : 0;
+          const statusColors = {
+            '준비중': 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+            '진행중': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+            '종료': 'bg-slate-800 text-slate-400 border-slate-700'
+          };
+          return `
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg flex flex-col justify-between group">
+              <div>
+                ${ev.img ? `
+                  <div class="w-full h-40 bg-slate-950 overflow-hidden relative border-b border-slate-800">
+                    <img src="${ev.img}" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" />
+                  </div>
+                ` : `
+                  <div class="w-full h-24 bg-slate-950/60 flex items-center justify-center border-b border-slate-800 text-purple-400/60">
+                    <i class="fa-solid fa-gift text-2xl"></i>
+                  </div>
+                `}
+                <div class="p-4 space-y-3">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${statusColors[ev.status] || statusColors['준비중']}">${ev.status || '준비중'}</span>
+                    <span class="text-[11px] text-slate-400"><i class="fa-regular fa-clock mr-1 text-[10px]"></i>${ev.date || '일정 미정'}</span>
+                  </div>
+                  <h4 class="text-sm font-bold text-white">${ev.name}</h4>
+                  
+                  <!-- 진행도 프로그레스 바 -->
+                  <div class="bg-slate-950/80 p-2.5 rounded-xl border border-slate-800">
+                    <div class="flex justify-between text-[11px] font-semibold mb-1">
+                      <span class="text-slate-400">배부 현황</span>
+                      <span class="text-purple-300 font-bold">${done} / ${total}개 (${percent}%)</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                      <div class="bg-gradient-to-r from-purple-500 to-pink-500 h-full transition-all duration-300" style="width: ${percent}%"></div>
+                    </div>
+                    <!-- 빠른 수량 증감 버튼 -->
+                    <div class="flex justify-end gap-1.5 mt-2">
+                      <button onclick="changeEventCount(${idx}, -1)" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold">-1</button>
+                      <button onclick="changeEventCount(${idx}, +1)" class="px-2 py-0.5 rounded bg-purple-600/30 hover:bg-purple-600 text-purple-200 text-[10px] font-bold">+1</button>
+                    </div>
+                  </div>
+
+                  <p class="text-xs text-slate-400 leading-relaxed bg-slate-950/40 p-2 rounded-lg border border-slate-800/80">${ev.memo || '장소 및 메모 없음'}</p>
+                </div>
+              </div>
+              <div class="px-4 pb-3 pt-1 border-t border-slate-800/60 flex justify-end gap-2 text-xs">
+                <button onclick="openEventModal(${idx})" class="text-slate-400 hover:text-indigo-400 flex items-center gap-1"><i class="fa-solid fa-pen text-[10px]"></i> 수정</button>
+                <button onclick="deleteEvent(${idx})" class="text-slate-500 hover:text-rose-400 flex items-center gap-1"><i class="fa-solid fa-trash text-[10px]"></i> 삭제</button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
     }
 
-    // 모달 제어 함수들
+    // ================= 모달 & 데이터 저장 함수 =================
+
     function openMemberModal(idx) {
       const mem = cloudData.groups[currentGroup].members[idx];
       document.getElementById('edit-member-idx').value = idx;
@@ -750,7 +871,7 @@
       syncData();
     }
 
-    // 앨범 모달
+    // 앨범
     function openAlbumModal(idx = -1) {
       document.getElementById('edit-album-idx').value = idx;
       document.getElementById('album-file-input').value = '';
@@ -792,12 +913,8 @@
       if (!cloudData.albums[currentGroup]) cloudData.albums[currentGroup] = [];
 
       const payload = { title, type, date, tracks, img };
-
-      if (idx >= 0) {
-        cloudData.albums[currentGroup][idx] = payload;
-      } else {
-        cloudData.albums[currentGroup].unshift(payload);
-      }
+      if (idx >= 0) cloudData.albums[currentGroup][idx] = payload;
+      else cloudData.albums[currentGroup].unshift(payload);
 
       closeModals();
       syncData();
@@ -809,7 +926,7 @@
       syncData();
     }
 
-    // 굿즈 모달
+    // 굿즈
     function openGoodsModal(idx = -1) {
       document.getElementById('edit-goods-idx').value = idx;
       document.getElementById('goods-file-input').value = '';
@@ -854,12 +971,8 @@
       if (!cloudData.goods[currentGroup]) cloudData.goods[currentGroup] = [];
 
       const payload = { name, img, cat, price, owned, memo };
-
-      if (idx >= 0) {
-        cloudData.goods[currentGroup][idx] = payload;
-      } else {
-        cloudData.goods[currentGroup].unshift(payload);
-      }
+      if (idx >= 0) cloudData.goods[currentGroup][idx] = payload;
+      else cloudData.goods[currentGroup].unshift(payload);
 
       closeModals();
       syncData();
@@ -876,7 +989,7 @@
       syncData();
     }
 
-    // 포토카드 모달
+    // 포토카드
     function openPhotocardModal(idx = -1) {
       document.getElementById('edit-pc-idx').value = idx;
       document.getElementById('pc-file-input').value = '';
@@ -915,12 +1028,8 @@
       if (!cloudData.photocards[currentGroup]) cloudData.photocards[currentGroup] = [];
 
       const payload = { member, version, img, collected };
-
-      if (idx >= 0) {
-        cloudData.photocards[currentGroup][idx] = payload;
-      } else {
-        cloudData.photocards[currentGroup].unshift(payload);
-      }
+      if (idx >= 0) cloudData.photocards[currentGroup][idx] = payload;
+      else cloudData.photocards[currentGroup].unshift(payload);
 
       closeModals();
       syncData();
@@ -937,8 +1046,81 @@
       syncData();
     }
 
+    // 나눔/이벤트 모달 (신규)
+    function openEventModal(idx = -1) {
+      document.getElementById('edit-event-idx').value = idx;
+      document.getElementById('event-file-input').value = '';
+      if (idx >= 0) {
+        const item = cloudData.events[currentGroup][idx];
+        document.getElementById('event-modal-title').innerText = '나눔/이벤트 수정';
+        document.getElementById('event-name').value = item.name;
+        document.getElementById('event-total').value = item.total || '';
+        document.getElementById('event-done').value = item.done || 0;
+        document.getElementById('event-date').value = item.date || '';
+        document.getElementById('event-status').value = item.status || '준비중';
+        document.getElementById('event-memo').value = item.memo || '';
+        document.getElementById('event-img-base64').value = item.img || '';
+        if (item.img) {
+          document.getElementById('event-img-preview').src = item.img;
+          document.getElementById('event-preview-wrap').classList.remove('hidden');
+        } else {
+          document.getElementById('event-preview-wrap').classList.add('hidden');
+        }
+      } else {
+        document.getElementById('event-modal-title').innerText = '새 나눔/이벤트 등록';
+        document.getElementById('event-name').value = '';
+        document.getElementById('event-total').value = '';
+        document.getElementById('event-done').value = 0;
+        document.getElementById('event-date').value = '';
+        document.getElementById('event-status').value = '준비중';
+        document.getElementById('event-memo').value = '';
+        document.getElementById('event-img-base64').value = '';
+        document.getElementById('event-preview-wrap').classList.add('hidden');
+      }
+      document.getElementById('event-modal').classList.replace('hidden', 'flex');
+    }
+
+    function saveEvent() {
+      const idx = parseInt(document.getElementById('edit-event-idx').value);
+      const name = document.getElementById('event-name').value.trim();
+      const total = parseInt(document.getElementById('event-total').value) || 0;
+      const done = parseInt(document.getElementById('event-done').value) || 0;
+      const date = document.getElementById('event-date').value.trim();
+      const status = document.getElementById('event-status').value;
+      const memo = document.getElementById('event-memo').value.trim();
+      const img = document.getElementById('event-img-base64').value;
+
+      if (!name) return alert('이벤트/나눔 이름을 입력해주세요.');
+      if (!cloudData.events[currentGroup]) cloudData.events[currentGroup] = [];
+
+      const payload = { name, total, done, date, status, memo, img };
+      if (idx >= 0) cloudData.events[currentGroup][idx] = payload;
+      else cloudData.events[currentGroup].unshift(payload);
+
+      closeModals();
+      syncData();
+    }
+
+    function changeEventCount(idx, delta) {
+      const item = cloudData.events[currentGroup][idx];
+      const newDone = Math.max(0, (Number(item.done) || 0) + delta);
+      item.done = newDone;
+      if (item.total && newDone >= Number(item.total)) {
+        item.status = '종료';
+      } else if (newDone > 0 && item.status === '준비중') {
+        item.status = '진행중';
+      }
+      syncData();
+    }
+
+    function deleteEvent(idx) {
+      if (!confirm('이 나눔/이벤트를 삭제하시겠습니까?')) return;
+      cloudData.events[currentGroup].splice(idx, 1);
+      syncData();
+    }
+
     function closeModals() {
-      document.querySelectorAll('#member-modal, #calendar-modal, #album-modal, #goods-modal, #photocard-modal').forEach(m => {
+      document.querySelectorAll('#member-modal, #calendar-modal, #album-modal, #goods-modal, #photocard-modal, #event-modal').forEach(m => {
         m.classList.replace('flex', 'hidden');
       });
     }
