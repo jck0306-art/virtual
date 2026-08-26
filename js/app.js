@@ -4,8 +4,12 @@ import { renderCalendar, openCalendarModal, saveCalendarUrl } from './calendar.j
 import { renderAlbums, openAlbumModal, saveAlbum, deleteAlbum } from './albums.js';
 import { renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, deleteGoods } from './goods.js';
 import { renderPhotocards, openPhotocardModal, savePhotocard, togglePcCollected, deletePhotocard } from './photocards.js';
-import { renderEvents, openEventModal, saveEvent, openApplicantManageModal, renderApplicantListTable, setAppFilter, addSingleApplicant, addBulkApplicants, toggleWinnerFromModal, 
-  deleteApplicantFromModal, drawRandomWinners, deleteEvent } from './events.js';
+import { 
+  renderEvents, openEventModal, saveEvent, 
+  openApplicantManageModal, renderApplicantListTable, setAppFilter, 
+  addSingleApplicant, addBulkApplicants, toggleWinnerFromModal, 
+  deleteApplicantFromModal, drawRandomWinners, deleteEvent 
+} from './events.js';
 import { renderDeliveries, openDeliveryModal, saveDelivery, toggleShipped, copyDeliveryAddress, deleteDelivery } from './delivery.js';
 
 let currentGroup = 'plave';
@@ -75,6 +79,7 @@ function setupFileListeners() {
   });
 }
 
+// 상단 그룹 & 메뉴 전환
 window.switchGroup = function(groupKey) {
   currentGroup = groupKey;
   const tabP = document.getElementById('tab-plave');
@@ -107,61 +112,57 @@ window.switchMenu = function(menuKey) {
 };
 
 window.closeModals = function() {
-  document.querySelectorAll('#member-modal, #calendar-modal, #album-modal, #goods-modal, #photocard-modal, #event-modal, #delivery-modal').forEach(m => {
+  document.querySelectorAll('#member-modal, #calendar-modal, #album-modal, #goods-modal, #photocard-modal, #event-modal, #delivery-modal, #applicant-manage-modal').forEach(m => {
     m.classList.replace('flex', 'hidden');
   });
 };
 
-// 프로필
+// 1. 멤버 프로필
 window.openMemberModal = idx => openMemberModal(idx, currentGroup);
 window.saveMember = () => saveMember(currentGroup, render);
 
-// 캘린더
+// 2. 구글 캘린더
 window.openCalendarModal = () => openCalendarModal(currentGroup);
 window.saveCalendarUrl = () => saveCalendarUrl(currentGroup, render);
 
-// 앨범
+// 3. 앨범
 window.openAlbumModal = idx => openAlbumModal(idx, currentGroup);
 window.saveAlbum = () => saveAlbum(currentGroup, render);
 window.deleteAlbum = idx => deleteAlbum(idx, currentGroup, render);
 
-// 굿즈
+// 4. 굿즈
 window.openGoodsModal = idx => openGoodsModal(idx, currentGroup);
 window.saveGoods = () => saveGoods(currentGroup, render);
 window.toggleGoodsOwned = idx => toggleGoodsOwned(idx, currentGroup, render);
 window.deleteGoods = idx => deleteGoods(idx, currentGroup, render);
 
-// 포카
+// 5. 포토카드
 window.openPhotocardModal = idx => openPhotocardModal(idx, currentGroup);
 window.savePhotocard = () => savePhotocard(currentGroup, render);
 window.togglePcCollected = idx => togglePcCollected(idx, currentGroup, render);
 window.deletePhotocard = idx => deletePhotocard(idx, currentGroup, render);
 
-// 나눔/이벤트
+// 6. 나눔 & 이벤트 / 스레드 신청자 관리
 window.openEventModal = idx => openEventModal(idx, currentGroup);
 window.saveEvent = () => saveEvent(currentGroup, render);
-window.openApplicantAddPrompt = eventIdx => openApplicantAddPrompt(eventIdx, currentGroup, render);
-window.toggleWinner = (eventIdx, appIdx) => toggleWinner(eventIdx, appIdx, currentGroup, render);
-window.deleteApplicant = (eventIdx, appIdx) => deleteApplicant(eventIdx, appIdx, currentGroup, render);
 window.deleteEvent = idx => deleteEvent(idx, currentGroup, render);
+window.openApplicantManageModal = idx => openApplicantManageModal(idx, currentGroup);
+window.renderApplicantListTable = () => renderApplicantListTable(currentGroup);
+window.setAppFilter = filterType => setAppFilter(filterType, currentGroup);
+window.addSingleApplicant = () => addSingleApplicant(currentGroup, render);
+window.addBulkApplicants = () => addBulkApplicants(currentGroup, render);
+window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx, currentGroup, render);
+window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, currentGroup, render);
+window.drawRandomWinners = () => drawRandomWinners(currentGroup, render);
 
-// 반택 배송
+// 7. 반택 주소록
 window.openDeliveryModal = idx => openDeliveryModal(idx, currentGroup);
 window.saveDelivery = () => saveDelivery(currentGroup, render);
 window.toggleShipped = idx => toggleShipped(idx, currentGroup, render);
 window.copyDeliveryAddress = idx => copyDeliveryAddress(idx, currentGroup);
 window.deleteDelivery = idx => deleteDelivery(idx, currentGroup, render);
 
-// 나눔/이벤트 대형 명단 제어
-window.addSingleApplicant = () => addSingleApplicant(currentGroup, render);
-window.addBulkApplicants = () => addBulkApplicants(currentGroup, render);
-window.openApplicantManageModal = idx => openApplicantManageModal(idx, currentGroup);
-window.renderApplicantListTable = () => renderApplicantListTable(currentGroup);
-window.setAppFilter = filterType => setAppFilter(filterType, currentGroup);
-window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx, currentGroup, render);
-window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, currentGroup, render);
-window.drawRandomWinners = () => drawRandomWinners(currentGroup, render);
-
+// 초기화
 window.addEventListener('DOMContentLoaded', () => {
   setupFileListeners();
   initFirebase(render);
