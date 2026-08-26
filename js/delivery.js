@@ -1,6 +1,7 @@
-import { cloudData, syncData } from './firebase.js';
+import { cloudData, syncData, ensureDataStructure } from './firebase.js';
 
 export function renderDeliveries(currentGroup) {
+  ensureDataStructure();
   const deliveries = (cloudData.deliveries && cloudData.deliveries[currentGroup]) || [];
   const listEl = document.getElementById('delivery-list');
   if (!listEl) return;
