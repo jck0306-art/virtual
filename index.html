@@ -47,23 +47,26 @@
 
     <!-- 기능 메뉴바 -->
     <nav class="max-w-5xl mx-auto px-4 flex gap-1 overflow-x-auto text-xs border-t border-slate-800/80 pt-1">
-      <button id="nav-profile" onclick="window.switchMenu('profile')" class="px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap">
+      <button id="nav-profile" onclick="window.switchMenu('profile')" class="px-3 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap">
         <i class="fa-solid fa-users text-indigo-400"></i> 멤버 프로필
       </button>
-      <button id="nav-calendar" onclick="window.switchMenu('calendar')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+      <button id="nav-calendar" onclick="window.switchMenu('calendar')" class="px-3 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
         <i class="fa-brands fa-google text-indigo-400"></i> 구글 캘린더
       </button>
-      <button id="nav-albums" onclick="window.switchMenu('albums')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+      <button id="nav-albums" onclick="window.switchMenu('albums')" class="px-3 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
         <i class="fa-solid fa-compact-disc text-amber-400"></i> 발매 앨범
       </button>
-      <button id="nav-goods" onclick="window.switchMenu('goods')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+      <button id="nav-goods" onclick="window.switchMenu('goods')" class="px-3 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
         <i class="fa-solid fa-box-open text-emerald-400"></i> 굿즈 관리
       </button>
-      <button id="nav-photocards" onclick="window.switchMenu('photocards')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+      <button id="nav-photocards" onclick="window.switchMenu('photocards')" class="px-3 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
         <i class="fa-solid fa-id-badge text-pink-400"></i> 포카 도감
       </button>
-      <button id="nav-events" onclick="window.switchMenu('events')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+      <button id="nav-events" onclick="window.switchMenu('events')" class="px-3 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
         <i class="fa-solid fa-gift text-purple-400"></i> 나눔 & 이벤트
+      </button>
+      <button id="nav-deliveries" onclick="window.switchMenu('deliveries')" class="px-3 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+        <i class="fa-solid fa-truck text-cyan-400"></i> 반택 주소록
       </button>
     </nav>
   </header>
@@ -165,14 +168,28 @@
     <section id="menu-view-events" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
       <div class="flex justify-between items-center">
         <div>
-          <h3 class="text-sm font-bold text-white">현장 나눔 & 팬 이벤트 관리</h3>
-          <p class="text-xs text-slate-400 mt-0.5">콘서트/팝업/생카 현장 나눔 물품 및 배부 현황을 체크합니다.</p>
+          <h3 class="text-sm font-bold text-white">나눔 이벤트 & 신청자/당첨자 관리</h3>
+          <p class="text-xs text-slate-400 mt-0.5">신청자 명단 기록 및 당첨자 선정을 관리합니다.</p>
         </div>
         <button onclick="window.openEventModal()" class="text-xs bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
-          <i class="fa-solid fa-plus"></i> 나눔/이벤트 등록
+          <i class="fa-solid fa-plus"></i> 새 이벤트 등록
         </button>
       </div>
       <div id="event-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+    </section>
+
+    <!-- [뷰 7] 반택 주소록 (신규) -->
+    <section id="menu-view-deliveries" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+      <div class="flex justify-between items-center">
+        <div>
+          <h3 class="text-sm font-bold text-white">GS25 / CU 편의점 반택 주소록</h3>
+          <p class="text-xs text-slate-400 mt-0.5">나눔/교환 시 발송할 반값택배 정보를 모아보고 바로 복사합니다.</p>
+        </div>
+        <button onclick="window.openDeliveryModal()" class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+          <i class="fa-solid fa-plus"></i> 배송지 등록
+        </button>
+      </div>
+      <div id="delivery-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </section>
 
   </main>
@@ -182,9 +199,7 @@
   <!-- 멤버 수정 모달 -->
   <div id="member-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4">
-      <h3 class="text-base font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-user-pen text-indigo-400"></i> 멤버 정보 수정
-      </h3>
+      <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-user-pen text-indigo-400"></i> 멤버 정보 수정</h3>
       <input type="hidden" id="edit-member-idx" />
       <div>
         <label class="text-xs text-slate-400 block mb-1">이름</label>
@@ -218,9 +233,7 @@
   <!-- 캘린더 URL 모달 -->
   <div id="calendar-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-700 space-y-4">
-      <h3 class="text-base font-bold text-white flex items-center gap-2">
-        <i class="fa-brands fa-google text-indigo-400"></i> 캘린더 URL 설정
-      </h3>
+      <h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-brands fa-google text-indigo-400"></i> 캘린더 URL 설정</h3>
       <div>
         <label class="text-xs text-slate-400 block mb-1">구글 캘린더 공개 Embed URL</label>
         <textarea id="cal-url-input" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono" placeholder="https://calendar.google.com/calendar/embed?src=..."></textarea>
@@ -285,12 +298,12 @@
       </div>
       <div>
         <label class="text-xs text-slate-400 block mb-1">굿즈 이름 *</label>
-        <input id="goods-name" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="예: 공식 응원봉, 아크릴 스탠드" />
+        <input id="goods-name" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="예: 공식 응원봉" />
       </div>
       <div class="grid grid-cols-2 gap-2">
         <div>
           <label class="text-xs text-slate-400 block mb-1">카테고리</label>
-          <input id="goods-cat" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="응원용품, 의류 등" />
+          <input id="goods-cat" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="응원용품 등" />
         </div>
         <div>
           <label class="text-xs text-slate-400 block mb-1">가격 (원)</label>
@@ -306,7 +319,7 @@
       </div>
       <div>
         <label class="text-xs text-slate-400 block mb-1">구매처 / 메모</label>
-        <input id="goods-memo" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="위버스샵, 팝업스토어 현장구매" />
+        <input id="goods-memo" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="위버스샵 구매 등" />
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
@@ -334,7 +347,7 @@
       </div>
       <div>
         <label class="text-xs text-slate-400 block mb-1">포카 버전/출처 *</label>
-        <input id="pc-version" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="예: 미니1집 A버전, 사운드웨이브 특전" />
+        <input id="pc-version" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="예: 미니1집 A버전" />
       </div>
       <div>
         <label class="text-xs text-slate-400 block mb-1">보유 상태</label>
@@ -350,13 +363,13 @@
     </div>
   </div>
 
-  <!-- 나눔 & 이벤트 등록/수정 모달 -->
+  <!-- 나눔/이벤트 등록 모달 (일정/상태 제외됨) -->
   <div id="event-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
     <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4">
-      <h3 id="event-modal-title" class="text-base font-bold text-white">나눔 & 이벤트 등록</h3>
+      <h3 id="event-modal-title" class="text-base font-bold text-white">나눔 이벤트 등록</h3>
       <input type="hidden" id="edit-event-idx" value="-1" />
       <div>
-        <label class="text-xs text-slate-400 block mb-1">품목/이벤트 사진</label>
+        <label class="text-xs text-slate-400 block mb-1">품목 사진</label>
         <input id="event-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer bg-slate-800 rounded-lg border border-slate-700 p-1" />
         <input type="hidden" id="event-img-base64" />
         <div id="event-preview-wrap" class="mt-2 hidden">
@@ -365,35 +378,15 @@
       </div>
       <div>
         <label class="text-xs text-slate-400 block mb-1">이벤트/나눔 이름 *</label>
-        <input id="event-name" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="예: 콘서트 투명 포카 나눔, 생카 럭드" />
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">준비 수량</label>
-          <input id="event-total" type="number" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="100" />
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">배부/완료 수량</label>
-          <input id="event-done" type="number" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="0" />
-        </div>
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">진행 일시</label>
-          <input id="event-date" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="YYYY.MM.DD HH:MM" />
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">진행 상태</label>
-          <select id="event-status" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500">
-            <option value="준비중">준비중</option>
-            <option value="진행중">진행중</option>
-            <option value="종료">종료</option>
-          </select>
-        </div>
+        <input id="event-name" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="예: 콘서트 투명 포카 나눔" />
       </div>
       <div>
-        <label class="text-xs text-slate-400 block mb-1">장소 / 배부 조건 / 메모</label>
-        <input id="event-memo" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="KSPO D구역 / 플리 인증" />
+        <label class="text-xs text-slate-400 block mb-1">준비 총 수량</label>
+        <input id="event-total" type="number" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="100" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">장소 / 조건 / 메모</label>
+        <input id="event-memo" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="예: 플리 인증 / 현장 배부" />
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
@@ -402,7 +395,51 @@
     </div>
   </div>
 
-  <!-- 메인 모듈 로드 -->
+  <!-- 반택 주소록 등록/수정 모달 (신규) -->
+  <div id="delivery-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+    <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4">
+      <h3 id="delivery-modal-title" class="text-base font-bold text-white">반택 배송지 등록</h3>
+      <input type="hidden" id="edit-delivery-idx" value="-1" />
+      <div class="grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">택배 종류</label>
+          <select id="del-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500">
+            <option value="GS반택">GS25 반택</option>
+            <option value="CU알뜰">CU 알뜰택배</option>
+            <option value="일반택배">일반택배/준등기</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">발송 상태</label>
+          <select id="del-shipped" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500">
+            <option value="false">발송대기</option>
+            <option value="true">발송완료</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">받는분 이름/닉네임 *</label>
+        <input id="del-recipient" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500" placeholder="홍길동" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">전화번호</label>
+        <input id="del-phone" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500" placeholder="010-0000-0000" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">편의점 점포명 (도착지) *</label>
+        <input id="del-store" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500" placeholder="예: GS25 강남역점" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">보낼 품목 / 메모</label>
+        <input id="del-memo" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500" placeholder="예: 밤비 포카 1장, 노아 스티커" />
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
+        <button onclick="window.saveDelivery()" class="px-3 py-1.5 text-xs bg-cyan-600 hover:bg-cyan-500 rounded-lg text-white font-bold">저장하기</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
