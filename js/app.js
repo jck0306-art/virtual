@@ -151,6 +151,15 @@ window.toggleShipped = idx => toggleShipped(idx, currentGroup, render);
 window.copyDeliveryAddress = idx => copyDeliveryAddress(idx, currentGroup);
 window.deleteDelivery = idx => deleteDelivery(idx, currentGroup, render);
 
+// 나눔/이벤트 대형 명단 제어
+window.openApplicantManageModal = idx => openApplicantManageModal(idx, currentGroup);
+window.renderApplicantListTable = () => renderApplicantListTable(currentGroup);
+window.setAppFilter = filterType => setAppFilter(filterType, currentGroup);
+window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx, currentGroup, render);
+window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, currentGroup, render);
+window.addBulkApplicants = () => addBulkApplicants(currentGroup, render);
+window.drawRandomWinners = () => drawRandomWinners(currentGroup, render);
+
 window.addEventListener('DOMContentLoaded', () => {
   setupFileListeners();
   initFirebase(render);
