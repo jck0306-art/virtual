@@ -37,14 +37,14 @@ function render() {
     `).join('');
   }
 
-  // 각 메뉴별 렌더링 호출
-  try { renderProfile(currentGroup); } catch (e) { console.error(e); }
-  try { renderCalendar(currentGroup); } catch (e) { console.error(e); }
-  try { renderAlbums(currentGroup); } catch (e) { console.error(e); }
-  try { renderGoods(currentGroup); } catch (e) { console.error(e); }
-  try { renderPhotocards(currentGroup); } catch (e) { console.error(e); }
-  try { renderEvents(currentGroup); } catch (e) { console.error(e); }
-  try { renderDeliveries(currentGroup); } catch (e) { console.error(e); }
+  // 뷰 렌더링
+  try { renderProfile(currentGroup); } catch (e) { console.error("Profile render error:", e); }
+  try { renderCalendar(currentGroup); } catch (e) { console.error("Calendar render error:", e); }
+  try { renderAlbums(currentGroup); } catch (e) { console.error("Albums render error:", e); }
+  try { renderGoods(currentGroup); } catch (e) { console.error("Goods render error:", e); }
+  try { renderPhotocards(currentGroup); } catch (e) { console.error("Photocards render error:", e); }
+  try { renderEvents(currentGroup); } catch (e) { console.error("Events render error:", e); }
+  try { renderDeliveries(currentGroup); } catch (e) { console.error("Deliveries render error:", e); }
 }
 
 function setupFileListeners() {
@@ -141,32 +141,32 @@ window.closeModals = function() {
   });
 };
 
-// 1. 멤버 프로필
+// 프로필
 window.openMemberModal = idx => openMemberModal(idx, currentGroup);
 window.saveMember = () => saveMember(currentGroup, render);
 
-// 2. 구글 캘린더
+// 캘린더
 window.openCalendarModal = () => openCalendarModal(currentGroup);
 window.saveCalendarUrl = () => saveCalendarUrl(currentGroup, render);
 
-// 3. 앨범
+// 앨범
 window.openAlbumModal = idx => openAlbumModal(idx, currentGroup);
 window.saveAlbum = () => saveAlbum(currentGroup, render);
 window.deleteAlbum = idx => deleteAlbum(idx, currentGroup, render);
 
-// 4. 굿즈
+// 굿즈
 window.openGoodsModal = idx => openGoodsModal(idx, currentGroup);
 window.saveGoods = () => saveGoods(currentGroup, render);
 window.toggleGoodsOwned = idx => toggleGoodsOwned(idx, currentGroup, render);
 window.deleteGoods = idx => deleteGoods(idx, currentGroup, render);
 
-// 5. 포토카드
+// 포카
 window.openPhotocardModal = idx => openPhotocardModal(idx, currentGroup);
 window.savePhotocard = () => savePhotocard(currentGroup, render);
 window.togglePcCollected = idx => togglePcCollected(idx, currentGroup, render);
 window.deletePhotocard = idx => deletePhotocard(idx, currentGroup, render);
 
-// 6. 나눔 & 이벤트
+// 나눔 & 이벤트
 window.openEventModal = idx => openEventModal(idx, currentGroup);
 window.saveEvent = () => saveEvent(currentGroup, render);
 window.deleteEvent = idx => deleteEvent(idx, currentGroup, render);
@@ -179,14 +179,13 @@ window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx,
 window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, currentGroup, render);
 window.drawRandomWinners = () => drawRandomWinners(currentGroup, render);
 
-// 7. 반택 주소록
+// 반택 주소록
 window.openDeliveryModal = idx => openDeliveryModal(idx, currentGroup);
 window.saveDelivery = () => saveDelivery(currentGroup, render);
 window.toggleShipped = idx => toggleShipped(idx, currentGroup, render);
 window.copyDeliveryAddress = idx => copyDeliveryAddress(idx, currentGroup);
 window.deleteDelivery = idx => deleteDelivery(idx, currentGroup, render);
 
-// 앱 시작
 window.addEventListener('DOMContentLoaded', () => {
   setupFileListeners();
   initFirebase(render);
