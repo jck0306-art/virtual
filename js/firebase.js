@@ -48,7 +48,8 @@ export const DEFAULT_DATA = {
   albums: { plave: [], wego6: [] },
   goods: { plave: [], wego6: [] },
   photocards: { plave: [], wego6: [] },
-  events: { plave: [], wego6: [] }
+  events: { plave: [], wego6: [] },
+  deliveries: { plave: [], wego6: [] }
 };
 
 let db = null;
@@ -64,16 +65,17 @@ if (firebaseConfig.apiKey !== "내_API_KEY") {
   }
 }
 
-export let cloudData = JSON.parse(localStorage.getItem('v_archive_cloud_data_v5')) || DEFAULT_DATA;
+export let cloudData = JSON.parse(localStorage.getItem('v_archive_cloud_data_v6')) || DEFAULT_DATA;
 
 export function initFirebase(onDataUpdate) {
   if (isFirebaseReady) {
-    db.collection('fandom_archive').doc('main_data_v5').onSnapshot(doc => {
+    db.collection('fandom_archive').doc('main_data_v6').onSnapshot(doc => {
       if (doc.exists) {
         cloudData = doc.data();
+        if (!cloudData.deliveries) cloudData.deliveries = { plave: [], wego6: [] };
         onDataUpdate();
       } else {
-        db.collection('fandom_archive').doc('main_data_v5').set(DEFAULT_DATA);
+        db.collection('fandom_archive').doc('main_data_v6').set(DEFAULT_DATA);
       }
     });
   } else {
@@ -84,9 +86,9 @@ export function initFirebase(onDataUpdate) {
 }
 
 export function syncData(onRender) {
-  localStorage.setItem('v_archive_cloud_data_v5', JSON.stringify(cloudData));
+  localStorage.setItem('v_archive_cloud_data_v6', JSON.stringify(cloudData));
   if (isFirebaseReady) {
-    db.collection('fandom_archive').doc('main_data_v5').set(cloudData);
+    db.collection('fandom_archive').doc('main_data_v6').set(cloudData);
   }
   if (onRender) onRender();
 }
