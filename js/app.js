@@ -16,67 +16,89 @@ let currentGroup = 'plave';
 let currentMenu = 'profile';
 
 function render() {
+  if (!cloudData || !cloudData.groups || !cloudData.groups[currentGroup]) return;
+
   const g = cloudData.groups[currentGroup];
 
-  document.getElementById('group-title').innerText = g.name;
-  document.getElementById('group-badge').innerText = g.company;
-  document.getElementById('group-fandom').innerHTML = `공식 팬덤: <span class="font-bold text-white">${g.fandom}</span>`;
-  
-  document.getElementById('quick-links').innerHTML = g.links.map(l => `
-    <a href="${l.url}" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 flex items-center gap-1.5 transition">
-      <i class="fa-brands ${l.icon} text-slate-400"></i> ${l.name}
-    </a>
-  `).join('');
+  const titleEl = document.getElementById('group-title');
+  const badgeEl = document.getElementById('group-badge');
+  const fandomEl = document.getElementById('group-fandom');
+  const linksEl = document.getElementById('quick-links');
 
-  renderProfile(currentGroup);
-  renderCalendar(currentGroup);
-  renderAlbums(currentGroup);
-  renderGoods(currentGroup);
-  renderPhotocards(currentGroup);
-  renderEvents(currentGroup);
-  renderDeliveries(currentGroup);
+  if (titleEl) titleEl.innerText = g.name;
+  if (badgeEl) badgeEl.innerText = g.company;
+  if (fandomEl) fandomEl.innerHTML = `공식 팬덤명: <span class="text-indigo-300 font-semibold">${g.fandom}</span>`;
+  
+  if (linksEl && g.links) {
+    linksEl.innerHTML = g.links.map(l => `
+      <a href="${l.url}" target="_blank" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs text-slate-200 flex items-center gap-1.5 transition">
+        <i class="fa-brands ${l.icon} text-slate-400"></i> ${l.name}
+      </a>
+    `).join('');
+  }
+
+  // 각 메뉴별 렌더링 호출
+  try { renderProfile(currentGroup); } catch (e) { console.error(e); }
+  try { renderCalendar(currentGroup); } catch (e) { console.error(e); }
+  try { renderAlbums(currentGroup); } catch (e) { console.error(e); }
+  try { renderGoods(currentGroup); } catch (e) { console.error(e); }
+  try { renderPhotocards(currentGroup); } catch (e) { console.error(e); }
+  try { renderEvents(currentGroup); } catch (e) { console.error(e); }
+  try { renderDeliveries(currentGroup); } catch (e) { console.error(e); }
 }
 
 function setupFileListeners() {
-  document.getElementById('album-file-input').addEventListener('change', e => {
-    if (e.target.files[0]) {
-      processImageFile(e.target.files[0], 600, base64 => {
-        document.getElementById('album-img-base64').value = base64;
-        document.getElementById('album-img-preview').src = base64;
-        document.getElementById('album-preview-wrap').classList.remove('hidden');
-      });
-    }
-  });
+  const albumIn = document.getElementById('album-file-input');
+  if (albumIn) {
+    albumIn.addEventListener('change', e => {
+      if (e.target.files[0]) {
+        processImageFile(e.target.files[0], 600, base64 => {
+          document.getElementById('album-img-base64').value = base64;
+          document.getElementById('album-img-preview').src = base64;
+          document.getElementById('album-preview-wrap').classList.remove('hidden');
+        });
+      }
+    });
+  }
 
-  document.getElementById('goods-file-input').addEventListener('change', e => {
-    if (e.target.files[0]) {
-      processImageFile(e.target.files[0], 600, base64 => {
-        document.getElementById('goods-img-base64').value = base64;
-        document.getElementById('goods-img-preview').src = base64;
-        document.getElementById('goods-preview-wrap').classList.remove('hidden');
-      });
-    }
-  });
+  const goodsIn = document.getElementById('goods-file-input');
+  if (goodsIn) {
+    goodsIn.addEventListener('change', e => {
+      if (e.target.files[0]) {
+        processImageFile(e.target.files[0], 600, base64 => {
+          document.getElementById('goods-img-base64').value = base64;
+          document.getElementById('goods-img-preview').src = base64;
+          document.getElementById('goods-preview-wrap').classList.remove('hidden');
+        });
+      }
+    });
+  }
 
-  document.getElementById('pc-file-input').addEventListener('change', e => {
-    if (e.target.files[0]) {
-      processImageFile(e.target.files[0], 500, base64 => {
-        document.getElementById('pc-img-base64').value = base64;
-        document.getElementById('pc-img-preview').src = base64;
-        document.getElementById('pc-preview-wrap').classList.remove('hidden');
-      });
-    }
-  });
+  const pcIn = document.getElementById('pc-file-input');
+  if (pcIn) {
+    pcIn.addEventListener('change', e => {
+      if (e.target.files[0]) {
+        processImageFile(e.target.files[0], 500, base64 => {
+          document.getElementById('pc-img-base64').value = base64;
+          document.getElementById('pc-img-preview').src = base64;
+          document.getElementById('pc-preview-wrap').classList.remove('hidden');
+        });
+      }
+    });
+  }
 
-  document.getElementById('event-file-input').addEventListener('change', e => {
-    if (e.target.files[0]) {
-      processImageFile(e.target.files[0], 600, base64 => {
-        document.getElementById('event-img-base64').value = base64;
-        document.getElementById('event-img-preview').src = base64;
-        document.getElementById('event-preview-wrap').classList.remove('hidden');
-      });
-    }
-  });
+  const eventIn = document.getElementById('event-file-input');
+  if (eventIn) {
+    eventIn.addEventListener('change', e => {
+      if (e.target.files[0]) {
+        processImageFile(e.target.files[0], 600, base64 => {
+          document.getElementById('event-img-base64').value = base64;
+          document.getElementById('event-img-preview').src = base64;
+          document.getElementById('event-preview-wrap').classList.remove('hidden');
+        });
+      }
+    });
+  }
 }
 
 // 상단 그룹 & 메뉴 전환
@@ -100,12 +122,14 @@ window.switchMenu = function(menuKey) {
   menus.forEach(m => {
     const btn = document.getElementById(`nav-${m}`);
     const view = document.getElementById(`menu-view-${m}`);
-    if (m === menuKey) {
-      btn.className = "px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap";
-      view.classList.remove('hidden');
-    } else {
-      btn.className = "px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap";
-      view.classList.add('hidden');
+    if (btn && view) {
+      if (m === menuKey) {
+        btn.className = "px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap";
+        view.classList.remove('hidden');
+      } else {
+        btn.className = "px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap";
+        view.classList.add('hidden');
+      }
     }
   });
   render();
@@ -142,7 +166,7 @@ window.savePhotocard = () => savePhotocard(currentGroup, render);
 window.togglePcCollected = idx => togglePcCollected(idx, currentGroup, render);
 window.deletePhotocard = idx => deletePhotocard(idx, currentGroup, render);
 
-// 6. 나눔 & 이벤트 / 스레드 신청자 관리
+// 6. 나눔 & 이벤트
 window.openEventModal = idx => openEventModal(idx, currentGroup);
 window.saveEvent = () => saveEvent(currentGroup, render);
 window.deleteEvent = idx => deleteEvent(idx, currentGroup, render);
@@ -162,7 +186,7 @@ window.toggleShipped = idx => toggleShipped(idx, currentGroup, render);
 window.copyDeliveryAddress = idx => copyDeliveryAddress(idx, currentGroup);
 window.deleteDelivery = idx => deleteDelivery(idx, currentGroup, render);
 
-// 초기화
+// 앱 시작
 window.addEventListener('DOMContentLoaded', () => {
   setupFileListeners();
   initFirebase(render);
