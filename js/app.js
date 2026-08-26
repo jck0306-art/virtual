@@ -4,7 +4,8 @@ import { renderCalendar, openCalendarModal, saveCalendarUrl } from './calendar.j
 import { renderAlbums, openAlbumModal, saveAlbum, deleteAlbum } from './albums.js';
 import { renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, deleteGoods } from './goods.js';
 import { renderPhotocards, openPhotocardModal, savePhotocard, togglePcCollected, deletePhotocard } from './photocards.js';
-import { renderEvents, openEventModal, saveEvent, openApplicantAddPrompt, toggleWinner, deleteApplicant, deleteEvent } from './events.js';
+import { renderEvents, openEventModal, saveEvent, openApplicantManageModal, renderApplicantListTable, setAppFilter, addSingleApplicant, addBulkApplicants, toggleWinnerFromModal, 
+  deleteApplicantFromModal, drawRandomWinners, deleteEvent } from './events.js';
 import { renderDeliveries, openDeliveryModal, saveDelivery, toggleShipped, copyDeliveryAddress, deleteDelivery } from './delivery.js';
 
 let currentGroup = 'plave';
@@ -152,12 +153,13 @@ window.copyDeliveryAddress = idx => copyDeliveryAddress(idx, currentGroup);
 window.deleteDelivery = idx => deleteDelivery(idx, currentGroup, render);
 
 // 나눔/이벤트 대형 명단 제어
+window.addSingleApplicant = () => addSingleApplicant(currentGroup, render);
+window.addBulkApplicants = () => addBulkApplicants(currentGroup, render);
 window.openApplicantManageModal = idx => openApplicantManageModal(idx, currentGroup);
 window.renderApplicantListTable = () => renderApplicantListTable(currentGroup);
 window.setAppFilter = filterType => setAppFilter(filterType, currentGroup);
 window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx, currentGroup, render);
 window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, currentGroup, render);
-window.addBulkApplicants = () => addBulkApplicants(currentGroup, render);
 window.drawRandomWinners = () => drawRandomWinners(currentGroup, render);
 
 window.addEventListener('DOMContentLoaded', () => {
