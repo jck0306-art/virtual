@@ -37,10 +37,10 @@ export function renderEvents(currentGroup) {
               <h4 class="text-base font-bold text-white">${ev.name}</h4>
               <p class="text-xs text-slate-400 leading-relaxed bg-slate-950/40 p-2.5 rounded-lg border border-slate-800/80">${ev.memo || '메모 없음'}</p>
 
-              <!-- 50인 대응 명단 관리 버튼 -->
+              <!-- 명단 관리 버튼 -->
               <button onclick="window.openApplicantManageModal(${idx})" class="w-full py-2.5 rounded-xl bg-purple-600/20 hover:bg-purple-600 border border-purple-500/40 hover:text-white text-purple-300 text-xs font-bold transition flex items-center justify-center gap-2 shadow-sm">
-                <i class="fa-solid fa-users-viewfinder text-sm"></i>
-                <span>신청자 & 당첨자 관리 (${applicants.length}명)</span>
+                <i class="fa-brands fa-threads text-sm"></i>
+                <span>스레드 신청자 & 당첨자 관리 (${applicants.length}명)</span>
               </button>
             </div>
           </div>
@@ -54,7 +54,7 @@ export function renderEvents(currentGroup) {
   }
 }
 
-// 이벤트 기본정보 등록/수정 모달
+// 이벤트 등록/수정 모달
 export function openEventModal(idx, currentGroup) {
   document.getElementById('edit-event-idx').value = idx;
   document.getElementById('event-file-input').value = '';
@@ -103,9 +103,9 @@ export function saveEvent(currentGroup, onRender) {
   syncData(onRender);
 }
 
-// 50인 전용 대형 신청자/당첨자 관리 모달 열기
+// 스레드 신청자/당첨자 전용 모달 제어
 let currentManagingEventIdx = -1;
-let currentAppFilter = 'all'; // 'all' | 'winner'
+let currentAppFilter = 'all';
 
 export function openApplicantManageModal(eventIdx, currentGroup) {
   currentManagingEventIdx = eventIdx;
@@ -126,20 +126,19 @@ export function renderApplicantListTable(currentGroup) {
   const winnersCount = apps.filter(a => a.isWinner).length;
   
   document.getElementById('app-stats-summary').innerHTML = `
-    신청 총 <strong class="text-white">${apps.length}</strong>명 · 당첨 <strong class="text-pink-400">${winnersCount}</strong>명
+    신청 총 <strong class="text-white">${apps.length}</strong>명 · 당첨 <strong class="text-pink-400 font-bold">${winnersCount}</strong>명
   `;
 
-  // 필터링 및 검색
   let filtered = apps.map((a, originalIdx) => ({ ...a, originalIdx }));
   if (currentAppFilter === 'winner') {
     filtered = filtered.filter(a => a.isWinner);
   }
   if (searchKeyword) {
-    filtered = filtered.filter(a => a.name.toLowerCase().includes(searchKeyword) || (a.tag && a.tag.toLowerCase().includes(searchKeyword)));
+    filtered = filtered.filter(a => a.handle.toLowerCase().includes(searchKeyword));
   }
 
   if (filtered.length === 0) {
-    listEl.innerHTML = `<tr><td colspan="4" class="py-8 text-center text-xs text-slate-500">해당하는 신청자가 없습니다.</td></tr>`;
+    listEl.innerHTML = `<tr><td colspan="3" class="py-8 text-center text-xs text-slate-500">등록된 스레드 신청자가 없습니다.</td></tr>`;
     return;
   }
 
@@ -147,10 +146,12 @@ export function renderApplicantListTable(currentGroup) {
     <tr class="border-b border-slate-800/60 hover:bg-slate-800/40 text-xs transition">
       <td class="py-2.5 px-3 text-slate-500 text-center w-12">${i + 1}</td>
       <td class="py-2.5 px-3 font-semibold ${a.isWinner ? 'text-pink-300 font-bold' : 'text-slate-200'}">
-        ${a.name}
+        <a href="https://www.threads.net/${a.handle.replace('@', '')}" target="_blank" class="hover:underline flex items-center gap-1.5 inline-flex">
+          <i class="fa-brands fa-threads text-[11px] text-slate-400"></i>
+          <span>${a.handle}</span>
+        </a>
       </td>
-      <td class="py-2.5 px-3 text-slate-400 font-mono text-[11px]">${a.tag || '-'}</td>
-      <td class="py-2.5 px-3 text-right space-x-1.5 w-36">
+      <td class="py-2.5 px-3 text-right space-x-1.5 w-32">
         <button onclick="window.toggleWinnerFromModal(${a.originalIdx})" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
           a.isWinner ? 'bg-pink-600 text-white shadow-sm' : 'bg-slate-800 hover:bg-slate-700 text-slate-400 border border-slate-700'
         }">
@@ -164,7 +165,6 @@ export function renderApplicantListTable(currentGroup) {
   `).join('');
 }
 
-// 명단 모달 내 개별 기능들
 export function setAppFilter(filterType, currentGroup) {
   currentAppFilter = filterType;
   const btnAll = document.getElementById('btn-filter-all');
@@ -179,6 +179,48 @@ export function setAppFilter(filterType, currentGroup) {
   renderApplicantListTable(currentGroup);
 }
 
+// 스레드 단일 신청자 추가 (스레드 아이디만 입력)
+export function addSingleApplicant(currentGroup, onRender) {
+  const handleInput = prompt('신청자의 스레드 아이디를 입력하세요:\n(예: @user_id 또는 user_id)');
+  if (!handleInput || !handleInput.trim()) return;
+
+  let handle = handleInput.trim();
+  if (!handle.startsWith('@')) handle = '@' + handle;
+
+  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  if (!ev.applicants) ev.applicants = [];
+  ev.applicants.push({ handle, isWinner: false });
+
+  syncData(() => {
+    renderApplicantListTable(currentGroup);
+    onRender();
+  });
+}
+
+// 스레드 아이디 목록 일괄 등록 (복사/붙여넣기)
+export function addBulkApplicants(currentGroup, onRender) {
+  const rawText = prompt("스레드 아이디 목록을 줄바꿈으로 붙여넣으세요:\n(예:\n@user1\n@user2\nuser3)");
+  if (!rawText || !rawText.trim()) return;
+
+  const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  if (!ev.applicants) ev.applicants = [];
+
+  lines.forEach(line => {
+    let handle = line.replace(/[,/\t]/g, '').trim();
+    if (handle) {
+      if (!handle.startsWith('@')) handle = '@' + handle;
+      ev.applicants.push({ handle, isWinner: false });
+    }
+  });
+
+  alert(`총 ${lines.length}개의 스레드 아이디가 등록되었습니다!`);
+  syncData(() => {
+    renderApplicantListTable(currentGroup);
+    onRender();
+  });
+}
+
 export function toggleWinnerFromModal(originalIdx, currentGroup, onRender) {
   const ev = cloudData.events[currentGroup][currentManagingEventIdx];
   ev.applicants[originalIdx].isWinner = !ev.applicants[originalIdx].isWinner;
@@ -189,7 +231,7 @@ export function toggleWinnerFromModal(originalIdx, currentGroup, onRender) {
 }
 
 export function deleteApplicantFromModal(originalIdx, currentGroup, onRender) {
-  if (!confirm('이 신청자를 명단에서 삭제하시겠습니까?')) return;
+  if (!confirm('이 신청자를 삭제하시겠습니까?')) return;
   const ev = cloudData.events[currentGroup][currentManagingEventIdx];
   ev.applicants.splice(originalIdx, 1);
   syncData(() => {
@@ -198,32 +240,6 @@ export function deleteApplicantFromModal(originalIdx, currentGroup, onRender) {
   });
 }
 
-// 텍스트 일괄 등록 (네이버폼/구글폼 줄바꿈 복사 붙여넣기 50명 한번에 등록)
-export function addBulkApplicants(currentGroup, onRender) {
-  const rawText = prompt("엑셀이나 폼에서 복사한 신청자 명단을 줄바꿈으로 붙여넣으세요:\n(형식 예: 이름 또는 '이름, 연락처')");
-  if (!rawText || !rawText.trim()) return;
-
-  const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
-  if (!ev.applicants) ev.applicants = [];
-
-  lines.forEach(line => {
-    const parts = line.split(/[,/\t]/).map(p => p.trim());
-    const name = parts[0];
-    const tag = parts.slice(1).join(' ') || '';
-    if (name) {
-      ev.applicants.push({ name, tag, isWinner: false });
-    }
-  });
-
-  alert(`${lines.length}명의 신청자가 등록되었습니다!`);
-  syncData(() => {
-    renderApplicantListTable(currentGroup);
-    onRender();
-  });
-}
-
-// 랜덤 당첨자 n명 자동 추첨 기능
 export function drawRandomWinners(currentGroup, onRender) {
   const ev = cloudData.events[currentGroup][currentManagingEventIdx];
   const apps = ev.applicants || [];
@@ -233,7 +249,6 @@ export function drawRandomWinners(currentGroup, onRender) {
   const count = parseInt(countStr);
   if (!count || count <= 0) return;
 
-  // 전체 초기화 후 랜덤 선정
   apps.forEach(a => a.isWinner = false);
   const shuffled = [...apps].sort(() => 0.5 - Math.random());
   const selected = shuffled.slice(0, Math.min(count, apps.length));
