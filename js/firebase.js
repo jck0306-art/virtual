@@ -67,18 +67,24 @@ if (firebaseConfig.apiKey !== "내_API_KEY") {
 
 export let cloudData = JSON.parse(localStorage.getItem('v_archive_cloud_data_v6')) || DEFAULT_DATA;
 
+function ensureDataStructure() {
+  if (!cloudData.events) cloudData.events = { plave: [], wego6: [] };
+  if (!cloudData.deliveries) cloudData.deliveries = { plave: [], wego6: [] };
+}
+
 export function initFirebase(onDataUpdate) {
   if (isFirebaseReady) {
     db.collection('fandom_archive').doc('main_data_v6').onSnapshot(doc => {
       if (doc.exists) {
         cloudData = doc.data();
-        if (!cloudData.deliveries) cloudData.deliveries = { plave: [], wego6: [] };
+        ensureDataStructure();
         onDataUpdate();
       } else {
         db.collection('fandom_archive').doc('main_data_v6').set(DEFAULT_DATA);
       }
     });
   } else {
+    ensureDataStructure();
     const statusEl = document.getElementById('cloud-status');
     if (statusEl) statusEl.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> 로컬 모드`;
     onDataUpdate();
@@ -86,6 +92,7 @@ export function initFirebase(onDataUpdate) {
 }
 
 export function syncData(onRender) {
+  ensureDataStructure();
   localStorage.setItem('v_archive_cloud_data_v6', JSON.stringify(cloudData));
   if (isFirebaseReady) {
     db.collection('fandom_archive').doc('main_data_v6').set(cloudData);
