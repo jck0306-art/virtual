@@ -58,6 +58,54 @@ export function renderEvents(currentGroup) {
   }
 }
 
+export function openEventModal(idx, currentGroup) {
+  document.getElementById('edit-event-idx').value = idx;
+  document.getElementById('event-file-input').value = '';
+  if (idx >= 0) {
+    const item = cloudData.events[currentGroup][idx];
+    document.getElementById('event-modal-title').innerText = '나눔 이벤트 수정';
+    document.getElementById('event-name').value = item.name || '';
+    document.getElementById('event-total').value = item.total || '';
+    document.getElementById('event-memo').value = item.memo || '';
+    document.getElementById('event-img-base64').value = item.img || '';
+    if (item.img) {
+      document.getElementById('event-img-preview').src = item.img;
+      document.getElementById('event-preview-wrap').classList.remove('hidden');
+    } else {
+      document.getElementById('event-preview-wrap').classList.add('hidden');
+    }
+  } else {
+    document.getElementById('event-modal-title').innerText = '새 나눔 이벤트 등록';
+    document.getElementById('event-name').value = '';
+    document.getElementById('event-total').value = '';
+    document.getElementById('event-memo').value = '';
+    document.getElementById('event-img-base64').value = '';
+    document.getElementById('event-preview-wrap').classList.add('hidden');
+  }
+  document.getElementById('event-modal').classList.replace('hidden', 'flex');
+}
+
+export function saveEvent(currentGroup, onRender) {
+  const idx = parseInt(document.getElementById('edit-event-idx').value);
+  const name = document.getElementById('event-name').value.trim();
+  const total = document.getElementById('event-total').value;
+  const memo = document.getElementById('event-memo').value.trim();
+  const img = document.getElementById('event-img-base64').value;
+
+  if (!name) return alert('이벤트 이름을 입력해주세요.');
+  if (!cloudData.events) cloudData.events = { plave: [], wego6: [] };
+  if (!cloudData.events[currentGroup]) cloudData.events[currentGroup] = [];
+
+  const oldApplicants = (idx >= 0 && cloudData.events[currentGroup][idx]) ? cloudData.events[currentGroup][idx].applicants : [];
+  const payload = { name, total, memo, img, applicants: oldApplicants || [] };
+
+  if (idx >= 0) cloudData.events[currentGroup][idx] = payload;
+  else cloudData.events[currentGroup].unshift(payload);
+
+  window.closeModals();
+  syncData(onRender);
+}
+
 export function openApplicantManageModal(eventIdx, currentGroup) {
   currentManagingEventIdx = eventIdx;
   const ev = cloudData.events[currentGroup][eventIdx];
