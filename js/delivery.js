@@ -1,4 +1,4 @@
-import { cloudData, syncData, ensureDataStructure } from './firebase.js';
+import { cloudData, syncData, ensureDataStructure } from './firebase.js'; 
 
 export function renderDeliveries(currentGroup) {
   ensureDataStructure();
