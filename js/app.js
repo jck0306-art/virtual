@@ -37,7 +37,7 @@ function render() {
     `).join('');
   }
 
-  // 뷰 렌더링
+  // 각 뷰 렌더링
   try { renderProfile(currentGroup); } catch (e) { console.error("Profile render error:", e); }
   try { renderCalendar(currentGroup); } catch (e) { console.error("Calendar render error:", e); }
   try { renderAlbums(currentGroup); } catch (e) { console.error("Albums render error:", e); }
@@ -101,7 +101,7 @@ function setupFileListeners() {
   }
 }
 
-// 상단 그룹 & 메뉴 전환 전역 바인딩
+// 상단 그룹 & 메뉴 전환
 window.switchGroup = function(groupKey) {
   currentGroup = groupKey;
   const tabP = document.getElementById('tab-plave');
@@ -173,13 +173,13 @@ window.openEventModal = idx => openEventModal(idx, currentGroup);
 window.saveEvent = () => saveEvent(currentGroup, render);
 window.deleteEvent = idx => deleteEvent(idx, currentGroup, render);
 window.openApplicantManageModal = idx => openApplicantManageModal(idx, currentGroup);
-window.renderApplicantListTable = () => renderApplicantListTable(currentGroup);
-window.setAppFilter = filterType => setAppFilter(filterType, currentGroup);
-window.addSingleApplicant = () => addSingleApplicant(currentGroup, render);
-window.addBulkApplicants = () => addBulkApplicants(currentGroup, render);
-window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx, currentGroup, render);
-window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, currentGroup, render);
-window.drawRandomWinners = () => drawRandomWinners(currentGroup, render);
+window.renderApplicantListTable = () => renderApplicantListTable();
+window.setAppFilter = filterType => setAppFilter(filterType);
+window.addSingleApplicant = () => addSingleApplicant(render);
+window.addBulkApplicants = () => addBulkApplicants(render);
+window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx, render);
+window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, render);
+window.drawRandomWinners = () => drawRandomWinners(render);
 
 // 반택 주소록
 window.openDeliveryModal = idx => openDeliveryModal(idx, currentGroup);
