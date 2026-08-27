@@ -501,11 +501,8 @@ Virtual Idol Group
 </div>
 </div>
 
-<script type="module" src="js/app.js"></script>
-</body>
-  <!-- 🌐 패밀리 사이트 퀵 네비게이터 플로팅 UI -->
+<!-- 🌐 패밀리 사이트 퀵 네비게이터 플로팅 UI -->
 <div class="fixed bottom-6 right-6 z-50">
-  
   <!-- 펼쳐지는 사이트 목록 메뉴 팝업 -->
   <div id="family-site-menu" class="hidden mb-3 w-52 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-2 space-y-1 transition-all">
     <div class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/80 mb-1">
@@ -551,6 +548,8 @@ Virtual Idol Group
   </button>
 </div>
 
+<script type="module" src="js/app.js"></script>
+
 <script>
   function toggleFamilySiteMenu() {
     const menu = document.getElementById('family-site-menu');
@@ -565,7 +564,6 @@ Virtual Idol Group
     }
   }
 
-  // 외부 클릭 시 메뉴 자동 닫기
   document.addEventListener('click', function(e) {
     const container = document.getElementById('family-site-menu')?.parentElement;
     const menu = document.getElementById('family-site-menu');
@@ -576,4 +574,5 @@ Virtual Idol Group
     }
   });
 </script>
+</body>
 </html>
