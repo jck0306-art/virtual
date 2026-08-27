@@ -101,17 +101,19 @@ function setupFileListeners() {
   }
 }
 
-// 상단 그룹 & 메뉴 전환
+// 상단 그룹 & 메뉴 전환 전역 바인딩
 window.switchGroup = function(groupKey) {
   currentGroup = groupKey;
   const tabP = document.getElementById('tab-plave');
   const tabW = document.getElementById('tab-wego6');
-  if (groupKey === 'plave') {
-    tabP.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 tab-active-plave";
-    tabW.className = "px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-2";
-  } else {
-    tabW.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 tab-active-wego6";
-    tabP.className = "px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-2";
+  if (tabP && tabW) {
+    if (groupKey === 'plave') {
+      tabP.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 tab-active-plave";
+      tabW.className = "px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-2";
+    } else {
+      tabW.className = "px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 tab-active-wego6";
+      tabP.className = "px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-2";
+    }
   }
   render();
 };
