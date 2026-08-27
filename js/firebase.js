@@ -1,7 +1,7 @@
 export const firebaseConfig = {
   apiKey: "AIzaSyBQ0zSJleSHBjmecj1Qe-kmhLu-GDYXWE8",
   authDomain: "license-mgmt-157ed.firebaseapp.com",
-  projectId: "license-mgmt-157ed",
+  projectId: "license-mgmt-157ed", 
   storageBucket: "license-mgmt-157ed.firebasestorage.app",
   messagingSenderId: "20449962943",
   appId: "1:20449962943:web:35d36af2eb555d23760f0a"
