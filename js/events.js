@@ -3,8 +3,10 @@ import { escapeHTML, sanitizeHandle } from './security.js';
 
 let currentManagingEventIdx = -1;
 let currentAppFilter = 'all';
+let activeGroup = 'plave';
 
 export function renderEvents(currentGroup) {
+  activeGroup = currentGroup;
   ensureDataStructure();
   const evts = (cloudData.events && cloudData.events[currentGroup]) || [];
   const eventGrid = document.getElementById('event-grid');
@@ -59,6 +61,7 @@ export function renderEvents(currentGroup) {
 }
 
 export function openEventModal(idx, currentGroup) {
+  activeGroup = currentGroup;
   document.getElementById('edit-event-idx').value = idx;
   document.getElementById('event-file-input').value = '';
   if (idx >= 0) {
@@ -107,21 +110,22 @@ export function saveEvent(currentGroup, onRender) {
 }
 
 export function openApplicantManageModal(eventIdx, currentGroup) {
+  if (currentGroup) activeGroup = currentGroup;
   currentManagingEventIdx = eventIdx;
-  const ev = cloudData.events[currentGroup][eventIdx];
+  const ev = cloudData.events[activeGroup][eventIdx];
   if (!ev.applicants) ev.applicants = [];
 
   const titleEl = document.getElementById('app-modal-event-name');
   if (titleEl) titleEl.innerText = ev.name;
   
-  renderApplicantListTable(currentGroup);
+  renderApplicantListTable();
   document.getElementById('applicant-manage-modal').classList.replace('hidden', 'flex');
 }
 
-export function renderApplicantListTable(currentGroup) {
-  if (currentManagingEventIdx < 0 || !cloudData.events[currentGroup] || !cloudData.events[currentGroup][currentManagingEventIdx]) return;
+export function renderApplicantListTable() {
+  if (currentManagingEventIdx < 0 || !cloudData.events[activeGroup] || !cloudData.events[activeGroup][currentManagingEventIdx]) return;
 
-  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  const ev = cloudData.events[activeGroup][currentManagingEventIdx];
   const listEl = document.getElementById('app-table-body');
   const searchKeyword = (document.getElementById('app-search-input')?.value || '').trim().toLowerCase();
   
@@ -174,7 +178,7 @@ export function renderApplicantListTable(currentGroup) {
   }).join('');
 }
 
-export function setAppFilter(filterType, currentGroup) {
+export function setAppFilter(filterType) {
   currentAppFilter = filterType;
   const btnAll = document.getElementById('btn-filter-all');
   const btnWin = document.getElementById('btn-filter-win');
@@ -185,32 +189,32 @@ export function setAppFilter(filterType, currentGroup) {
     if (btnWin) btnWin.className = "px-3 py-1 rounded-lg text-xs font-bold bg-pink-600 text-white";
     if (btnAll) btnAll.className = "px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white";
   }
-  renderApplicantListTable(currentGroup);
+  renderApplicantListTable();
 }
 
-export function addSingleApplicant(currentGroup, onRender) {
+export function addSingleApplicant(onRender) {
   if (currentManagingEventIdx < 0) return;
   const handleInput = prompt('신청자의 스레드 아이디를 입력하세요:');
   if (!handleInput || !handleInput.trim()) return;
 
   const handle = sanitizeHandle(handleInput);
-  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  const ev = cloudData.events[activeGroup][currentManagingEventIdx];
   if (!ev.applicants) ev.applicants = [];
   ev.applicants.push({ handle, isWinner: false });
 
   syncData(() => {
-    renderApplicantListTable(currentGroup);
-    onRender();
+    renderApplicantListTable();
+    if (onRender) onRender();
   });
 }
 
-export function addBulkApplicants(currentGroup, onRender) {
+export function addBulkApplicants(onRender) {
   if (currentManagingEventIdx < 0) return;
   const rawText = prompt("스레드 아이디 목록을 줄바꿈으로 붙여넣으세요:");
   if (!rawText || !rawText.trim()) return;
 
   const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  const ev = cloudData.events[activeGroup][currentManagingEventIdx];
   if (!ev.applicants) ev.applicants = [];
 
   lines.forEach(line => {
@@ -222,32 +226,32 @@ export function addBulkApplicants(currentGroup, onRender) {
 
   alert(`총 ${lines.length}개의 스레드 아이디가 등록되었습니다!`);
   syncData(() => {
-    renderApplicantListTable(currentGroup);
-    onRender();
+    renderApplicantListTable();
+    if (onRender) onRender();
   });
 }
 
-export function toggleWinnerFromModal(originalIdx, currentGroup, onRender) {
-  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+export function toggleWinnerFromModal(originalIdx, onRender) {
+  const ev = cloudData.events[activeGroup][currentManagingEventIdx];
   ev.applicants[originalIdx].isWinner = !ev.applicants[originalIdx].isWinner;
   syncData(() => {
-    renderApplicantListTable(currentGroup);
-    onRender();
+    renderApplicantListTable();
+    if (onRender) onRender();
   });
 }
 
-export function deleteApplicantFromModal(originalIdx, currentGroup, onRender) {
+export function deleteApplicantFromModal(originalIdx, onRender) {
   if (!confirm('이 신청자를 삭제하시겠습니까?')) return;
-  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+  const ev = cloudData.events[activeGroup][currentManagingEventIdx];
   ev.applicants.splice(originalIdx, 1);
   syncData(() => {
-    renderApplicantListTable(currentGroup);
-    onRender();
+    renderApplicantListTable();
+    if (onRender) onRender();
   });
 }
 
-export function drawRandomWinners(currentGroup, onRender) {
-  const ev = cloudData.events[currentGroup][currentManagingEventIdx];
+export function drawRandomWinners(onRender) {
+  const ev = cloudData.events[activeGroup][currentManagingEventIdx];
   const apps = ev.applicants || [];
   if (apps.length === 0) return alert('추첨할 신청자가 없습니다.');
 
@@ -262,8 +266,8 @@ export function drawRandomWinners(currentGroup, onRender) {
 
   alert(`랜덤 추첨 완료! 총 ${selected.length}명이 당첨자로 선정되었습니다.`);
   syncData(() => {
-    renderApplicantListTable(currentGroup);
-    onRender();
+    renderApplicantListTable();
+    if (onRender) onRender();
   });
 }
 
