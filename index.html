@@ -53,6 +53,9 @@ V-ARCHIVE
 <button id="nav-profile" onclick="window.switchMenu('profile')" class="px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap">
 <i class="fa-solid fa-users text-indigo-400"></i> 멤버 프로필
 </button>
+<button id="nav-official" onclick="window.switchMenu('official')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+<i class="fa-solid fa-bullhorn text-pink-400"></i> 공식 스케줄
+</button>
 <button id="nav-calendar" onclick="window.switchMenu('calendar')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
 <i class="fa-brands fa-google text-indigo-400"></i> 구글 캘린더
 </button>
@@ -103,7 +106,33 @@ Virtual Idol Group
 <div id="member-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5"></div>
 </section>
 
-<!-- [뷰 2] 구글 캘린더 -->
+<!-- [뷰 2] 🌟 공식 스케줄 및 이벤트 (신설) -->
+<section id="menu-view-official" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-5">
+<div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+<div>
+<h3 class="text-base font-bold text-white flex items-center gap-2">
+<i class="fa-solid fa-bullhorn text-pink-400"></i> 공식 이벤트 & 스케줄
+</h3>
+<p class="text-xs text-slate-400 mt-0.5">라이브 콘서트, 팝업스토어, 콜라보 카페, 티켓팅 일정을 체크하세요.</p>
+</div>
+<div class="flex items-center gap-2">
+<select id="official-filter-type" onchange="window.renderOfficialEvents()" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-pink-500">
+<option value="all">전체 행사</option>
+<option value="콘서트/팬미팅">콘서트/팬미팅</option>
+<option value="팝업/전시">팝업/전시</option>
+<option value="콜라보/카페">콜라보/카페</option>
+<option value="티켓팅/굿즈">티켓팅/굿즈</option>
+<option value="기타">기타</option>
+</select>
+<button onclick="window.openOfficialModal()" class="text-xs bg-pink-600 hover:bg-pink-500 text-white px-3.5 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-md shadow-pink-600/20 transition">
+<i class="fa-solid fa-plus text-[10px]"></i> 일정 등록
+</button>
+</div>
+</div>
+<div id="official-event-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+</section>
+
+<!-- [뷰 3] 구글 캘린더 -->
 <section id="menu-view-calendar" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -125,7 +154,7 @@ Virtual Idol Group
 </div>
 </section>
 
-<!-- [뷰 3] 발매 앨범 -->
+<!-- [뷰 4] 발매 앨범 -->
 <section id="menu-view-albums" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -139,7 +168,7 @@ Virtual Idol Group
 <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- [뷰 4] 굿즈 관리 -->
+<!-- [뷰 5] 굿즈 관리 -->
 <section id="menu-view-goods" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -153,7 +182,7 @@ Virtual Idol Group
 <div id="goods-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- [뷰 5] 포카 도감 -->
+<!-- [뷰 6] 포카 도감 -->
 <section id="menu-view-photocards" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -167,7 +196,7 @@ Virtual Idol Group
 <div id="photocard-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5"></div>
 </section>
 
-<!-- [뷰 6] 나눔 & 이벤트 -->
+<!-- [뷰 7] 나눔 & 이벤트 -->
 <section id="menu-view-events" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -181,7 +210,7 @@ Virtual Idol Group
 <div id="event-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- [뷰 7] 반택 주소록 -->
+<!-- [뷰 8] 반택 주소록 -->
 <section id="menu-view-deliveries" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -198,6 +227,70 @@ Virtual Idol Group
 </main>
 
 <!-- ================= 모달 모음 ================= -->
+
+<!-- 공식 이벤트 등록/수정 모달 (신설) -->
+<div id="official-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 overflow-y-auto">
+<div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4 my-8 shadow-2xl">
+<div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+<h3 id="official-modal-title" class="text-base font-bold text-white flex items-center gap-2">
+<i class="fa-solid fa-calendar-star text-pink-400"></i> 공식 스케줄 등록
+</h3>
+<button onclick="window.closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+</div>
+<input type="hidden" id="edit-official-idx" value="-1" />
+<div>
+<label class="text-xs text-slate-400 block mb-1">행사/스케줄 명칭 *</label>
+<input id="off-title" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="예: 2026 팬콘서트 'Hello PLLI'" />
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div>
+<label class="text-xs text-slate-400 block mb-1">분류</label>
+<select id="off-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-pink-500">
+<option value="콘서트/팬미팅">콘서트/팬미팅</option>
+<option value="팝업/전시">팝업/전시</option>
+<option value="콜라보/카페">콜라보/카페</option>
+<option value="티켓팅/굿즈">티켓팅/굿즈</option>
+<option value="기타">기타 행사</option>
+</select>
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">내 상태</label>
+<select id="off-status" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-pink-500">
+<option value="참여확정">참여확정</option>
+<option value="예정">예정</option>
+<option value="고민중">고민중</option>
+<option value="종료">종료</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div>
+<label class="text-xs text-slate-400 block mb-1">시작일 *</label>
+<input id="off-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-pink-500 font-mono" />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">종료일 (선택)</label>
+<input id="off-end-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-pink-500 font-mono" />
+</div>
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">장소 / 진행처</label>
+<input id="off-location" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="예: 올림픽홀 / 더현대 서울" />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">공식 링크 / 예매처 URL</label>
+<input id="off-url" type="url" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-pink-500" placeholder="https://..." />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">메모 / 준비물</label>
+<input id="off-memo" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="예: 티켓 현장수령, 응원봉 건전지" />
+</div>
+<div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+<button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
+<button onclick="window.saveOfficialEvent()" class="px-4 py-1.5 text-xs bg-pink-600 hover:bg-pink-500 rounded-lg text-white font-bold">저장하기</button>
+</div>
+</div>
+</div>
 
 <!-- 멤버 수정 모달 -->
 <div id="member-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
@@ -401,8 +494,6 @@ Virtual Idol Group
 <!-- 50인 대응 스레드 아이디 전용 신청자/당첨자 관리 모달 -->
 <div id="applicant-manage-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
 <div class="bg-slate-900 rounded-3xl max-w-xl w-full p-6 border border-slate-700 space-y-4 shadow-2xl flex flex-col max-h-[85vh]">
-
-<!-- 상단 타이틀 & 통계 -->
 <div class="flex items-center justify-between border-b border-slate-800 pb-3">
 <div>
 <h3 class="text-base font-bold text-white flex items-center gap-2">
@@ -416,7 +507,6 @@ Virtual Idol Group
 </button>
 </div>
 
-<!-- 컨트롤 바 (검색 + 필터 + 단일추가 + 일괄붙여넣기 + 랜덤추첨) -->
 <div class="flex flex-wrap items-center justify-between gap-2">
 <div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
 <button id="btn-filter-all" onclick="window.setAppFilter('all')" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white">전체</button>
@@ -437,7 +527,6 @@ Virtual Idol Group
 </div>
 </div>
 
-<!-- 스레드 아이디 테이블 -->
 <div class="flex-1 overflow-y-auto border border-slate-800 rounded-2xl bg-slate-950/60">
 <table class="w-full text-left border-collapse">
 <thead class="sticky top-0 bg-slate-900 border-b border-slate-800 text-[11px] text-slate-400">
@@ -451,11 +540,9 @@ Virtual Idol Group
 </table>
 </div>
 
-<!-- 하단 닫기 -->
 <div class="flex justify-end pt-1">
 <button onclick="window.closeModals()" class="px-4 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 font-semibold">닫기</button>
 </div>
-
 </div>
 </div>
 
@@ -532,20 +619,19 @@ Virtual Idol Group
       <span>철분 관리 (IronTrack)</span>
     </a>
 
-    <a href="https://jck0306-art.github.io/virtual/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
-      <div class="w-6 h-6 rounded-lg bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400 group-hover:bg-pink-600 group-hover:text-white transition">
+    <a href="https://jck0306-art.github.io/virtual/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-pink-300 bg-pink-500/20 border border-pink-500/30">
+      <div class="w-6 h-6 rounded-lg bg-pink-500/30 flex items-center justify-center text-pink-300">
         <i class="fa-solid fa-compact-disc text-[10px]"></i>
       </div>
-      <span>덕질 아카이브</span>
+      <span>덕질 아카이브 (현재)</span>
     </a>
 
-    <!-- 4. 향수 아카이브 (ScentTrack) -->
-   <a href="https://jck0306-art.github.io/Perfume/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
-     <div class="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition">
-    <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
-  </div>
-  <span>향수 아카이브</span>
-</a>
+    <a href="https://jck0306-art.github.io/Perfume/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+      <div class="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition">
+        <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+      </div>
+      <span>향수 아카이브</span>
+    </a>
   </div>
 
   <button id="family-site-btn" onclick="toggleFamilySiteMenu()" class="w-12 h-12 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80 shadow-2xl flex items-center justify-center text-lg transition duration-200 hover:scale-105 active:scale-95 ml-auto">
