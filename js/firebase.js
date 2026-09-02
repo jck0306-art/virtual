@@ -45,6 +45,7 @@ export const DEFAULT_DATA = {
       ]
     }
   },
+  officialEvents: { plave: [], wego6: [] }, // 🌟 신설
   albums: { plave: [], wego6: [] },
   goods: { plave: [], wego6: [] },
   photocards: { plave: [], wego6: [] },
@@ -69,6 +70,7 @@ export let cloudData = JSON.parse(localStorage.getItem('v_archive_cloud_data_v7'
 
 export function ensureDataStructure() {
   if (!cloudData.groups) cloudData.groups = DEFAULT_DATA.groups;
+  if (!cloudData.officialEvents) cloudData.officialEvents = { plave: [], wego6: [] };
   if (!cloudData.albums) cloudData.albums = { plave: [], wego6: [] };
   if (!cloudData.goods) cloudData.goods = { plave: [], wego6: [] };
   if (!cloudData.photocards) cloudData.photocards = { plave: [], wego6: [] };
@@ -76,6 +78,7 @@ export function ensureDataStructure() {
   if (!cloudData.deliveries) cloudData.deliveries = { plave: [], wego6: [] };
 
   ['plave', 'wego6'].forEach(k => {
+    if (!cloudData.officialEvents[k]) cloudData.officialEvents[k] = [];
     if (!cloudData.albums[k]) cloudData.albums[k] = [];
     if (!cloudData.goods[k]) cloudData.goods[k] = [];
     if (!cloudData.photocards[k]) cloudData.photocards[k] = [];
