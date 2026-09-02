@@ -1,6 +1,9 @@
 import { initFirebase, cloudData, processImageFile } from './firebase.js';
 import { renderProfile, openMemberModal, saveMember } from './profile.js';
-import { renderCalendar, openCalendarModal, saveCalendarUrl } from './calendar.js';
+import { 
+  renderOfficialEvents, openOfficialModal, openOfficialModalWithDate, 
+  saveOfficialEvent, deleteOfficialEvent, changeCalendarMonth, goCalendarToday 
+} from './official.js';
 import { renderAlbums, openAlbumModal, saveAlbum, deleteAlbum } from './albums.js';
 import { renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, deleteGoods } from './goods.js';
 import { renderPhotocards, openPhotocardModal, savePhotocard, togglePcCollected, deletePhotocard } from './photocards.js';
@@ -39,7 +42,7 @@ function render() {
 
   // 각 뷰 렌더링
   try { renderProfile(currentGroup); } catch (e) { console.error("Profile render error:", e); }
-  try { renderCalendar(currentGroup); } catch (e) { console.error("Calendar render error:", e); }
+  try { renderOfficialEvents(currentGroup); } catch (e) { console.error("Official events error:", e); }
   try { renderAlbums(currentGroup); } catch (e) { console.error("Albums render error:", e); }
   try { renderGoods(currentGroup); } catch (e) { console.error("Goods render error:", e); }
   try { renderPhotocards(currentGroup); } catch (e) { console.error("Photocards render error:", e); }
@@ -120,7 +123,8 @@ window.switchGroup = function(groupKey) {
 
 window.switchMenu = function(menuKey) {
   currentMenu = menuKey;
-  const menus = ['profile', 'calendar', 'albums', 'goods', 'photocards', 'events', 'deliveries'];
+  // calendar 메뉴 항목 완전 제거
+  const menus = ['profile', 'official', 'albums', 'goods', 'photocards', 'events', 'deliveries'];
   menus.forEach(m => {
     const btn = document.getElementById(`nav-${m}`);
     const view = document.getElementById(`menu-view-${m}`);
@@ -138,7 +142,7 @@ window.switchMenu = function(menuKey) {
 };
 
 window.closeModals = function() {
-  document.querySelectorAll('#member-modal, #calendar-modal, #album-modal, #goods-modal, #photocard-modal, #event-modal, #delivery-modal, #applicant-manage-modal').forEach(m => {
+  document.querySelectorAll('#member-modal, #album-modal, #goods-modal, #photocard-modal, #event-modal, #delivery-modal, #applicant-manage-modal, #official-modal').forEach(m => {
     m.classList.replace('flex', 'hidden');
   });
 };
@@ -147,9 +151,14 @@ window.closeModals = function() {
 window.openMemberModal = idx => openMemberModal(idx, currentGroup);
 window.saveMember = () => saveMember(currentGroup, render);
 
-// 캘린더
-window.openCalendarModal = () => openCalendarModal(currentGroup);
-window.saveCalendarUrl = () => saveCalendarUrl(currentGroup, render);
+// 공식 스케줄 & 달력 조작
+window.renderOfficialEvents = () => renderOfficialEvents(currentGroup);
+window.openOfficialModal = (idx = -1) => openOfficialModal(idx, currentGroup);
+window.openOfficialModalWithDate = dateStr => openOfficialModalWithDate(dateStr);
+window.saveOfficialEvent = () => saveOfficialEvent(currentGroup, render);
+window.deleteOfficialEvent = idx => deleteOfficialEvent(idx, currentGroup, render);
+window.changeCalendarMonth = delta => changeCalendarMonth(delta);
+window.goCalendarToday = () => goCalendarToday();
 
 // 앨범
 window.openAlbumModal = idx => openAlbumModal(idx, currentGroup);
