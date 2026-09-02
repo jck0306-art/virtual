@@ -19,7 +19,6 @@
 .tab-active-plave { background: linear-gradient(135deg, #6366F1, #A855F7); color: white; }
 .tab-active-wego6 { background: linear-gradient(135deg, #06B6D4, #3B82F6); color: white; }
 .menu-active { background: #334155; color: #38BDF8; font-weight: 700; border-bottom: 2px solid #38BDF8; }
-.calendar-dark-filter { filter: invert(0.88) hue-rotate(180deg) contrast(0.95); }
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-20">
@@ -48,16 +47,13 @@ V-ARCHIVE
 </div>
 </div>
 
-<!-- 기능 메뉴바 -->
+<!-- 기능 메뉴바 (구글 캘린더 제거) -->
 <nav class="max-w-5xl mx-auto px-4 flex gap-1 overflow-x-auto text-xs border-t border-slate-800/80 pt-1">
 <button id="nav-profile" onclick="window.switchMenu('profile')" class="px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap">
 <i class="fa-solid fa-users text-indigo-400"></i> 멤버 프로필
 </button>
 <button id="nav-official" onclick="window.switchMenu('official')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
-<i class="fa-solid fa-bullhorn text-pink-400"></i> 공식 스케줄
-</button>
-<button id="nav-calendar" onclick="window.switchMenu('calendar')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
-<i class="fa-brands fa-google text-indigo-400"></i> 구글 캘린더
+<i class="fa-solid fa-calendar-days text-pink-400"></i> 공식 스케줄 달력
 </button>
 <button id="nav-albums" onclick="window.switchMenu('albums')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
 <i class="fa-solid fa-compact-disc text-amber-400"></i> 발매 앨범
@@ -106,55 +102,78 @@ Virtual Idol Group
 <div id="member-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5"></div>
 </section>
 
-<!-- [뷰 2] 🌟 공식 스케줄 및 이벤트 (신설) -->
-<section id="menu-view-official" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-5">
-<div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
-<div>
-<h3 class="text-base font-bold text-white flex items-center gap-2">
-<i class="fa-solid fa-bullhorn text-pink-400"></i> 공식 이벤트 & 스케줄
-</h3>
-<p class="text-xs text-slate-400 mt-0.5">라이브 콘서트, 팝업스토어, 콜라보 카페, 티켓팅 일정을 체크하세요.</p>
-</div>
-<div class="flex items-center gap-2">
-<select id="official-filter-type" onchange="window.renderOfficialEvents()" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-pink-500">
-<option value="all">전체 행사</option>
-<option value="콘서트/팬미팅">콘서트/팬미팅</option>
-<option value="팝업/전시">팝업/전시</option>
-<option value="콜라보/카페">콜라보/카페</option>
-<option value="티켓팅/굿즈">티켓팅/굿즈</option>
-<option value="기타">기타</option>
-</select>
-<button onclick="window.openOfficialModal()" class="text-xs bg-pink-600 hover:bg-pink-500 text-white px-3.5 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-md shadow-pink-600/20 transition">
-<i class="fa-solid fa-plus text-[10px]"></i> 일정 등록
-</button>
-</div>
-</div>
-<div id="official-event-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+<!-- [뷰 2] 🌟 공식 스케줄 & 인터랙티브 달력 뷰 -->
+<section id="menu-view-official" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-6">
+  <!-- 달력 상단 컨트롤 바 -->
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400">
+        <i class="fa-solid fa-calendar-days text-sm"></i>
+      </div>
+      <div>
+        <h3 id="cal-month-title" class="text-base md:text-lg font-bold text-white">2026년 9월</h3>
+        <p class="text-[11px] text-slate-400">날짜 칸을 누르면 해당 일자로 즉시 스케줄을 추가할 수 있습니다.</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <!-- 달 이동 버튼 -->
+      <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-xl p-0.5">
+        <button onclick="window.changeCalendarMonth(-1)" class="px-2.5 py-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition" title="이전 달">
+          <i class="fa-solid fa-chevron-left text-xs"></i>
+        </button>
+        <button onclick="window.goCalendarToday()" class="px-2.5 py-1 text-xs text-slate-300 hover:text-white font-bold rounded-lg hover:bg-slate-800 transition">
+          오늘
+        </button>
+        <button onclick="window.changeCalendarMonth(1)" class="px-2.5 py-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition" title="다음 달">
+          <i class="fa-solid fa-chevron-right text-xs"></i>
+        </button>
+      </div>
+
+      <button onclick="window.openOfficialModal()" class="text-xs bg-pink-600 hover:bg-pink-500 text-white px-3.5 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-md shadow-pink-600/20 transition">
+        <i class="fa-solid fa-plus text-[10px]"></i> 일정 등록
+      </button>
+    </div>
+  </div>
+
+  <!-- 커스텀 월간 달력 영역 -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 md:p-4 overflow-hidden shadow-inner">
+    <!-- 요일 헤더 -->
+    <div class="grid grid-cols-7 text-center font-bold text-[11px] md:text-xs pb-2 border-b border-slate-800 mb-2">
+      <span class="text-rose-400">일</span>
+      <span class="text-slate-400">월</span>
+      <span class="text-slate-400">화</span>
+      <span class="text-slate-400">수</span>
+      <span class="text-slate-400">목</span>
+      <span class="text-slate-400">금</span>
+      <span class="text-indigo-400">토</span>
+    </div>
+    <!-- 42칸 달력 그리드 -->
+    <div id="calendar-days-grid" class="grid grid-cols-7 gap-1 md:gap-1.5"></div>
+  </div>
+
+  <!-- 스케줄 카드 목록 섹션 -->
+  <div class="space-y-4 pt-2">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
+        <i class="fa-solid fa-list-check text-pink-400"></i> 등록된 스케줄 목록
+      </h4>
+      <div class="flex items-center gap-2">
+        <select id="official-filter-type" onchange="window.renderOfficialEvents()" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-pink-500">
+          <option value="all">전체 행사</option>
+          <option value="콘서트/팬미팅">콘서트/팬미팅</option>
+          <option value="팝업/전시">팝업/전시</option>
+          <option value="콜라보/카페">콜라보/카페</option>
+          <option value="티켓팅/굿즈">티켓팅/굿즈</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+    </div>
+    <div id="official-event-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+  </div>
 </section>
 
-<!-- [뷰 3] 구글 캘린더 -->
-<section id="menu-view-calendar" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
-<div class="flex justify-between items-center">
-<div>
-<h3 class="text-sm font-bold text-white" id="calendar-header-title">구글 캘린더</h3>
-<p class="text-xs text-slate-400 mt-0.5">앱에서 등록한 라이브 방송/스케줄이 실시간으로 반영됩니다.</p>
-</div>
-<button onclick="window.openCalendarModal()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-3 py-1.5 rounded-xl font-semibold flex items-center gap-1.5 transition">
-<i class="fa-solid fa-gear text-indigo-400"></i> 캘린더 URL 설정
-</button>
-</div>
-<div class="relative w-full rounded-2xl overflow-hidden bg-slate-900 border border-slate-800 min-h-[520px]">
-<div id="calendar-empty" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center space-y-3 z-10 bg-slate-900/90">
-<p class="text-sm font-bold text-white">연결된 구글 캘린더가 없습니다.</p>
-<button onclick="window.openCalendarModal()" class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
-캘린더 URL 연결하기
-</button>
-</div>
-<iframe id="google-calendar-iframe" src="" class="w-full h-[540px] border-0 rounded-2xl calendar-dark-filter" frameborder="0" scrolling="no"></iframe>
-</div>
-</section>
-
-<!-- [뷰 4] 발매 앨범 -->
+<!-- [뷰 3] 발매 앨범 -->
 <section id="menu-view-albums" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -168,7 +187,7 @@ Virtual Idol Group
 <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- [뷰 5] 굿즈 관리 -->
+<!-- [뷰 4] 굿즈 관리 -->
 <section id="menu-view-goods" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -182,7 +201,7 @@ Virtual Idol Group
 <div id="goods-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- [뷰 6] 포카 도감 -->
+<!-- [뷰 5] 포카 도감 -->
 <section id="menu-view-photocards" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -196,7 +215,7 @@ Virtual Idol Group
 <div id="photocard-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5"></div>
 </section>
 
-<!-- [뷰 7] 나눔 & 이벤트 -->
+<!-- [뷰 6] 나눔 & 이벤트 -->
 <section id="menu-view-events" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -210,7 +229,7 @@ Virtual Idol Group
 <div id="event-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- [뷰 8] 반택 주소록 -->
+<!-- [뷰 7] 반택 주소록 -->
 <section id="menu-view-deliveries" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
 <div>
@@ -228,12 +247,12 @@ Virtual Idol Group
 
 <!-- ================= 모달 모음 ================= -->
 
-<!-- 공식 이벤트 등록/수정 모달 (신설) -->
+<!-- 공식 스케줄 등록/수정 모달 -->
 <div id="official-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 overflow-y-auto">
 <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4 my-8 shadow-2xl">
 <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
 <h3 id="official-modal-title" class="text-base font-bold text-white flex items-center gap-2">
-<i class="fa-solid fa-calendar-star text-pink-400"></i> 공식 스케줄 등록
+<i class="fa-solid fa-calendar-plus text-pink-400"></i> 공식 스케줄 등록
 </h3>
 <button onclick="window.closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
 </div>
@@ -322,21 +341,6 @@ Virtual Idol Group
 <div class="flex justify-end gap-2 pt-2">
 <button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
 <button onclick="window.saveMember()" class="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold">저장하기</button>
-</div>
-</div>
-</div>
-
-<!-- 캘린더 URL 모달 -->
-<div id="calendar-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
-<div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-700 space-y-4">
-<h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-brands fa-google text-indigo-400"></i> 캘린더 URL 설정</h3>
-<div>
-<label class="text-xs text-slate-400 block mb-1">구글 캘린더 공개 Embed URL</label>
-<textarea id="cal-url-input" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-xs text-white focus:outline-none focus:border-indigo-500 font-mono" placeholder="https://calendar.google.com/calendar/embed?src=..."></textarea>
-</div>
-<div class="flex justify-end gap-2 pt-2">
-<button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
-<button onclick="window.saveCalendarUrl()" class="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold">저장하기</button>
 </div>
 </div>
 </div>
