@@ -539,22 +539,16 @@ Virtual Idol Group
 <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4">
 <h3 id="delivery-modal-title" class="text-base font-bold text-white">반택 배송지 등록</h3>
 <input type="hidden" id="edit-delivery-idx" value="-1" />
-<div class="grid grid-cols-2 gap-2">
-<div>
-<label class="text-xs text-slate-400 block mb-1">택배 종류</label>
-<select id="del-type" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500">
-<option value="GS반택">GS25 반택</option>
-<option value="CU알뜰">CU 알뜰택배</option>
-<option value="일반택배">일반택배/준등기</option>
-</select>
-</div>
-<div>
-<label class="text-xs text-slate-400 block mb-1">발송 상태</label>
-<select id="del-shipped" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500">
-<option value="false">발송대기</option>
-<option value="true">발송완료</option>
-</select>
-</div>
+<div class="flex items-center gap-2 flex-wrap">
+  <button onclick="window.downloadDeliveryTemplate()" class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition">
+    <i class="fa-solid fa-file-arrow-down"></i> 양식 다운로드
+  </button>
+  <button onclick="window.triggerExcelUpload()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition shadow-md">
+    <i class="fa-solid fa-file-excel"></i> 엑셀 일괄 등록
+  </button>
+  <button onclick="window.openDeliveryModal()" class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition shadow-md">
+    <i class="fa-solid fa-plus"></i> 배송지 등록
+  </button>
 </div>
 <div>
 <label class="text-xs text-slate-400 block mb-1">받는분 이름/닉네임 *</label>
