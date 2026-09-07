@@ -6,6 +6,9 @@
 <title>V-IDOL Cloud Archive | PLAVE & WE-GO-6</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- SheetJS (엑셀 라이브러리) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -220,16 +223,35 @@ Virtual Idol Group
 <div id="event-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- [뷰 7] 반택 주소록 -->
+<!-- [뷰 7] 반택 주소록 (양식 다운로드 및 엑셀 일괄 등록 버튼 추가) -->
 <section id="menu-view-deliveries" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
-<div class="flex justify-between items-center">
-<div>
-<h3 class="text-sm font-bold text-white">GS25 / CU 편의점 반택 주소록</h3>
-<p class="text-xs text-slate-400 mt-0.5">나눔/교환 시 발송할 반값택배 정보를 모아보고 바로 복사합니다.</p>
-</div>
-<button onclick="window.openDeliveryModal()" class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
-<i class="fa-solid fa-plus"></i> 배송지 등록
-</button>
+<div class="flex flex-wrap items-center justify-between gap-3">
+  <div>
+    <h3 class="text-sm font-bold text-white flex items-center gap-2">
+      <i class="fa-solid fa-truck text-cyan-400"></i> GS25 / CU 편의점 반택 주소록
+    </h3>
+    <p class="text-xs text-slate-400 mt-0.5">엑셀 양식을 다운로드하여 작성한 뒤 일괄 등록할 수 있습니다.</p>
+  </div>
+  
+  <div class="flex items-center gap-2 flex-wrap">
+    <!-- 숨겨진 파일 선택 인풋 -->
+    <input id="excel-file-input" type="file" accept=".xlsx, .xls" onchange="window.handleExcelUpload(event)" class="hidden" />
+
+    <!-- 1. 양식 다운로드 버튼 -->
+    <button type="button" onclick="window.downloadDeliveryTemplate()" class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 hover:border-emerald-500/40 px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition shadow-sm">
+      <i class="fa-solid fa-file-arrow-down"></i> 양식 다운로드
+    </button>
+
+    <!-- 2. 엑셀 일괄 등록 버튼 -->
+    <button type="button" onclick="document.getElementById('excel-file-input').click()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition shadow-md shadow-emerald-600/20">
+      <i class="fa-solid fa-file-excel"></i> 엑셀 일괄 등록
+    </button>
+
+    <!-- 3. 개별 직접 등록 버튼 -->
+    <button type="button" onclick="window.openDeliveryModal()" class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition shadow-md shadow-cyan-600/20">
+      <i class="fa-solid fa-plus"></i> 배송지 직접 등록
+    </button>
+  </div>
 </div>
 <div id="delivery-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
 </section>
