@@ -2,9 +2,24 @@ import { cloudData, syncData, ensureDataStructure } from './firebase.js';
 
 let activeGroup = 'plave';
 
-// 1. 주소 모달 HTML 템플릿 DOM 자동 주입
+// 안전한 값 세팅 유틸리티 (null 에러 원천 차단)
+function setVal(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val;
+}
+function setText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.innerText = text;
+}
+
+// 1. 주소 모달 HTML 템플릿 DOM 주입 (구버전 태그 자동 청소 포함)
 export function injectDeliveryModal() {
-  if (document.getElementById('delivery-modal')) return;
+  // index.html에 남아있는 구버전 모달이나 파일 인풋이 있다면 충돌 방지를 위해 제거
+  const oldModal = document.getElementById('delivery-modal');
+  if (oldModal) oldModal.remove();
+
+  const oldInput = document.getElementById('excel-file-input');
+  if (oldInput) oldInput.remove();
 
   const modalHtml = `
     <!-- 엑셀 파일 선택 인풋 (숨김) -->
@@ -73,56 +88,71 @@ export function injectDeliveryModal() {
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 
   // 엑셀 파일 인풋 이벤트 바인딩
-  document.getElementById('excel-file-input').addEventListener('change', (e) => {
-    handleExcelUpload(e, window.currentGroup, window.renderAll);
-  });
+  const fileInput = document.getElementById('excel-file-input');
+  if (fileInput) {
+    fileInput.addEventListener('change', (e) => {
+      handleExcelUpload(e, window.getCurrentGroup ? window.getCurrentGroup() : activeGroup, window.renderAllApp);
+    });
+  }
 }
 
-// 2. 모달 열기/닫기
+// 2. 모달 열기/닫기 (null 안전 처리)
 export function openDeliveryModal(idx = -1, currentGroup) {
   if (currentGroup) activeGroup = currentGroup;
-  injectDeliveryModal();
-
-  const modal = document.getElementById('delivery-modal');
-  document.getElementById('edit-delivery-idx').value = idx;
-
-  if (idx >= 0) {
-    const d = cloudData.deliveries[activeGroup][idx];
-    document.getElementById('delivery-modal-title').innerText = '반택 배송지 수정';
-    document.getElementById('del-type').value = d.type || 'GS반택';
-    document.getElementById('del-shipped').value = String(Boolean(d.shipped));
-    document.getElementById('del-recipient').value = d.recipient || '';
-    document.getElementById('del-phone').value = d.phone || '';
-    document.getElementById('del-store').value = d.store || '';
-    document.getElementById('del-memo').value = d.memo || '';
-  } else {
-    document.getElementById('delivery-modal-title').innerText = '반택 배송지 등록';
-    document.getElementById('del-type').value = 'GS반택';
-    document.getElementById('del-shipped').value = 'false';
-    document.getElementById('del-recipient').value = '';
-    document.getElementById('del-phone').value = '';
-    document.getElementById('del-store').value = '';
-    document.getElementById('del-memo').value = '';
+  
+  // 모달이 DOM에 없으면 주입
+  if (!document.getElementById('delivery-modal')) {
+    injectDeliveryModal();
   }
 
-  modal.classList.replace('hidden', 'flex');
+  const modal = document.getElementById('delivery-modal');
+  setVal('edit-delivery-idx', idx);
+
+  if (idx >= 0) {
+    ensureDataStructure();
+    const list = (cloudData.deliveries && cloudData.deliveries[activeGroup]) || [];
+    const d = list[idx] || {};
+    setText('delivery-modal-title', '반택 배송지 수정');
+    setVal('del-type', d.type || 'GS반택');
+    setVal('del-shipped', String(Boolean(d.shipped)));
+    setVal('del-recipient', d.recipient || '');
+    setVal('del-phone', d.phone || '');
+    setVal('del-store', d.store || '');
+    setVal('del-memo', d.memo || '');
+  } else {
+    setText('delivery-modal-title', '반택 배송지 등록');
+    setVal('del-type', 'GS반택');
+    setVal('del-shipped', 'false');
+    setVal('del-recipient', '');
+    setVal('del-phone', '');
+    setVal('del-store', '');
+    setVal('del-memo', '');
+  }
+
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  }
 }
 
 export function closeDeliveryModal() {
   const modal = document.getElementById('delivery-modal');
-  if (modal) modal.classList.replace('flex', 'hidden');
+  if (modal) {
+    modal.classList.remove('flex');
+    modal.classList.add('hidden');
+  }
 }
 
-// 3. 단일 주소 저장
+// 3. 단일 배송지 저장
 export function saveDelivery(currentGroup, onRender) {
   const grp = currentGroup || activeGroup;
-  const idx = parseInt(document.getElementById('edit-delivery-idx').value);
-  const type = document.getElementById('del-type').value;
-  const shipped = document.getElementById('del-shipped').value === 'true';
-  const recipient = document.getElementById('del-recipient').value.trim();
-  const phone = document.getElementById('del-phone').value.trim();
-  const store = document.getElementById('del-store').value.trim();
-  const memo = document.getElementById('del-memo').value.trim();
+  const idx = parseInt(document.getElementById('edit-delivery-idx')?.value ?? '-1');
+  const type = document.getElementById('del-type')?.value || 'GS반택';
+  const shipped = document.getElementById('del-shipped')?.value === 'true';
+  const recipient = (document.getElementById('del-recipient')?.value || '').trim();
+  const phone = (document.getElementById('del-phone')?.value || '').trim();
+  const store = (document.getElementById('del-store')?.value || '').trim();
+  const memo = (document.getElementById('del-memo')?.value || '').trim();
 
   if (!recipient || !store) return alert('받는분과 편의점 점포명은 필수 항목입니다.');
 
@@ -141,7 +171,7 @@ export function saveDelivery(currentGroup, onRender) {
 // 4. 엑셀 양식 다운로드
 export function downloadDeliveryTemplate() {
   if (typeof XLSX === 'undefined') {
-    return alert('엑셀 라이브러리가 아직 로드되지 않았습니다.');
+    return alert('엑셀 라이브러리가 로드되지 않았습니다.');
   }
 
   const templateData = [
@@ -170,8 +200,12 @@ export function downloadDeliveryTemplate() {
 
 // 5. 엑셀 업로드 파싱
 export function handleExcelUpload(event, currentGroup, onRender) {
-  const file = event.target.files[0];
+  const file = event.target.files && event.target.files[0];
   if (!file) return;
+
+  if (typeof XLSX === 'undefined') {
+    return alert('엑셀 라이브러리가 아직 로드되지 않았습니다.');
+  }
 
   const grp = currentGroup || activeGroup;
   const reader = new FileReader();
@@ -180,10 +214,15 @@ export function handleExcelUpload(event, currentGroup, onRender) {
     try {
       const data = new Uint8Array(e.target.result);
       const workbook = XLSX.read(data, { type: 'array' });
-      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const firstSheet = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheet];
       const rows = XLSX.utils.sheet_to_json(worksheet);
 
-      if (!rows || rows.length === 0) return alert('엑셀 파일에 데이터가 없습니다.');
+      if (!rows || rows.length === 0) {
+        alert('엑셀 파일에 데이터가 없습니다.');
+        event.target.value = '';
+        return;
+      }
 
       ensureDataStructure();
       if (!cloudData.deliveries) cloudData.deliveries = { plave: [], wego6: [] };
@@ -219,6 +258,7 @@ export function handleExcelUpload(event, currentGroup, onRender) {
         alert('유효한 데이터가 없습니다. [받는분이름]과 [도착점포명]을 확인해 주세요.');
       }
     } catch (err) {
+      console.error(err);
       alert('엑셀 파싱 중 오류가 발생했습니다.');
       event.target.value = '';
     }
