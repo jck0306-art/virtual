@@ -2,7 +2,6 @@ import { cloudData, syncData, ensureDataStructure } from './firebase.js';
 
 let activeGroup = 'plave';
 
-// 안전한 값 세팅 유틸리티 (null 에러 원천 차단)
 function setVal(id, val) {
   const el = document.getElementById(id);
   if (el) el.value = val;
@@ -12,9 +11,8 @@ function setText(id, text) {
   if (el) el.innerText = text;
 }
 
-// 1. 주소 모달 HTML 템플릿 DOM 주입 (구버전 태그 자동 청소 포함)
+// 1. 주소 모달 HTML 템플릿 DOM 주입
 export function injectDeliveryModal() {
-  // index.html에 남아있는 구버전 모달이나 파일 인풋이 있다면 충돌 방지를 위해 제거
   const oldModal = document.getElementById('delivery-modal');
   if (oldModal) oldModal.remove();
 
@@ -26,8 +24,8 @@ export function injectDeliveryModal() {
     <input id="excel-file-input" type="file" accept=".xlsx, .xls" class="hidden" />
 
     <!-- 반택 주소록 등록/수정 모달 컴포넌트 -->
-    <div id="delivery-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
-      <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4 shadow-2xl">
+    <div id="delivery-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 overflow-y-auto">
+      <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4 my-8 shadow-2xl">
         <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
           <h3 id="delivery-modal-title" class="text-base font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-truck text-cyan-400"></i> 반택 배송지 등록
@@ -54,6 +52,15 @@ export function injectDeliveryModal() {
               <option value="false">발송대기</option>
               <option value="true">발송완료</option>
             </select>
+          </div>
+        </div>
+
+        <!-- 스레드 아이디 입력란 -->
+        <div>
+          <label class="text-xs text-slate-400 block mb-1">스레드 계정 (선택)</label>
+          <div class="relative">
+            <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-purple-400 font-bold text-xs">@</span>
+            <input id="del-threads" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg py-2 pl-7 pr-3 text-sm text-white focus:outline-none focus:border-purple-500 font-mono" placeholder="username" />
           </div>
         </div>
 
@@ -87,7 +94,6 @@ export function injectDeliveryModal() {
 
   document.body.insertAdjacentHTML('beforeend', modalHtml);
 
-  // 엑셀 파일 인풋 이벤트 바인딩
   const fileInput = document.getElementById('excel-file-input');
   if (fileInput) {
     fileInput.addEventListener('change', (e) => {
@@ -96,11 +102,10 @@ export function injectDeliveryModal() {
   }
 }
 
-// 2. 모달 열기/닫기 (null 안전 처리)
+// 2. 모달 열기/닫기
 export function openDeliveryModal(idx = -1, currentGroup) {
   if (currentGroup) activeGroup = currentGroup;
   
-  // 모달이 DOM에 없으면 주입
   if (!document.getElementById('delivery-modal')) {
     injectDeliveryModal();
   }
@@ -115,6 +120,7 @@ export function openDeliveryModal(idx = -1, currentGroup) {
     setText('delivery-modal-title', '반택 배송지 수정');
     setVal('del-type', d.type || 'GS반택');
     setVal('del-shipped', String(Boolean(d.shipped)));
+    setVal('del-threads', (d.threads || '').replace(/^@/, ''));
     setVal('del-recipient', d.recipient || '');
     setVal('del-phone', d.phone || '');
     setVal('del-store', d.store || '');
@@ -123,6 +129,7 @@ export function openDeliveryModal(idx = -1, currentGroup) {
     setText('delivery-modal-title', '반택 배송지 등록');
     setVal('del-type', 'GS반택');
     setVal('del-shipped', 'false');
+    setVal('del-threads', '');
     setVal('del-recipient', '');
     setVal('del-phone', '');
     setVal('del-store', '');
@@ -149,6 +156,8 @@ export function saveDelivery(currentGroup, onRender) {
   const idx = parseInt(document.getElementById('edit-delivery-idx')?.value ?? '-1');
   const type = document.getElementById('del-type')?.value || 'GS반택';
   const shipped = document.getElementById('del-shipped')?.value === 'true';
+  const threadsRaw = (document.getElementById('del-threads')?.value || '').trim();
+  const threads = threadsRaw ? threadsRaw.replace(/^@/, '') : '';
   const recipient = (document.getElementById('del-recipient')?.value || '').trim();
   const phone = (document.getElementById('del-phone')?.value || '').trim();
   const store = (document.getElementById('del-store')?.value || '').trim();
@@ -160,7 +169,7 @@ export function saveDelivery(currentGroup, onRender) {
   if (!cloudData.deliveries) cloudData.deliveries = { plave: [], wego6: [] };
   if (!cloudData.deliveries[grp]) cloudData.deliveries[grp] = [];
 
-  const payload = { type, shipped, recipient, phone, store, memo, createdAt: new Date().toISOString() };
+  const payload = { type, shipped, threads, recipient, phone, store, memo, createdAt: new Date().toISOString() };
   if (idx >= 0) cloudData.deliveries[grp][idx] = payload;
   else cloudData.deliveries[grp].unshift(payload);
 
@@ -168,7 +177,7 @@ export function saveDelivery(currentGroup, onRender) {
   syncData(onRender);
 }
 
-// 4. 엑셀 양식 다운로드
+// 4. 엑셀 양식 다운로드 (스레드아이디 컬럼 포함)
 export function downloadDeliveryTemplate() {
   if (typeof XLSX === 'undefined') {
     return alert('엑셀 라이브러리가 로드되지 않았습니다.');
@@ -177,6 +186,7 @@ export function downloadDeliveryTemplate() {
   const templateData = [
     {
       "택배종류": "GS반택",
+      "스레드아이디": "plli_love",
       "받는분이름": "홍길동",
       "전화번호": "010-1234-5678",
       "도착점포명": "GS25 강남역점",
@@ -184,6 +194,7 @@ export function downloadDeliveryTemplate() {
     },
     {
       "택배종류": "CU알뜰",
+      "스레드아이디": "noah_fan",
       "받는분이름": "김플리",
       "전화번호": "010-9876-5432",
       "도착점포명": "CU 신촌메인점",
@@ -192,13 +203,20 @@ export function downloadDeliveryTemplate() {
   ];
 
   const worksheet = XLSX.utils.json_to_sheet(templateData);
-  worksheet['!cols'] = [{ wch: 12 }, { wch: 15 }, { wch: 16 }, { wch: 22 }, { wch: 30 }];
+  worksheet['!cols'] = [
+    { wch: 12 }, // 택배종류
+    { wch: 18 }, // 스레드아이디
+    { wch: 15 }, // 받는분이름
+    { wch: 16 }, // 전화번호
+    { wch: 22 }, // 도착점포명
+    { wch: 30 }  // 보낼품목_메모
+  ];
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, "반택주소록양식");
   XLSX.writeFile(workbook, "반택_배송지_등록양식.xlsx");
 }
 
-// 5. 엑셀 업로드 파싱
+// 5. 엑셀 업로드 파싱 (스레드아이디 자동 인식)
 export function handleExcelUpload(event, currentGroup, onRender) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
@@ -238,11 +256,20 @@ export function handleExcelUpload(event, currentGroup, onRender) {
           if (!['GS반택', 'CU알뜰', '일반택배'].includes(type)) {
             type = type.includes('CU') ? 'CU알뜰' : (type.includes('일반') ? '일반택배' : 'GS반택');
           }
+          const threadsRaw = String(row['스레드아이디'] || row['스레드계정'] || row['스레드'] || '').trim();
+          const threads = threadsRaw ? threadsRaw.replace(/^@/, '') : '';
           const phone = String(row['전화번호'] || row['연락처'] || '').trim();
           const memo = String(row['보낼품목_메모'] || row['품목'] || row['메모'] || '').trim();
 
           cloudData.deliveries[grp].unshift({
-            type, recipient, phone, store, memo, shipped: false, createdAt: new Date().toISOString()
+            type,
+            threads,
+            recipient,
+            phone,
+            store,
+            memo,
+            shipped: false,
+            createdAt: new Date().toISOString()
           });
           addedCount++;
         }
