@@ -13,7 +13,13 @@ import {
   addSingleApplicant, addBulkApplicants, toggleWinnerFromModal, 
   deleteApplicantFromModal, drawRandomWinners, deleteEvent 
 } from './events.js';
-import { renderDeliveries, openDeliveryModal, saveDelivery, toggleShipped, copyDeliveryAddress, deleteDelivery } from './delivery.js';
+import { 
+  renderDeliveries, toggleShipped, copyDeliveryAddress, deleteDelivery 
+} from './delivery.js';
+import { 
+  injectDeliveryModal, openDeliveryModal, closeDeliveryModal, saveDelivery,
+  downloadDeliveryTemplate, handleExcelUpload 
+} from './deliveryModal.js';
 
 let currentGroup = 'plave';
 let currentMenu = 'profile';
@@ -123,7 +129,6 @@ window.switchGroup = function(groupKey) {
 
 window.switchMenu = function(menuKey) {
   currentMenu = menuKey;
-  // calendar 메뉴 항목 완전 제거
   const menus = ['profile', 'official', 'albums', 'goods', 'photocards', 'events', 'deliveries'];
   menus.forEach(m => {
     const btn = document.getElementById(`nav-${m}`);
@@ -190,14 +195,18 @@ window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx,
 window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, render);
 window.drawRandomWinners = () => drawRandomWinners(render);
 
-// 반택 주소록
+// 반택 주소록 & 엑셀 기능
 window.openDeliveryModal = idx => openDeliveryModal(idx, currentGroup);
+window.closeDeliveryModal = () => closeDeliveryModal();
 window.saveDelivery = () => saveDelivery(currentGroup, render);
 window.toggleShipped = idx => toggleShipped(idx, currentGroup, render);
 window.copyDeliveryAddress = idx => copyDeliveryAddress(idx, currentGroup);
 window.deleteDelivery = idx => deleteDelivery(idx, currentGroup, render);
+window.downloadDeliveryTemplate = () => downloadDeliveryTemplate();
+window.handleExcelUpload = (e) => handleExcelUpload(e, currentGroup, render);
 
 window.addEventListener('DOMContentLoaded', () => {
+  injectDeliveryModal();
   setupFileListeners();
   initFirebase(render);
 });
