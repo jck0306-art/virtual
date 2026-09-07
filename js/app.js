@@ -195,8 +195,10 @@ window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx,
 window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, render);
 window.drawRandomWinners = () => drawRandomWinners(render);
 
-// 반택 주소록 & 엑셀 기능
-window.openDeliveryModal = idx => openDeliveryModal(idx, currentGroup);
+// 반택 주소록 & 엑셀 기능 바인딩
+window.getCurrentGroup = () => currentGroup;
+window.renderAllApp = render;
+window.openDeliveryModal = (idx = -1) => openDeliveryModal(idx, currentGroup);
 window.closeDeliveryModal = () => closeDeliveryModal();
 window.saveDelivery = () => saveDelivery(currentGroup, render);
 window.toggleShipped = idx => toggleShipped(idx, currentGroup, render);
