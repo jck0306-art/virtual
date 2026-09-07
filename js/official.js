@@ -116,7 +116,7 @@ function renderCalendarGrid(events) {
 
 // 🌟 누적된 분류 목록 동적 추출 및 셀렉트/데이터리스트 갱신
 function updateDynamicTypes(events) {
-  const defaultTypes = ['콘서트/팬미팅', '팝업/전시', '콜라보/카페', '티켓팅/굿즈', '기타'];
+  const defaultTypes = ['콘서트', '팝업', '티켓팅/굿즈'];
   const userTypes = events.map(e => e.type).filter(Boolean);
   const uniqueTypes = Array.from(new Set([...defaultTypes, ...userTypes]));
 
@@ -227,7 +227,7 @@ export function openOfficialModal(idx = -1, currentGroup) {
     const item = cloudData.officialEvents[activeGroup][idx];
     document.getElementById('official-modal-title').innerText = '공식 스케줄 수정';
     document.getElementById('off-title').value = item.title || '';
-    document.getElementById('off-type').value = item.type || '콘서트/팬미팅';
+    document.getElementById('off-type').value = item.type || '콘서트';
     document.getElementById('off-status').value = item.status || '예정';
     document.getElementById('off-date').value = item.date || '';
     document.getElementById('off-end-date').value = item.endDate || '';
@@ -235,7 +235,7 @@ export function openOfficialModal(idx = -1, currentGroup) {
   } else {
     document.getElementById('official-modal-title').innerText = '새 공식 스케줄 등록';
     document.getElementById('off-title').value = '';
-    document.getElementById('off-type').value = '콘서트/팬미팅';
+    document.getElementById('off-type').value = '콘서트';
     document.getElementById('off-status').value = '예정';
     document.getElementById('off-date').value = new Date().toISOString().slice(0, 10);
     document.getElementById('off-end-date').value = '';
