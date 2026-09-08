@@ -1,5 +1,5 @@
 import { cloudData, syncData, ensureDataStructure } from './firebase.js';
-import { escapeHTML } from './security.js';
+import { escapeHTML } from './security.js'; 
 
 let activeGroup = 'plave';
 
