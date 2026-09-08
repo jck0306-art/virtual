@@ -36,7 +36,7 @@ export function renderDeliveries(currentGroup) {
       '일반택배': 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
     }[d.type] || 'bg-slate-800 text-slate-300 border-slate-700';
 
-    // 최애 멤버별 뱃지 컬러 스타일
+    // 최애 멤버별 뱃지 컬러
     const biasBadgeColor = {
       '예플리': 'bg-blue-500/20 text-blue-300 border-blue-500/40',
       '놔플리': 'bg-purple-500/20 text-purple-300 border-purple-500/40',
@@ -60,7 +60,7 @@ export function renderDeliveries(currentGroup) {
         <!-- 2. 최애멤 뱃지 -->
         <td class="py-2.5 px-3 text-center">
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${biasBadgeColor}">
-            ${escapeHTML(d.bias || '미지정')}
+            ${escapeHTML(d.bias || '올플리')}
           </span>
         </td>
 
@@ -112,6 +112,16 @@ export function renderDeliveries(currentGroup) {
       </tr>
     `;
   }).join('');
+}
+
+// import 오류 방지용 export 유지
+export function toggleShipped(idx, currentGroup, onRender) {
+  const grp = currentGroup || activeGroup;
+  ensureDataStructure();
+  if (cloudData.deliveries[grp] && cloudData.deliveries[grp][idx]) {
+    cloudData.deliveries[grp][idx].shipped = !cloudData.deliveries[grp][idx].shipped;
+    syncData(onRender);
+  }
 }
 
 export function copyDeliveryAddress(idx, currentGroup) {
