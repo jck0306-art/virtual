@@ -1,5 +1,5 @@
 import { cloudData, syncData, ensureDataStructure } from './firebase.js';
-import { escapeHTML } from './security.js'; 
+import { escapeHTML } from './security.js';
 
 let activeGroup = 'plave';
 
@@ -24,18 +24,27 @@ export function renderDeliveries(currentGroup) {
     return;
   }
 
-  // 🌟 원본 인덱스를 보존한 상태에서 받는분 이름 기준 오름차순(가나다순) 정렬
+  // 받는분 이름 기준 오름차순(가나다순) 정렬
   const sortedList = rawList
     .map((item, originalIdx) => ({ ...item, originalIdx }))
     .sort((a, b) => (a.recipient || '').localeCompare(b.recipient || '', 'ko'));
 
   tbody.innerHTML = sortedList.map(d => {
-    const isShipped = Boolean(d.shipped);
     const badgeColor = {
       'GS반택': 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30',
       'CU알뜰': 'bg-purple-500/10 text-purple-300 border-purple-500/30',
       '일반택배': 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
     }[d.type] || 'bg-slate-800 text-slate-300 border-slate-700';
+
+    // 최애 멤버별 뱃지 컬러 스타일
+    const biasBadgeColor = {
+      '예플리': 'bg-blue-500/20 text-blue-300 border-blue-500/40',
+      '놔플리': 'bg-purple-500/20 text-purple-300 border-purple-500/40',
+      '밤플리': 'bg-pink-500/20 text-pink-300 border-pink-500/40',
+      '도플리': 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+      '함플리': 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+      '올플리': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+    }[d.bias] || 'bg-slate-800 text-slate-400 border-slate-700';
 
     const threadsClean = d.threads ? d.threads.replace(/^@/, '') : '';
 
@@ -48,15 +57,11 @@ export function renderDeliveries(currentGroup) {
           </span>
         </td>
 
-        <!-- 2. 발송 상태 토글 -->
+        <!-- 2. 최애멤 뱃지 -->
         <td class="py-2.5 px-3 text-center">
-          <button onclick="window.toggleShipped(${d.originalIdx})" class="text-[10px] font-bold px-2 py-0.5 rounded-full border transition ${
-            isShipped 
-              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30' 
-              : 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
-          }">
-            ${isShipped ? '<i class="fa-solid fa-check"></i> 완료' : '⏳ 대기'}
-          </button>
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${biasBadgeColor}">
+            ${escapeHTML(d.bias || '미지정')}
+          </span>
         </td>
 
         <!-- 3. 받는분 (이름 + 스레드) -->
@@ -109,15 +114,6 @@ export function renderDeliveries(currentGroup) {
   }).join('');
 }
 
-export function toggleShipped(idx, currentGroup, onRender) {
-  const grp = currentGroup || activeGroup;
-  ensureDataStructure();
-  if (cloudData.deliveries[grp] && cloudData.deliveries[grp][idx]) {
-    cloudData.deliveries[grp][idx].shipped = !cloudData.deliveries[grp][idx].shipped;
-    syncData(onRender);
-  }
-}
-
 export function copyDeliveryAddress(idx, currentGroup) {
   const grp = currentGroup || activeGroup;
   ensureDataStructure();
@@ -127,6 +123,7 @@ export function copyDeliveryAddress(idx, currentGroup) {
   const threadsClean = d.threads ? `@${d.threads.replace(/^@/, '')}` : '';
   const text = [
     `[${d.type || 'GS반택'}]`,
+    d.bias ? `최애: ${d.bias}` : '',
     threadsClean ? `계정: ${threadsClean}` : '',
     `받는분: ${d.recipient}`,
     d.phone ? `연락처: ${d.phone}` : '',
