@@ -47,15 +47,18 @@ export function injectDeliveryModal() {
             </select>
           </div>
           <div>
-            <label class="text-xs text-slate-400 block mb-1">발송 상태</label>
-            <select id="del-shipped" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-cyan-500">
-              <option value="false">발송대기</option>
-              <option value="true">발송완료</option>
+            <label class="text-xs text-slate-400 block mb-1">최애멤 선택 *</label>
+            <select id="del-bias" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-indigo-300 font-bold focus:outline-none focus:border-indigo-500">
+              <option value="예플리">💙 예플리</option>
+              <option value="놔플리">💜 놔플리</option>
+              <option value="밤플리">💗 밤플리</option>
+              <option value="도플리">❤️ 도플리</option>
+              <option value="함플리">🖤 함플리</option>
+              <option value="올플리">🌈 올플리</option>
             </select>
           </div>
         </div>
 
-        <!-- 스레드 아이디 입력란 -->
         <div>
           <label class="text-xs text-slate-400 block mb-1">스레드 계정 (선택)</label>
           <div class="relative">
@@ -119,7 +122,7 @@ export function openDeliveryModal(idx = -1, currentGroup) {
     const d = list[idx] || {};
     setText('delivery-modal-title', '반택 배송지 수정');
     setVal('del-type', d.type || 'GS반택');
-    setVal('del-shipped', String(Boolean(d.shipped)));
+    setVal('del-bias', d.bias || '예플리');
     setVal('del-threads', (d.threads || '').replace(/^@/, ''));
     setVal('del-recipient', d.recipient || '');
     setVal('del-phone', d.phone || '');
@@ -128,7 +131,7 @@ export function openDeliveryModal(idx = -1, currentGroup) {
   } else {
     setText('delivery-modal-title', '반택 배송지 등록');
     setVal('del-type', 'GS반택');
-    setVal('del-shipped', 'false');
+    setVal('del-bias', '예플리');
     setVal('del-threads', '');
     setVal('del-recipient', '');
     setVal('del-phone', '');
@@ -155,7 +158,7 @@ export function saveDelivery(currentGroup, onRender) {
   const grp = currentGroup || activeGroup;
   const idx = parseInt(document.getElementById('edit-delivery-idx')?.value ?? '-1');
   const type = document.getElementById('del-type')?.value || 'GS반택';
-  const shipped = document.getElementById('del-shipped')?.value === 'true';
+  const bias = document.getElementById('del-bias')?.value || '예플리';
   const threadsRaw = (document.getElementById('del-threads')?.value || '').trim();
   const threads = threadsRaw ? threadsRaw.replace(/^@/, '') : '';
   const recipient = (document.getElementById('del-recipient')?.value || '').trim();
@@ -169,7 +172,7 @@ export function saveDelivery(currentGroup, onRender) {
   if (!cloudData.deliveries) cloudData.deliveries = { plave: [], wego6: [] };
   if (!cloudData.deliveries[grp]) cloudData.deliveries[grp] = [];
 
-  const payload = { type, shipped, threads, recipient, phone, store, memo, createdAt: new Date().toISOString() };
+  const payload = { type, bias, threads, recipient, phone, store, memo, createdAt: new Date().toISOString() };
   if (idx >= 0) cloudData.deliveries[grp][idx] = payload;
   else cloudData.deliveries[grp].unshift(payload);
 
@@ -177,7 +180,7 @@ export function saveDelivery(currentGroup, onRender) {
   syncData(onRender);
 }
 
-// 4. 엑셀 양식 다운로드 (스레드아이디 컬럼 포함)
+// 4. 엑셀 양식 다운로드 (최애멤 컬럼 포함)
 export function downloadDeliveryTemplate() {
   if (typeof XLSX === 'undefined') {
     return alert('엑셀 라이브러리가 로드되지 않았습니다.');
@@ -186,25 +189,28 @@ export function downloadDeliveryTemplate() {
   const templateData = [
     {
       "택배종류": "GS반택",
+      "최애멤": "예플리",
       "스레드아이디": "plli_love",
-      "받는분이름": "홍길동",
-      "전화번호": "010-1234-5678",
-      "도착점포명": "GS25 강남역점",
+      "받는분이름": "강효정",
+      "전화번호": "010-9036-7063",
+      "도착점포명": "GS25 권선명당점",
       "보낼품목_메모": "예준 포카 1장"
     },
     {
       "택배종류": "CU알뜰",
-      "스레드아이디": "noah_fan",
-      "받는분이름": "김플리",
-      "전화번호": "010-9876-5432",
-      "도착점포명": "CU 신촌메인점",
-      "보낼품목_메모": "은호 스티커 세트"
+      "최애멤": "밤플리",
+      "스레드아이디": "bambi_fan",
+      "받는분이름": "고유정",
+      "전화번호": "010-7428-9583",
+      "도착점포명": "CU 대전전자타운점",
+      "보낼품목_메모": "밤비 키링"
     }
   ];
 
   const worksheet = XLSX.utils.json_to_sheet(templateData);
   worksheet['!cols'] = [
     { wch: 12 }, // 택배종류
+    { wch: 12 }, // 최애멤
     { wch: 18 }, // 스레드아이디
     { wch: 15 }, // 받는분이름
     { wch: 16 }, // 전화번호
@@ -216,7 +222,7 @@ export function downloadDeliveryTemplate() {
   XLSX.writeFile(workbook, "반택_배송지_등록양식.xlsx");
 }
 
-// 5. 엑셀 업로드 파싱 (스레드아이디 자동 인식)
+// 5. 엑셀 업로드 파싱 (최애멤 자동 인식)
 export function handleExcelUpload(event, currentGroup, onRender) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
@@ -246,7 +252,9 @@ export function handleExcelUpload(event, currentGroup, onRender) {
       if (!cloudData.deliveries) cloudData.deliveries = { plave: [], wego6: [] };
       if (!cloudData.deliveries[grp]) cloudData.deliveries[grp] = [];
 
+      const validBiases = ['예플리', '놔플리', '밤플리', '도플리', '함플리', '올플리'];
       let addedCount = 0;
+
       rows.forEach(row => {
         const recipient = String(row['받는분이름'] || row['받는분'] || row['이름'] || '').trim();
         const store = String(row['도착점포명'] || row['점포명'] || row['편의점점포명'] || '').trim();
@@ -256,6 +264,10 @@ export function handleExcelUpload(event, currentGroup, onRender) {
           if (!['GS반택', 'CU알뜰', '일반택배'].includes(type)) {
             type = type.includes('CU') ? 'CU알뜰' : (type.includes('일반') ? '일반택배' : 'GS반택');
           }
+
+          let bias = String(row['최애멤'] || row['최애'] || '올플리').trim();
+          if (!validBiases.includes(bias)) bias = '올플리';
+
           const threadsRaw = String(row['스레드아이디'] || row['스레드계정'] || row['스레드'] || '').trim();
           const threads = threadsRaw ? threadsRaw.replace(/^@/, '') : '';
           const phone = String(row['전화번호'] || row['연락처'] || '').trim();
@@ -263,12 +275,12 @@ export function handleExcelUpload(event, currentGroup, onRender) {
 
           cloudData.deliveries[grp].unshift({
             type,
+            bias,
             threads,
             recipient,
             phone,
             store,
             memo,
-            shipped: false,
             createdAt: new Date().toISOString()
           });
           addedCount++;
