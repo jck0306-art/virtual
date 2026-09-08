@@ -20,6 +20,9 @@ import {
   injectDeliveryModal, openDeliveryModal, closeDeliveryModal, saveDelivery,
   downloadDeliveryTemplate, handleExcelUpload 
 } from './deliveryModal.js';
+import { initAuthGuard, logoutAdmin } from './security.js';
+
+window.logoutAdmin = logoutAdmin;
 
 let currentGroup = 'plave';
 let currentMenu = 'profile';
@@ -207,8 +210,13 @@ window.deleteDelivery = idx => deleteDelivery(idx, currentGroup, render);
 window.downloadDeliveryTemplate = () => downloadDeliveryTemplate();
 window.handleExcelUpload = (e) => handleExcelUpload(e, currentGroup, render);
 
+// 기존 맨 끝 DOMContentLoaded 부분을 이렇게 감싸서 교체
 window.addEventListener('DOMContentLoaded', () => {
-  injectDeliveryModal();
-  setupFileListeners();
-  initFirebase(render);
+  // 인증이 통과(false)되어야만 내부 코드가 실행됩니다.
+  initAuthGuard(false, (adminUser) => {
+    // 🌟 이 자리에 원래 맨 밑에 들어있던 초기화 함수들을 넣어주시면 됩니다.
+    // (예: injectDeliveryModal?.(); setupFileListeners?.(); initFirebase(render); 등)
+    setupFileListeners?.();
+    initFirebase(render);
+  });
 });
