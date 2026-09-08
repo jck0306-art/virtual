@@ -46,7 +46,7 @@ function render() {
     `).join('');
   }
 
-  // 각 뷰 렌더링
+  // 각 뷰 안전 렌더링
   try { renderProfile(currentGroup); } catch (e) { console.error("Profile render error:", e); }
   try { renderOfficialEvents(currentGroup); } catch (e) { console.error("Official events error:", e); }
   try { renderAlbums(currentGroup); } catch (e) { console.error("Albums render error:", e); }
