@@ -7,80 +7,104 @@ export function renderDeliveries(currentGroup) {
   if (currentGroup) activeGroup = currentGroup;
   ensureDataStructure();
 
-  const container = document.getElementById('delivery-list');
-  if (!container) return;
+  const tbody = document.getElementById('delivery-table-body');
+  if (!tbody) return;
 
-  const list = (cloudData.deliveries && cloudData.deliveries[activeGroup]) || [];
+  const rawList = (cloudData.deliveries && cloudData.deliveries[activeGroup]) || [];
 
-  if (list.length === 0) {
-    container.innerHTML = `
-      <div class="col-span-full py-12 text-center bg-slate-900/60 rounded-3xl border border-dashed border-slate-800 text-slate-500 text-xs">
-        <i class="fa-solid fa-truck-ramp-box text-3xl mb-2 block text-slate-600"></i>
-        등록된 반값택배 주소가 없습니다.
-      </div>
+  if (rawList.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8" class="py-12 text-center text-slate-500 text-xs">
+          <i class="fa-solid fa-truck-ramp-box text-3xl mb-2 block text-slate-600"></i>
+          등록된 반값택배 배송지 정보가 없습니다.
+        </td>
+      </tr>
     `;
     return;
   }
 
-  container.innerHTML = list.map((d, idx) => {
+  // 🌟 원본 인덱스를 보존한 상태에서 받는분 이름 기준 오름차순(가나다순) 정렬
+  const sortedList = rawList
+    .map((item, originalIdx) => ({ ...item, originalIdx }))
+    .sort((a, b) => (a.recipient || '').localeCompare(b.recipient || '', 'ko'));
+
+  tbody.innerHTML = sortedList.map(d => {
     const isShipped = Boolean(d.shipped);
     const badgeColor = {
-      'GS반택': 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40',
-      'CU알뜰': 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-      '일반택배': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+      'GS반택': 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30',
+      'CU알뜰': 'bg-purple-500/10 text-purple-300 border-purple-500/30',
+      '일반택배': 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
     }[d.type] || 'bg-slate-800 text-slate-300 border-slate-700';
 
     const threadsClean = d.threads ? d.threads.replace(/^@/, '') : '';
 
     return `
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col justify-between space-y-3 transition hover:border-slate-700">
-        <div class="space-y-2">
-          <div class="flex justify-between items-start">
-            <div class="flex items-center gap-2 flex-wrap">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeColor}">${escapeHTML(d.type || 'GS반택')}</span>
-              <button onclick="window.toggleShipped(${idx})" class="text-[10px] font-bold px-2 py-0.5 rounded-full border transition ${
-                isShipped 
-                  ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' 
-                  : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-              }">
-                ${isShipped ? '<i class="fa-solid fa-check"></i> 발송완료' : '⏳ 발송대기'}
-              </button>
-            </div>
-            <div class="flex items-center gap-1">
-              <button onclick="window.openDeliveryModal(${idx})" class="text-slate-500 hover:text-cyan-400 p-1 text-xs"><i class="fa-solid fa-pen"></i></button>
-              <button onclick="window.deleteDelivery(${idx})" class="text-slate-500 hover:text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
-            </div>
-          </div>
+      <tr class="hover:bg-slate-800/40 transition">
+        <!-- 1. 택배 종류 -->
+        <td class="py-2.5 px-3 text-center">
+          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${badgeColor}">
+            ${escapeHTML(d.type || 'GS반택')}
+          </span>
+        </td>
 
-          <div>
-            <div class="flex items-center gap-2 flex-wrap">
-              <h4 class="text-sm font-bold text-white">${escapeHTML(d.recipient)}</h4>
-              ${threadsClean ? `
-                <a href="https://www.threads.net/@${escapeHTML(threadsClean)}" target="_blank" rel="noopener noreferrer" class="text-xs text-purple-400 hover:text-purple-300 flex items-center gap-1 font-mono font-semibold bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20">
-                  <i class="fa-brands fa-threads text-[11px]"></i>@${escapeHTML(threadsClean)}
-                </a>
-              ` : ''}
-            </div>
-            ${d.phone ? `<p class="text-xs text-slate-400 font-mono mt-0.5">${escapeHTML(d.phone)}</p>` : ''}
-          </div>
+        <!-- 2. 발송 상태 토글 -->
+        <td class="py-2.5 px-3 text-center">
+          <button onclick="window.toggleShipped(${d.originalIdx})" class="text-[10px] font-bold px-2 py-0.5 rounded-full border transition ${
+            isShipped 
+              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30' 
+              : 'bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30'
+          }">
+            ${isShipped ? '<i class="fa-solid fa-check"></i> 완료' : '⏳ 대기'}
+          </button>
+        </td>
 
-          <div class="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 space-y-1 font-mono">
-            <div class="flex items-center gap-1.5 font-sans font-semibold text-cyan-300">
-              <i class="fa-solid fa-store text-slate-500 text-xs"></i>
-              <span>${escapeHTML(d.store)}</span>
-            </div>
-            ${d.memo ? `
-              <div class="text-slate-400 font-sans text-[11px] pt-1 border-t border-slate-800/80">
-                ${escapeHTML(d.memo)}
-              </div>
+        <!-- 3. 받는분 (이름 + 스레드) -->
+        <td class="py-2.5 px-3">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span class="font-bold text-white">${escapeHTML(d.recipient)}</span>
+            ${threadsClean ? `
+              <a href="https://www.threads.net/@${escapeHTML(threadsClean)}" target="_blank" rel="noopener noreferrer" 
+                 class="text-[11px] text-purple-400 hover:text-purple-300 font-mono flex items-center gap-0.5 bg-purple-500/10 px-1.5 py-0.2 rounded border border-purple-500/20">
+                <i class="fa-brands fa-threads text-[10px]"></i>@${escapeHTML(threadsClean)}
+              </a>
             ` : ''}
           </div>
-        </div>
+        </td>
 
-        <button onclick="window.copyDeliveryAddress(${idx})" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center gap-1.5 border border-slate-700">
-          <i class="fa-regular fa-copy text-cyan-400"></i> 배송 정보 전체 복사
-        </button>
-      </div>
+        <!-- 4. 전화번호 -->
+        <td class="py-2.5 px-3 font-mono text-slate-300">
+          ${escapeHTML(d.phone || '-')}
+        </td>
+
+        <!-- 5. 도착 점포명 -->
+        <td class="py-2.5 px-3 font-semibold text-cyan-300">
+          <div class="flex items-center gap-1">
+            <i class="fa-solid fa-store text-slate-500 text-[10px]"></i>
+            <span>${escapeHTML(d.store)}</span>
+          </div>
+        </td>
+
+        <!-- 6. 품목 / 메모 -->
+        <td class="py-2.5 px-3 text-slate-400 max-w-[200px] truncate" title="${escapeHTML(d.memo || '')}">
+          ${escapeHTML(d.memo || '-')}
+        </td>
+
+        <!-- 7. 복사 버튼 -->
+        <td class="py-2.5 px-3 text-center">
+          <button onclick="window.copyDeliveryAddress(${d.originalIdx})" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold transition border border-slate-700 flex items-center justify-center gap-1 mx-auto" title="배송정보 전체 복사">
+            <i class="fa-regular fa-copy text-cyan-400"></i> 복사
+          </button>
+        </td>
+
+        <!-- 8. 수정/삭제 -->
+        <td class="py-2.5 px-3 text-center">
+          <div class="flex items-center justify-center gap-1">
+            <button onclick="window.openDeliveryModal(${d.originalIdx})" class="text-slate-500 hover:text-cyan-400 p-1 text-xs"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="window.deleteDelivery(${d.originalIdx})" class="text-slate-500 hover:text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </td>
+      </tr>
     `;
   }).join('');
 }
@@ -111,9 +135,9 @@ export function copyDeliveryAddress(idx, currentGroup) {
   ].filter(Boolean).join('\n');
 
   navigator.clipboard.writeText(text).then(() => {
-    alert(`배송 정보가 클립보드에 복사되었습니다!\n\n${text}`);
+    alert(`배송 정보가 복사되었습니다!\n\n${text}`);
   }).catch(() => {
-    alert('복사 권한이 거부되었습니다.');
+    alert('클립보드 복사 권한이 거부되었습니다.');
   });
 }
 
