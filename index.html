@@ -1,543 +1,655 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>향수 아카이브 (ScentTrack)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>V-IDOL Cloud Archive | PLAVE & WE-GO-6</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
-  <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<!-- Firebase SDK (기존 firestore 아래에 auth 추가) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-  <script type="module" src="js/app.js?v=14"></script>
+<!-- SheetJS (엑셀 라이브러리) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<!-- App Module 미리 로드 -->
+<script type="module" src="js/app.js"></script>
+
+<style>
+.glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+.tab-active-plave { background: linear-gradient(135deg, #6366F1, #A855F7); color: white; }
+.tab-active-wego6 { background: linear-gradient(135deg, #06B6D4, #3B82F6); color: white; }
+.menu-active { background: #334155; color: #38BDF8; font-weight: 700; border-bottom: 2px solid #38BDF8; }
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-16">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans pb-20">
 
-  <!-- 상단 헤더 -->
-  <header class="sticky top-0 z-30 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 md:px-8 py-3.5">
-    <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 text-lg">
-          <i class="fa-solid fa-wand-magic-sparkles"></i>
-        </div>
-        <div>
-          <h1 class="text-base md:text-lg font-bold text-white flex items-center gap-2">
-            ScentTrack <span class="text-xs font-normal text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded border border-purple-500/20">Perfume & VIP</span>
-          </h1>
-        </div>
+<!-- 상단 네비게이션 헤더 -->
+<header class="sticky top-0 z-40 bg-slate-950/90 backdrop-blur-md border-b border-slate-800">
+<div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<i class="fa-solid fa-compact-disc text-indigo-400 text-xl"></i>
+<span class="font-extrabold text-base md:text-lg tracking-wider bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent">
+V-ARCHIVE
+</span>
+<span id="cloud-status" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+<i class="fa-solid fa-cloud"></i> 실시간 동기화
+</span>
+</div>
+
+<!-- 그룹 전환 탭 -->
+<div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800">
+<button id="tab-plave" onclick="window.switchGroup('plave')" class="px-4 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-2 tab-active-plave">
+<span>✨ PLAVE</span>
+</button>
+<button id="tab-wego6" onclick="window.switchGroup('wego6')" class="px-4 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:text-white transition flex items-center gap-2">
+<span>⚡ WE-GO-6</span>
+</button>
+</div>
+</div>
+
+<!-- 기능 메뉴바 -->
+<nav class="max-w-5xl mx-auto px-4 flex gap-1 overflow-x-auto text-xs border-t border-slate-800/80 pt-1">
+<button id="nav-profile" onclick="window.switchMenu('profile')" class="px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap">
+<i class="fa-solid fa-users text-indigo-400"></i> 멤버 프로필
+</button>
+<button id="nav-official" onclick="window.switchMenu('official')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+<i class="fa-solid fa-calendar-days text-pink-400"></i> 공식 스케줄 달력
+</button>
+<button id="nav-albums" onclick="window.switchMenu('albums')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+<i class="fa-solid fa-compact-disc text-amber-400"></i> 발매 앨범
+</button>
+<button id="nav-goods" onclick="window.switchMenu('goods')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+<i class="fa-solid fa-box-open text-emerald-400"></i> 굿즈 관리
+</button>
+<button id="nav-photocards" onclick="window.switchMenu('photocards')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+<i class="fa-solid fa-id-badge text-pink-400"></i> 포카 도감
+</button>
+<button id="nav-events" onclick="window.switchMenu('events')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+<i class="fa-solid fa-gift text-purple-400"></i> 나눔 & 이벤트
+</button>
+<button id="nav-deliveries" onclick="window.switchMenu('deliveries')" class="px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+<i class="fa-solid fa-truck text-cyan-400"></i> 반택 주소록
+</button>
+</nav>
+</header>
+
+<main class="max-w-5xl mx-auto px-4 mt-6 space-y-6">
+
+<!-- 상단 그룹 헤더 배너 -->
+<section id="group-hero" class="relative overflow-hidden rounded-3xl p-5 md:p-6 glass shadow-xl">
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<span id="group-badge" class="px-3 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+Virtual Idol Group
+</span>
+<h1 id="group-title" class="text-2xl md:text-3xl font-black mt-1 text-white">PLAVE</h1>
+<p id="group-fandom" class="text-xs text-slate-400 mt-0.5">공식 팬덤명: <span class="text-indigo-300 font-semibold">PLLI</span></p>
+</div>
+<div id="quick-links" class="flex flex-wrap gap-2"></div>
+</div>
+</section>
+
+<!-- [뷰 1] 멤버 프로필 -->
+<section id="menu-view-profile" class="space-y-4">
+<div class="flex justify-between items-center">
+<div>
+<h2 class="text-base font-bold text-white flex items-center gap-2">
+<i class="fa-solid fa-users text-indigo-400"></i> 멤버 프로필
+</h2>
+<p class="text-xs text-slate-400 mt-0.5">카드 우측 상단의 ✏️ 버튼을 눌러 포지션과 생일을 수정할 수 있습니다.</p>
+</div>
+</div>
+<div id="member-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5"></div>
+</section>
+
+<!-- [뷰 2] 공식 스케줄 & 인터랙티브 달력 뷰 -->
+<section id="menu-view-official" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-xl bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400">
+        <i class="fa-solid fa-calendar-days text-sm"></i>
+      </div>
+      <div>
+        <h3 id="cal-month-title" class="text-base md:text-lg font-bold text-white">2026년 9월</h3>
+        <p class="text-[11px] text-slate-400">날짜 칸을 누르면 해당 일자로 즉시 스케줄을 추가할 수 있습니다.</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-2">
+      <div class="flex items-center bg-slate-900 border border-slate-700/80 rounded-xl p-0.5">
+        <button onclick="window.changeCalendarMonth(-1)" class="px-2.5 py-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition" title="이전 달">
+          <i class="fa-solid fa-chevron-left text-xs"></i>
+        </button>
+        <button onclick="window.goCalendarToday()" class="px-2.5 py-1 text-xs text-slate-300 hover:text-white font-bold rounded-lg hover:bg-slate-800 transition">
+          오늘
+        </button>
+        <button onclick="window.changeCalendarMonth(1)" class="px-2.5 py-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition" title="다음 달">
+          <i class="fa-solid fa-chevron-right text-xs"></i>
+        </button>
       </div>
 
-      <!-- 상단 3단 전환 탭 (향수 컬렉션 vs 위시리스트 vs VIP 멤버십) -->
-      <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
-        <button id="tab-btn-perfumes" onclick="window.switchMainTab('perfumes')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-purple-600 text-white shadow-sm">
-          <i class="fa-solid fa-spray-can"></i> 향수 컬렉션
-        </button>
-        <button id="tab-btn-wish" onclick="window.switchMainTab('wish')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white">
-          <i class="fa-solid fa-heart text-pink-400"></i> 위시리스트
-          <span id="wish-header-badge" class="text-[10px] px-1.5 py-0.2 rounded-full bg-pink-500/20 text-pink-300 font-mono">0</span>
-        </button>
-        <button id="tab-btn-vip" onclick="window.switchMainTab('vip')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white">
-          <i class="fa-solid fa-crown text-amber-400"></i> VIP 멤버십
-          <span id="vip-header-badge" class="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-mono">0</span>
-        </button>
-      </div>
+      <button onclick="window.openOfficialModal()" class="text-xs bg-pink-600 hover:bg-pink-500 text-white px-3.5 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-md shadow-pink-600/20 transition">
+        <i class="fa-solid fa-plus text-[10px]"></i> 일정 등록
+      </button>
+    </div>
+  </div>
 
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 md:p-4 overflow-hidden shadow-inner">
+    <div class="grid grid-cols-7 text-center font-bold text-[11px] md:text-xs pb-2 border-b border-slate-800 mb-2">
+      <span class="text-rose-400">일</span>
+      <span class="text-slate-400">월</span>
+      <span class="text-slate-400">화</span>
+      <span class="text-slate-400">수</span>
+      <span class="text-slate-400">목</span>
+      <span class="text-slate-400">금</span>
+      <span class="text-indigo-400">토</span>
+    </div>
+    <div id="calendar-days-grid" class="grid grid-cols-7 gap-1 md:gap-1.5"></div>
+  </div>
+
+  <div class="space-y-4 pt-2">
+    <div class="flex flex-wrap items-center justify-between gap-2">
+      <h4 class="text-sm font-bold text-white flex items-center gap-1.5">
+        <i class="fa-solid fa-list-check text-pink-400"></i> 등록된 스케줄 목록
+      </h4>
       <div class="flex items-center gap-2">
-        <span id="cloud-status" class="text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 font-mono">
-          <i class="fa-solid fa-cloud"></i> DB 연결 중...
-        </span>
-        <button id="btn-open-perfume-add" onclick="window.openPerfumeModal()" class="text-xs md:text-sm bg-purple-600 hover:bg-purple-500 text-white font-semibold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-purple-600/20">
-          <i class="fa-solid fa-plus text-xs"></i> 향수 등록
-        </button>
-        <button id="btn-open-wish-add" onclick="window.openWishModal()" class="hidden text-xs md:text-sm bg-pink-600 hover:bg-pink-500 text-white font-semibold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-pink-600/20">
-          <i class="fa-solid fa-heart text-xs"></i> 위시 등록
-        </button>
-        <button id="btn-open-vip-add" onclick="window.openVipModal()" class="hidden text-xs md:text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-amber-500/20">
-          <i class="fa-solid fa-crown text-xs"></i> VIP 브랜드 등록
-        </button>
+        <select id="official-filter-type" onchange="window.renderOfficialEvents()" class="bg-slate-900 border border-slate-700 rounded-xl px-2.5 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-pink-500">
+          <option value="all">전체 행사</option>
+          <option value="콘서트">콘서트</option>
+          <option value="티켓팅">티켓팅</option>
+        </select>
       </div>
     </div>
-  </header>
+    <div id="official-event-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+  </div>
+</section>
 
-  <!-- ================= [뷰 1] 향수 컬렉션 (보유) ================= -->
-  <main id="section-perfume-view" class="max-w-6xl mx-auto p-4 md:p-8 space-y-5">
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
-        <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
-          <i class="fa-solid fa-spray-can text-purple-400"></i> 총 컬렉션
-        </div>
-        <div id="stat-total" class="text-2xl font-bold text-white font-mono">0</div>
-      </div>
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
-        <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
-          <i class="fa-solid fa-star text-amber-400"></i> 평균 평점
-        </div>
-        <div id="stat-rating" class="text-2xl font-bold text-amber-300 font-mono">0.0</div>
-      </div>
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
-        <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
-          <i class="fa-solid fa-heart text-rose-400"></i> 인생향수 (5★)
-        </div>
-        <div id="stat-favs" class="text-2xl font-bold text-rose-300 font-mono">0</div>
-      </div>
-      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
-        <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
-          <i class="fa-solid fa-clock-rotate-left text-cyan-400"></i> 시향기 작성
-        </div>
-        <div id="stat-reviewed" class="text-2xl font-bold text-cyan-300 font-mono">0</div>
-      </div>
+<!-- [뷰 3] 발매 앨범 -->
+<section id="menu-view-albums" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+<div class="flex justify-between items-center">
+<div>
+<h3 class="text-sm font-bold text-white">디스코그래피 / 앨범 보관함</h3>
+<p class="text-xs text-slate-400 mt-0.5">커버 사진과 수록곡 정보를 관리합니다.</p>
+</div>
+<button onclick="window.openAlbumModal()" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+<i class="fa-solid fa-plus"></i> 앨범 추가
+</button>
+</div>
+<div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+</section>
+
+<!-- [뷰 4] 굿즈 관리 -->
+<section id="menu-view-goods" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+<div class="flex justify-between items-center">
+<div>
+<h3 class="text-sm font-bold text-white">공식 & 콜라보 굿즈 보관함</h3>
+<p class="text-xs text-slate-400 mt-0.5">사진, 가격, 보유/미보유 상태를 기록합니다.</p>
+</div>
+<button onclick="window.openGoodsModal()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+<i class="fa-solid fa-plus"></i> 굿즈 등록
+</button>
+</div>
+<div id="goods-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+</section>
+
+<!-- [뷰 5] 포카 도감 -->
+<section id="menu-view-photocards" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+<div class="flex justify-between items-center">
+<div>
+<h3 class="text-sm font-bold text-white">포토카드 도감 & 체크리스트</h3>
+<p class="text-xs text-slate-400 mt-0.5">보유/미보유 상태를 선택해 도감을 채워보세요.</p>
+</div>
+<button onclick="window.openPhotocardModal()" class="text-xs bg-pink-600 hover:bg-pink-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+<i class="fa-solid fa-plus"></i> 새 포카 추가
+</button>
+</div>
+<div id="photocard-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5"></div>
+</section>
+
+<!-- [뷰 6] 나눔 & 이벤트 -->
+<section id="menu-view-events" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+<div class="flex justify-between items-center">
+<div>
+<h3 class="text-sm font-bold text-white">나눔 이벤트 & 신청자/당첨자 관리</h3>
+<p class="text-xs text-slate-400 mt-0.5">신청자 명단 기록 및 당첨자 선정을 관리합니다.</p>
+</div>
+<button onclick="window.openEventModal()" class="text-xs bg-purple-600 hover:bg-purple-500 text-white px-3 py-1.5 rounded-xl font-bold flex items-center gap-1.5">
+<i class="fa-solid fa-plus"></i> 새 이벤트 등록
+</button>
+</div>
+<div id="event-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+</section>
+
+<!-- [뷰 7] 반택 주소록 (가로형 테이블 리스트 & 엑셀 기능) -->
+<section id="menu-view-deliveries" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
+  <div class="flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h3 class="text-sm font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-truck text-cyan-400"></i> GS25 / CU 편의점 반택 주소록
+      </h3>
+      <p class="text-xs text-slate-400 mt-0.5">이름 가나다순으로 정렬됩니다. 필요한 항목의 배송 정보를 클릭해 복사하세요.</p>
+    </div>
+    
+    <div class="flex items-center gap-2 flex-wrap">
+      <input id="excel-file-input" type="file" accept=".xlsx, .xls" onchange="window.handleExcelUpload(event)" class="hidden" />
+
+      <button type="button" onclick="window.downloadDeliveryTemplate()" class="text-xs bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700 hover:border-emerald-500/40 px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition shadow-sm">
+        <i class="fa-solid fa-file-arrow-down"></i> 양식 다운로드
+      </button>
+
+      <button type="button" onclick="document.getElementById('excel-file-input').click()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition shadow-md shadow-emerald-600/20">
+        <i class="fa-solid fa-file-excel"></i> 엑셀 일괄 등록
+      </button>
+
+      <button type="button" onclick="window.openDeliveryModal()" class="text-xs bg-cyan-600 hover:bg-cyan-500 text-white px-3 py-2 rounded-xl font-bold flex items-center gap-1.5 transition shadow-md shadow-cyan-600/20">
+        <i class="fa-solid fa-plus"></i> 배송지 직접 등록
+      </button>
+    </div>
+  </div>
+
+  <!-- 테이블 리스트 컨테이너 -->
+  <div class="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900/60 shadow-inner">
+    <table class="w-full text-left text-xs border-collapse min-w-[700px]">
+      <thead class="bg-slate-900 border-b border-slate-800 text-slate-400 text-[11px] select-none">
+        <tr>
+          <th class="py-3 px-3.5 text-center w-20">종류</th>
+          <!-- 🌟 최애멤 컬럼으로 변경 -->
+          <th class="py-3 px-3.5 text-center w-24">최애멤</th>
+          <th class="py-3 px-3.5 w-44">받는분 (이름 / 스레드)</th>
+          <th class="py-3 px-3.5 w-32 font-mono">전화번호</th>
+          <th class="py-3 px-3.5">도착 점포명</th>
+          <th class="py-3 px-3.5">품목 / 메모</th>
+          <th class="py-3 px-3.5 text-center w-24">복사</th>
+          <th class="py-3 px-3.5 text-center w-16">관리</th>
+        </tr>
+      </thead>
+      <tbody id="delivery-table-body" class="divide-y divide-slate-800/60"></tbody>
+    </table>
+  </div>
+</section>
+
+</main>
+
+<!-- ================= 모달 모음 ================= -->
+
+<!-- 공식 스케줄 등록/수정 모달 -->
+<div id="official-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 overflow-y-auto">
+  <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4 my-8 shadow-2xl">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+      <h3 id="official-modal-title" class="text-base font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-calendar-plus text-pink-400"></i> 공식 스케줄 등록
+      </h3>
+      <button onclick="window.closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    
+    <input type="hidden" id="edit-official-idx" value="-1" />
+    
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">행사 명칭 *</label>
+      <input id="off-title" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="예: 2026 팬콘서트 'Hello PLLI'" />
     </div>
 
-    <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-3.5 flex flex-col sm:flex-row gap-3 items-center justify-between">
-      <div class="relative w-full sm:flex-1">
-        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
-        <input id="search-input" oninput="window.filterPerfumes()" type="text" placeholder="브랜드, 향수명, 향조, 구매처, 노트 검색..." 
-          class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs md:text-sm text-white focus:outline-none focus:border-purple-500 placeholder-slate-500" />
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">분류 (직접 입력/선택)</label>
+        <input id="off-type" list="off-type-list" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-pink-500" placeholder="직접 입력 또는 선택" />
+        <datalist id="off-type-list"></datalist>
       </div>
-
-      <div class="w-full sm:w-auto flex items-center gap-2">
-        <select id="category-filter-select" onchange="window.setCategoryFilter(this.value)"
-          class="w-full sm:w-48 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-purple-500 cursor-pointer font-medium">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">내 상태</label>
+        <select id="off-status" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-pink-500">
+          <option value="참여확정">참여확정</option>
+          <option value="예정">예정</option>
+          <option value="고민중">고민중</option>
+          <option value="종료">종료</option>
         </select>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-      <div class="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-3xl p-4 shadow-xl space-y-3">
-        <div class="flex justify-between items-center px-1 pb-1 border-b border-slate-800/80">
-          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-            <i class="fa-solid fa-list text-purple-400"></i> 보유 컬렉션 목록
-          </span>
-          <span id="list-count" class="text-xs font-mono text-purple-300 font-bold bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">0</span>
-        </div>
-        <div id="perfume-list-container" class="space-y-2 max-h-[calc(100vh-320px)] overflow-y-auto pr-1"></div>
-      </div>
-
-      <div id="perfume-detail-section" class="lg:col-span-7 bg-slate-900/90 border border-slate-800 rounded-3xl p-5 md:p-6 shadow-xl min-h-[420px]">
-        <div id="perfume-detail-content"></div>
-      </div>
-    </div>
-  </main>
-
-  <!-- ================= [뷰 2] 위시리스트 뷰 ================= -->
-  <main id="section-wish-view" class="hidden max-w-6xl mx-auto p-4 md:p-8 space-y-6">
-    <div class="bg-gradient-to-r from-pink-500/10 via-purple-500/10 to-slate-900 border border-pink-500/30 rounded-3xl p-5 md:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div class="grid grid-cols-2 gap-2">
       <div>
-        <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30">
-          Perfume Wishlist
-        </span>
-        <h2 class="text-xl md:text-2xl font-black text-white mt-1.5 flex items-center gap-2">
-          <i class="fa-solid fa-heart text-pink-400"></i> 향수 위시리스트 & 시향 버킷
-        </h2>
-        <p class="text-xs text-slate-400 mt-1">구매 예정이거나 매장에서 착향해보고 싶은 위시 향수를 기록하고, 소장 시 즉시 보유 컬렉션으로 전환하세요.</p>
+        <label class="text-xs text-slate-400 block mb-1">시작일 *</label>
+        <input id="off-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-pink-500 font-mono" />
       </div>
-      <div class="flex items-center gap-3">
-        <div class="bg-slate-900/80 px-4 py-2.5 rounded-2xl border border-slate-800 text-center">
-          <span class="text-[10px] text-slate-400 block">위시 총합</span>
-          <strong id="wish-stat-total" class="text-lg font-mono font-bold text-pink-400">0</strong>
-        </div>
-        <div class="bg-slate-900/80 px-4 py-2.5 rounded-2xl border border-slate-800 text-center">
-          <span class="text-[10px] text-slate-400 block">시향 완료</span>
-          <strong id="wish-stat-tested" class="text-lg font-mono font-bold text-cyan-400">0</strong>
-        </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">종료일 (선택)</label>
+        <input id="off-end-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-pink-500 font-mono" />
       </div>
     </div>
 
-    <!-- 위시 카드 목록 그리드 -->
-    <div id="wish-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-  </main>
-
-  <!-- ================= [뷰 3] VIP 멤버십 관리 뷰 ================= -->
-  <main id="section-vip-view" class="hidden max-w-6xl mx-auto p-4 md:p-8 space-y-6">
-    <div class="bg-gradient-to-r from-amber-500/10 via-purple-500/10 to-slate-900 border border-amber-500/30 rounded-3xl p-5 md:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-      <div>
-        <span class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-          VIP Brand Lounge
-        </span>
-        <h2 class="text-xl md:text-2xl font-black text-white mt-1.5 flex items-center gap-2">
-          <i class="fa-solid fa-crown text-amber-400"></i> 뷰티 & 프래그런스 VIP 멤버십 관리
-        </h2>
-        <p class="text-xs text-slate-400 mt-1">내가 등록되어 있는 브랜드 등급, 마일리지/포인트, 생일 선물 및 연간 VIP 바우처를 관리하세요.</p>
-      </div>
-      <div class="flex items-center gap-3">
-        <div class="bg-slate-900/80 px-4 py-2.5 rounded-2xl border border-slate-800 text-center">
-          <span class="text-[10px] text-slate-400 block">등록 브랜드</span>
-          <strong id="vip-stat-count" class="text-lg font-mono font-bold text-amber-400">0</strong>
-        </div>
-        <div class="bg-slate-900/80 px-4 py-2.5 rounded-2xl border border-slate-800 text-center">
-          <span class="text-[10px] text-slate-400 block">선물 미수령</span>
-          <strong id="vip-stat-pending-gifts" class="text-lg font-mono font-bold text-rose-400">0</strong>
-        </div>
-      </div>
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">비고</label>
+      <textarea id="off-note" rows="3" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-pink-500 leading-relaxed" placeholder="장소, 링크, 준비물, 주의사항 등 자유롭게 작성"></textarea>
     </div>
 
-    <div id="vip-grid-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-  </main>
-
-  <!-- ================= 모달 모음 ================= -->
-
-  <!-- 1. 향수 등록/수정 모달 -->
-  <div id="perfume-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50 overflow-y-auto">
-    <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-800 shadow-2xl space-y-4 my-8">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 id="modal-title" class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-wand-magic-sparkles text-purple-400"></i> 새 향수 등록
-        </h3>
-        <button onclick="window.closePerfumeModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
-
-      <input type="hidden" id="form-id" />
-
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">브랜드 명 *</label>
-          <input id="form-brand" type="text" placeholder="예: 조 말론 런던, 르라보" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">향수 명칭 *</label>
-          <input id="form-name" type="text" placeholder="예: Sea Salt & Bergamot" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
-        </div>
-      </div>
-
-      <div>
-        <div class="flex justify-between items-center mb-1">
-          <label class="text-xs text-slate-400 block">향 노트 (쉼표로 구분)</label>
-          <span class="text-[10px] text-purple-400 font-mono">순서대로 차트 생성</span>
-        </div>
-        <input id="form-accords" type="text" placeholder="예: 광물, 짠, 감귤류, 나무, 선박, 허브, 이끼 낀" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">향조 계열 *</label>
-          <div class="space-y-1.5">
-            <select id="form-category-select" onchange="window.handleCategorySelectChange(this.value)" 
-              class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
-            </select>
-            <input id="form-category-custom" type="text" placeholder="새로운 향조 입력" 
-              class="w-full bg-slate-950 border border-purple-500/50 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none hidden" />
-          </div>
-        </div>
-
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">농도(부향률)</label>
-          <div class="space-y-1.5">
-            <select id="form-concentration-select" onchange="window.handleConcentrationSelectChange(this.value)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-purple-500 focus:outline-none">
-              <option value="EDP">오 드 퍼퓸 (EDP)</option>
-              <option value="EDT">오 드 뚜왈렛 (EDT)</option>
-              <option value="EDC">오 드 코롱 (EDC)</option>
-              <option value="Cologne Absolue">코롱 압솔뤼 (Cologne Absolue)</option>
-              <option value="Parfum">퍼퓸 / 엑스트레 (Parfum)</option>
-              <option value="__custom__">✏️ 직접 입력하기</option>
-            </select>
-            <input id="form-concentration-custom" type="text" placeholder="새로운 농도 입력" 
-              class="w-full bg-slate-950 border border-purple-500/50 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none hidden" />
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <label class="text-xs text-slate-400 block mb-1.5">어울리는 계절 (다중 선택) *</label>
-        <div class="grid grid-cols-4 gap-2">
-          <label class="season-checkbox flex items-center justify-center gap-1.5 p-2 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer select-none text-xs text-slate-300 hover:border-slate-700">
-            <input type="checkbox" value="봄" class="accent-purple-500 w-3.5 h-3.5" />
-            <span>봄</span>
-          </label>
-          <label class="season-checkbox flex items-center justify-center gap-1.5 p-2 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer select-none text-xs text-slate-300 hover:border-slate-700">
-            <input type="checkbox" value="여름" class="accent-purple-500 w-3.5 h-3.5" />
-            <span>여름</span>
-          </label>
-          <label class="season-checkbox flex items-center justify-center gap-1.5 p-2 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer select-none text-xs text-slate-300 hover:border-slate-700">
-            <input type="checkbox" value="가을" class="accent-purple-500 w-3.5 h-3.5" />
-            <span>가을</span>
-          </label>
-          <label class="season-checkbox flex items-center justify-center gap-1.5 p-2 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer select-none text-xs text-slate-300 hover:border-slate-700">
-            <input type="checkbox" value="겨울" class="accent-purple-500 w-3.5 h-3.5" />
-            <span>겨울</span>
-          </label>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">용량 / 잔여량 (%)</label>
-          <div class="flex items-center gap-2">
-            <input id="form-capacity" type="text" placeholder="100ml" class="w-20 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
-            <input id="form-remain" type="range" min="0" max="100" value="100" class="flex-1 accent-purple-500" oninput="document.getElementById('remain-val').innerText = this.value + '%'" />
-            <span id="remain-val" class="text-xs text-purple-300 font-mono w-10 text-right">100%</span>
-          </div>
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">내 평점</label>
-          <select id="form-rating" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-amber-300 font-semibold focus:border-purple-500 focus:outline-none">
-            <option value="5">★★★★★ (인생 향수)</option>
-            <option value="4">★★★★☆ (호감 / 자주 씀)</option>
-            <option value="3">★★★☆☆ (무난함)</option>
-            <option value="2">★★☆☆☆ (아쉬움)</option>
-            <option value="1">★☆☆☆☆ (불호)</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">구매 일자 (선택)</label>
-          <input id="form-buy-date" type="date" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none font-mono" />
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">구매처 (선택)</label>
-          <input id="form-store" type="text" placeholder="예: 신세계 강남점, 면세점" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
-        </div>
-      </div>
-
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">노트 구성 (탑 / 미들 / 베이스)</label>
-        <input id="form-notes" type="text" placeholder="예: 베르가못 / 씨 솔트 / 드리프트우드" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-purple-500 focus:outline-none" />
-      </div>
-
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">시향 메모 & 착향 후기</label>
-        <textarea id="form-memo" rows="3" placeholder="첫 분사 시 느낌, 잔향 지속력, 어울리는 룩 등을 기록하세요." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white focus:border-purple-500 focus:outline-none"></textarea>
-      </div>
-
-      <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-        <button onclick="window.closePerfumeModal()" class="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">취소</button>
-        <button onclick="window.savePerfume()" class="px-5 py-2 text-xs bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition shadow">저장하기</button>
-      </div>
+    <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+      <button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
+      <button onclick="window.saveOfficialEvent()" class="px-4 py-1.5 text-xs bg-pink-600 hover:bg-pink-500 rounded-lg text-white font-bold">저장하기</button>
     </div>
   </div>
+</div>
 
-  <!-- 2. 🌟 위시리스트 등록/수정 모달 -->
-  <div id="wish-modal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50 overflow-y-auto">
-    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-800 shadow-2xl space-y-4 my-8">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 id="wish-modal-title" class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-heart text-pink-400"></i> 위시리스트 등록
-        </h3>
-        <button onclick="window.closeWishModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
+<!-- 멤버 수정 모달 -->
+<div id="member-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+<div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4">
+<h3 class="text-base font-bold text-white flex items-center gap-2"><i class="fa-solid fa-user-pen text-indigo-400"></i> 멤버 정보 수정</h3>
+<input type="hidden" id="edit-member-idx" />
+<div>
+<label class="text-xs text-slate-400 block mb-1">이름</label>
+<input id="mem-name" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">포지션 / 역할</label>
+<input id="mem-role" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div>
+<label class="text-xs text-slate-400 block mb-1">생일</label>
+<input id="mem-bday" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="MM-DD" />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">상징 이모지</label>
+<input id="mem-emoji" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+</div>
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">상징 색상 (HEX)</label>
+<input id="mem-color" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500" />
+</div>
+<div class="flex justify-end gap-2 pt-2">
+<button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
+<button onclick="window.saveMember()" class="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold">저장하기</button>
+</div>
+</div>
+</div>
 
-      <input type="hidden" id="form-wish-id" />
+<!-- 앨범 등록 & 수정 모달 -->
+<div id="album-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+<div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4">
+<h3 id="album-modal-title" class="text-base font-bold text-white">앨범 등록</h3>
+<input type="hidden" id="edit-album-idx" value="-1" />
+<div>
+<label class="text-xs text-slate-400 block mb-1">앨범 커버 이미지</label>
+<input id="album-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer bg-slate-800 rounded-lg border border-slate-700 p-1" />
+<input type="hidden" id="album-img-base64" />
+<div id="album-preview-wrap" class="mt-2 hidden">
+<img id="album-img-preview" src="" class="w-16 h-16 object-cover rounded-lg border border-slate-700" />
+</div>
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">앨범명 *</label>
+<input id="album-title" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="예: Asterum : 134-1" />
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div>
+<label class="text-xs text-slate-400 block mb-1">발매 형태</label>
+<input id="album-type" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="미니, 싱글 등" />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">발매일</label>
+<input id="album-date" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="YYYY-MM-DD" />
+</div>
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">타이틀 곡 / 수록곡 메모</label>
+<input id="album-tracks" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-indigo-500" placeholder="예: 타이틀: WAY 4 LUV" />
+</div>
+<div class="flex justify-end gap-2 pt-2">
+<button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
+<button onclick="window.saveAlbum()" class="px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold">저장하기</button>
+</div>
+</div>
+</div>
 
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">브랜드 명 *</label>
-          <input id="form-wish-brand" type="text" placeholder="예: 르라보, 바이레도" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">향수 명칭 *</label>
-          <input id="form-wish-name" type="text" placeholder="예: 상탈 33, 블랑쉬" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
-        </div>
-      </div>
+<!-- 굿즈 등록 & 수정 모달 -->
+<div id="goods-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+<div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4">
+<h3 id="goods-modal-title" class="text-base font-bold text-white">굿즈 등록</h3>
+<input type="hidden" id="edit-goods-idx" value="-1" />
+<div>
+<label class="text-xs text-slate-400 block mb-1">굿즈 사진 업로드</label>
+<input id="goods-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-600 file:text-white hover:file:bg-emerald-500 cursor-pointer bg-slate-800 rounded-lg border border-slate-700 p-1" />
+<input type="hidden" id="goods-img-base64" />
+<div id="goods-preview-wrap" class="mt-2 hidden">
+<img id="goods-img-preview" src="" class="w-16 h-16 object-cover rounded-lg border border-slate-700" />
+</div>
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">굿즈 이름 *</label>
+<input id="goods-name" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="예: 공식 응원봉" />
+</div>
+<div class="grid grid-cols-2 gap-2">
+<div>
+<label class="text-xs text-slate-400 block mb-1">카테고리</label>
+<input id="goods-cat" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="응원용품 등" />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">가격 (원)</label>
+<input id="goods-price" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="45,000" />
+</div>
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">보유 상태</label>
+<select id="goods-owned" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500">
+<option value="true">보유</option>
+<option value="false">미보유 (위시)</option>
+</select>
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">구매처 / 메모</label>
+<input id="goods-memo" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-emerald-500" placeholder="위버스샵 구매 등" />
+</div>
+<div class="flex justify-end gap-2 pt-2">
+<button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
+<button onclick="window.saveGoods()" class="px-3 py-1.5 text-xs bg-emerald-600 hover:bg-emerald-500 rounded-lg text-white font-bold">저장하기</button>
+</div>
+</div>
+</div>
 
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">예상 가격 / 용량</label>
-          <input id="form-wish-price" type="text" placeholder="예: 28만원 / 50ml" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">시향 여부</label>
-          <select id="form-wish-tested" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:border-pink-500 focus:outline-none">
-            <option value="false">미시향 (시향 희망)</option>
-            <option value="true">시향 완료 (구매 대기)</option>
-          </select>
-        </div>
-      </div>
+<!-- 포토카드 등록 & 수정 모달 -->
+<div id="photocard-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+<div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4">
+<h3 id="pc-modal-title" class="text-base font-bold text-white">포토카드 등록</h3>
+<input type="hidden" id="edit-pc-idx" value="-1" />
+<div>
+<label class="text-xs text-slate-400 block mb-1">포토카드 사진 업로드</label>
+<input id="pc-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-600 file:text-white hover:file:bg-pink-500 cursor-pointer bg-slate-800 rounded-lg border border-slate-700 p-1" />
+<input type="hidden" id="pc-img-base64" />
+<div id="pc-preview-wrap" class="mt-2 hidden">
+<img id="pc-img-preview" src="" class="w-16 h-24 object-cover rounded-lg border border-slate-700" />
+</div>
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">해당 멤버 *</label>
+<input id="pc-member" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="예: 남예준, 시우" />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">포카 버전/출처 *</label>
+<input id="pc-version" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-pink-500" placeholder="예: 미니1집 A버전" />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">보유 상태</label>
+<select id="pc-collected" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-pink-500">
+<option value="true">보유</option>
+<option value="false">미보유</option>
+</select>
+</div>
+<div class="flex justify-end gap-2 pt-2">
+<button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
+<button onclick="window.savePhotocard()" class="px-3 py-1.5 text-xs bg-pink-600 hover:bg-pink-500 rounded-lg text-white font-bold">저장하기</button>
+</div>
+</div>
+</div>
 
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">위시 우선순위</label>
-          <select id="form-wish-priority" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-amber-300 font-bold focus:border-pink-500 focus:outline-none">
-            <option value="3">★★★ (1순위 / 최우선)</option>
-            <option value="2">★★☆ (2순위 / 고민중)</option>
-            <option value="1">★☆☆ (3순위 / 단순관심)</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">향조 / 메인노트</label>
-          <input id="form-wish-category" type="text" placeholder="예: 우디, 머스크" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
-        </div>
-      </div>
+<!-- 나눔/이벤트 등록 모달 -->
+<div id="event-modal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+<div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 space-y-4">
+<h3 id="event-modal-title" class="text-base font-bold text-white">나눔 이벤트 등록</h3>
+<input type="hidden" id="edit-event-idx" value="-1" />
+<div>
+<label class="text-xs text-slate-400 block mb-1">품목 사진</label>
+<input id="event-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-500 cursor-pointer bg-slate-800 rounded-lg border border-slate-700 p-1" />
+<input type="hidden" id="event-img-base64" />
+<div id="event-preview-wrap" class="mt-2 hidden">
+<img id="event-img-preview" src="" class="w-16 h-16 object-cover rounded-lg border border-slate-700" />
+</div>
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">이벤트/나눔 이름 *</label>
+<input id="event-name" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="예: 콘서트 투명 포카 나눔" />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">준비 총 수량</label>
+<input id="event-total" type="number" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="100" />
+</div>
+<div>
+<label class="text-xs text-slate-400 block mb-1">장소 / 조건 / 메모</label>
+<input id="event-memo" type="text" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-purple-500" placeholder="예: 플리 인증 / 현장 배부" />
+</div>
+<div class="flex justify-end gap-2 pt-2">
+<button onclick="window.closeModals()" class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300">취소</button>
+<button onclick="window.saveEvent()" class="px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 rounded-lg text-white font-bold">저장하기</button>
+</div>
+</div>
+</div>
 
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">구매 예정처 / 링크</label>
-        <input id="form-wish-store" type="text" placeholder="예: 면세점 입고 알림 신청, 공식 온라인몰" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
-      </div>
+<!-- 50인 대응 스레드 아이디 전용 신청자/당첨자 관리 모달 -->
+<div id="applicant-manage-modal" class="fixed inset-0 bg-black/80 hidden items-center justify-center p-4 z-50">
+<div class="bg-slate-900 rounded-3xl max-w-xl w-full p-6 border border-slate-700 space-y-4 shadow-2xl flex flex-col max-h-[85vh]">
+<div class="flex items-center justify-between border-b border-slate-800 pb-3">
+<div>
+<h3 class="text-base font-bold text-white flex items-center gap-2">
+<i class="fa-brands fa-threads text-purple-400"></i>
+<span id="app-modal-event-name">나눔 이벤트</span>
+</h3>
+<p id="app-stats-summary" class="text-xs text-slate-400 mt-0.5">신청 현황</p>
+</div>
+<button onclick="window.closeModals()" class="text-slate-500 hover:text-white text-lg p-1">
+<i class="fa-solid fa-xmark"></i>
+</button>
+</div>
 
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">위시 메모 / 시향 인상</label>
-        <textarea id="form-wish-memo" rows="3" placeholder="시향지 잔향 느낌, 할인 프로모션 정보 등을 기록하세요." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-pink-500 focus:outline-none"></textarea>
-      </div>
+<div class="flex flex-wrap items-center justify-between gap-2">
+<div class="flex items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+<button id="btn-filter-all" onclick="window.setAppFilter('all')" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-700 text-white">전체</button>
+<button id="btn-filter-win" onclick="window.setAppFilter('winner')" class="px-3 py-1 rounded-lg text-xs font-semibold text-slate-400 hover:text-white">당첨자만</button>
+</div>
 
-      <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-        <button onclick="window.closeWishModal()" class="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">취소</button>
-        <button onclick="window.saveWishItem()" class="px-5 py-2 text-xs bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-xl transition shadow">저장하기</button>
-      </div>
+<div class="flex items-center gap-1.5">
+<input id="app-search-input" oninput="window.renderApplicantListTable()" type="text" placeholder="아이디 검색..." class="bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1 text-xs text-white focus:outline-none focus:border-purple-500 w-28" />
+<button onclick="window.addSingleApplicant()" class="px-2.5 py-1 text-xs bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-xl transition">
++ 직접추가
+</button>
+<button onclick="window.addBulkApplicants()" class="px-2.5 py-1 text-xs bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl flex items-center gap-1 transition shadow-sm">
+<i class="fa-solid fa-paste"></i> 일괄등록
+</button>
+<button onclick="window.drawRandomWinners()" class="px-2.5 py-1 text-xs bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-xl flex items-center gap-1 transition shadow-sm">
+<i class="fa-solid fa-dice"></i> 추첨
+</button>
+</div>
+</div>
+
+<div class="flex-1 overflow-y-auto border border-slate-800 rounded-2xl bg-slate-950/60">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-slate-900 border-b border-slate-800 text-[11px] text-slate-400">
+<tr>
+<th class="py-2 px-3 text-center w-12">No</th>
+<th class="py-2 px-3">스레드 계정 (클릭 시 이동)</th>
+<th class="py-2 px-3 text-right pr-4">당첨 여부</th>
+</tr>
+</thead>
+<tbody id="app-table-body" class="divide-y divide-slate-800/40"></tbody>
+</table>
+</div>
+
+<div class="flex justify-end pt-1">
+<button onclick="window.closeModals()" class="px-4 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300 font-semibold">닫기</button>
+</div>
+</div>
+</div>
+
+<!-- 🌐 패밀리 사이트 퀵 네비게이터 플로팅 UI -->
+<div class="fixed bottom-6 right-6 z-50">
+  <div id="family-site-menu" class="hidden mb-3 w-52 bg-slate-900/95 backdrop-blur-md border border-slate-700/80 rounded-2xl shadow-2xl p-2 space-y-1 transition-all">
+    <div class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/80 mb-1">
+      Family Sites
     </div>
+    
+    <a href="https://jck0306-art.github.io/portal/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+      <div class="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition">
+        <i class="fa-solid fa-house text-[10px]"></i>
+      </div>
+      <span>포털 허브</span>
+    </a>
+
+    <a href="https://jck0306-art.github.io/license-mgmt/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+      <div class="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition">
+        <i class="fa-solid fa-graduation-cap text-[10px]"></i>
+      </div>
+      <span>자격증 관리</span>
+    </a>
+
+    <a href="https://jck0306-art.github.io/career/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+      <div class="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition">
+        <i class="fa-solid fa-briefcase text-[10px]"></i>
+      </div>
+      <span>경력 관리 (CareerTrack)</span>
+    </a>
+
+    <a href="https://jck0306-art.github.io/IronTrack/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+      <div class="w-6 h-6 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:bg-rose-600 group-hover:text-white transition">
+        <i class="fa-solid fa-droplet text-[10px]"></i>
+      </div>
+      <span>철분 관리 (IronTrack)</span>
+    </a>
+
+    <div class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-pink-300 bg-pink-500/20 border border-pink-500/30">
+      <div class="w-6 h-6 rounded-lg bg-pink-500/30 flex items-center justify-center text-pink-300">
+        <i class="fa-solid fa-compact-disc text-[10px]"></i>
+      </div>
+      <span>덕질 아카이브 (현재)</span>
+    </div>
+
+    <a href="https://jck0306-art.github.io/Perfume/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
+      <div class="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition">
+        <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
+      </div>
+      <span>향수 아카이브</span>
+    </a>
   </div>
 
-  <!-- 3. VIP 멤버십 등록/수정 모달 -->
-  <div id="vip-modal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50 overflow-y-auto">
-    <div class="bg-slate-900 rounded-2xl max-w-md w-full p-6 border border-slate-800 shadow-2xl space-y-4 my-8">
-      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-        <h3 id="vip-modal-title" class="text-base font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-crown text-amber-400"></i> VIP 멤버십 브랜드 등록
-        </h3>
-        <button onclick="window.closeVipModal()" class="text-slate-400 hover:text-white p-1">
-          <i class="fa-solid fa-xmark text-lg"></i>
-        </button>
-      </div>
+  <button id="family-site-btn" onclick="toggleFamilySiteMenu()" class="w-12 h-12 rounded-2xl bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700/80 shadow-2xl flex items-center justify-center text-lg transition duration-200 hover:scale-105 active:scale-95 ml-auto">
+    <i id="family-site-icon" class="fa-solid fa-layer-group text-indigo-400"></i>
+  </button>
+</div>
 
-      <input type="hidden" id="form-vip-id" />
-
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">브랜드 명 *</label>
-          <input id="form-vip-brand" type="text" placeholder="예: 조 말론, 딥티크, 샤넬" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">내 멤버십 등급 *</label>
-          <input id="form-vip-tier" type="text" placeholder="예: VIP, 블랙, 플래티넘" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-amber-300 font-bold focus:border-amber-400 focus:outline-none" />
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">주 이용 매장/백화점</label>
-          <input id="form-vip-store" type="text" placeholder="예: 신세계 강남점, 롯데 본점" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
-        </div>
-        <div>
-          <label class="text-xs text-slate-400 block mb-1">등급 유효/갱신일</label>
-          <input id="form-vip-valid-date" type="text" placeholder="예: 2026-12-31 까지" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none font-mono" />
-        </div>
-      </div>
-
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">적립 포인트 / 잔여 마일리지</label>
-        <input id="form-vip-points" type="text" placeholder="예: 45,000P (2026년 말 소멸)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
-      </div>
-
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">상시 VIP 혜택 (할인율, 무료샘플, 각인 등)</label>
-        <textarea id="form-vip-benefits" rows="2" placeholder="예: 상시 5% 할인, 무료 인그레이빙(각인) 서비스, 신제품 프리 시향권" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-amber-400 focus:outline-none"></textarea>
-      </div>
-
-      <div class="bg-slate-950/60 p-3 rounded-xl border border-slate-800/80 space-y-2">
-        <span class="text-[11px] font-bold text-amber-400 block flex items-center gap-1.5">
-          <i class="fa-solid fa-gift"></i> 연간 선물 및 혜택 수령 체크
-        </span>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="text-[11px] text-slate-400 block mb-0.5">올해 생일 선물</label>
-            <input id="form-vip-gift-desc" type="text" placeholder="미니어처 캔들 세트" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none mb-1" />
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
-              <input id="form-vip-gift-received" type="checkbox" class="accent-amber-400 w-3.5 h-3.5" />
-              <span>수령 완료</span>
-            </label>
-          </div>
-          <div>
-            <label class="text-[11px] text-slate-400 block mb-0.5">연간/기념일 바우처</label>
-            <input id="form-vip-voucher-desc" type="text" placeholder="1만원 상품권, 스페셜 키트" class="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white focus:border-amber-400 focus:outline-none mb-1" />
-            <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer select-none">
-              <input id="form-vip-voucher-received" type="checkbox" class="accent-amber-400 w-3.5 h-3.5" />
-              <span>사용/수령 완료</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">담당 셀러 / 비고 메모</label>
-        <input id="form-vip-memo" type="text" placeholder="예: 신세계 강남 김매니저님 (친절하심), 10월 행사 초대 예정" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-amber-400 focus:outline-none" />
-      </div>
-
-      <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
-        <button onclick="window.closeVipModal()" class="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">취소</button>
-        <button onclick="window.saveVipItem()" class="px-5 py-2 text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl transition shadow">저장하기</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 🌐 패밀리 사이트 퀵 네비게이터 플로팅 UI -->
-  <div class="fixed bottom-6 right-6 z-50">
-    <div id="family-site-menu" class="hidden mb-3 w-52 bg-slate-900/95 backdrop-blur-md border border-slate-800 rounded-2xl shadow-2xl p-2 space-y-1 transition-all">
-      <div class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800/80 mb-1">
-        Family Sites
-      </div>
-      <a href="https://jck0306-art.github.io/portal/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
-        <div class="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition">
-          <i class="fa-solid fa-house text-[10px]"></i>
-        </div>
-        <span>포털 허브</span>
-      </a>
-      <a href="https://jck0306-art.github.io/license-mgmt/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
-        <div class="w-6 h-6 rounded-lg bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition">
-          <i class="fa-solid fa-graduation-cap text-[10px]"></i>
-        </div>
-        <span>자격증 관리</span>
-      </a>
-      <a href="https://jck0306-art.github.io/career/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
-        <div class="w-6 h-6 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 group-hover:bg-purple-600 group-hover:text-white transition">
-          <i class="fa-solid fa-briefcase text-[10px]"></i>
-        </div>
-        <span>경력 관리 (CareerTrack)</span>
-      </a>
-      <a href="https://jck0306-art.github.io/IronTrack/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
-        <div class="w-6 h-6 rounded-lg bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 group-hover:bg-rose-600 group-hover:text-white transition">
-          <i class="fa-solid fa-droplet text-[10px]"></i>
-        </div>
-        <span>철분 관리 (IronTrack)</span>
-      </a>
-      <a href="https://jck0306-art.github.io/virtual/" class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition group">
-        <div class="w-6 h-6 rounded-lg bg-pink-500/10 border border-pink-500/30 flex items-center justify-center text-pink-400 group-hover:bg-pink-600 group-hover:text-white transition">
-          <i class="fa-solid fa-compact-disc text-[10px]"></i>
-        </div>
-        <span>덕질 아카이브</span>
-      </a>
-      <div class="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-purple-300 bg-purple-500/20 border border-purple-500/30">
-        <div class="w-6 h-6 rounded-lg bg-purple-500/30 flex items-center justify-center text-purple-300">
-          <i class="fa-solid fa-wand-magic-sparkles text-[10px]"></i>
-        </div>
-        <span>향수 아카이브 (현재)</span>
-      </div>
-    </div>
-
-    <button id="family-site-btn" onclick="toggleFamilySiteMenu()" class="w-12 h-12 rounded-2xl bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 shadow-2xl flex items-center justify-center text-lg transition duration-200 hover:scale-105 active:scale-95 ml-auto">
-      <i id="family-site-icon" class="fa-solid fa-layer-group text-purple-400"></i>
-    </button>
-  </div>
-
-  <script>
-    function toggleFamilySiteMenu() {
-      const menu = document.getElementById('family-site-menu');
-      const icon = document.getElementById('family-site-icon');
-      if (!menu) return;
-
-      if (menu.classList.contains('hidden')) {
-        menu.classList.remove('hidden');
-        if (icon) icon.className = "fa-solid fa-xmark text-slate-400 text-base";
-      } else {
-        menu.classList.add('hidden');
-        if (icon) icon.className = "fa-solid fa-layer-group text-purple-400";
-      }
+<script>
+  function toggleFamilySiteMenu() {
+    const menu = document.getElementById('family-site-menu');
+    const icon = document.getElementById('family-site-icon');
+    
+    if (menu.classList.contains('hidden')) {
+      menu.classList.remove('hidden');
+      icon.className = "fa-solid fa-xmark text-slate-400 text-base";
+    } else {
+      menu.classList.add('hidden');
+      icon.className = "fa-solid fa-layer-group text-indigo-400";
     }
+  }
 
-    document.addEventListener('click', function(e) {
-      const container = document.getElementById('family-site-menu')?.parentElement;
-      const menu = document.getElementById('family-site-menu');
-      const icon = document.getElementById('family-site-icon');
-      if (container && !container.contains(e.target) && menu && !menu.classList.contains('hidden')) {
-        menu.classList.add('hidden');
-        if (icon) icon.className = "fa-solid fa-layer-group text-purple-400";
-      }
-    });
-  </script>
+  document.addEventListener('click', function(e) {
+    const container = document.getElementById('family-site-menu')?.parentElement;
+    const menu = document.getElementById('family-site-menu');
+    const icon = document.getElementById('family-site-icon');
+    if (container && !container.contains(e.target) && menu && !menu.classList.contains('hidden')) {
+      menu.classList.add('hidden');
+      if (icon) icon.className = "fa-solid fa-layer-group text-indigo-400";
+    }
+  });
+</script>
 </body>
 </html>
