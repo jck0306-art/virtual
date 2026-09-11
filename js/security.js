@@ -18,7 +18,13 @@ export function sanitizeURL(url) {
   return '#';
 }
 
-// 🌟 Google 팝업 로그인 (절대 다른 페이지로 이동 안 함)
+// 🌟 events.js에서 요구하는 sanitizeHandle 함수 추가
+export function sanitizeHandle(handle) {
+  if (!handle) return '';
+  return String(handle).trim().replace(/^@/, '');
+}
+
+// 🌟 Google 팝업 로그인
 export async function loginWithGoogle() {
   if (!window.firebase || !window.firebase.auth) {
     alert("Firebase Auth 라이브러리를 불러오는 중입니다. 잠시 후 다시 눌러주세요.");
@@ -49,9 +55,8 @@ export async function logoutAdmin() {
   location.reload();
 }
 
-// 🌟 보안 가드 (리다이렉트 원천 차단)
+// 🌟 보안 가드 (리다이렉트 없이 중앙에 잠금창 유지)
 export function initAuthGuard(isPortal = false, onAuthorized = null) {
-  // 포털 메인 화면은 페이지 잠금 오버레이를 띄우지 않고 헤더 버튼으로만 제어
   if (isPortal) {
     waitForAuth((user) => {
       renderHeaderAuthUI(user, true);
@@ -62,7 +67,6 @@ export function initAuthGuard(isPortal = false, onAuthorized = null) {
     return;
   }
 
-  // 패밀리 사이트: 로그인 전까지 화면을 덮는 잠금창 생성 (사라지지 않음)
   let overlay = document.getElementById('auth-lock-overlay');
   if (!overlay) {
     overlay = document.createElement('div');
@@ -102,7 +106,6 @@ export function initAuthGuard(isPortal = false, onAuthorized = null) {
       renderHeaderAuthUI(user, false);
       if (onAuthorized) onAuthorized(user);
     } else {
-      // 비로그인 상태여도 절대 다른 곳으로 튕겨내지 않고 잠금창을 화면에 유지
       if (curOverlay) curOverlay.style.display = 'flex';
       renderHeaderAuthUI(null, false);
     }
@@ -120,7 +123,6 @@ function waitForAuth(callback) {
   }, 50);
 }
 
-// 상단 헤더에 로그인/로그아웃 버튼 표시
 function renderHeaderAuthUI(user, isPortal) {
   let container = document.getElementById('admin-header-auth');
   if (!container) {
@@ -147,7 +149,6 @@ function renderHeaderAuthUI(user, isPortal) {
       </div>
     `;
   } else {
-    // 비로그인 상태일 때 누를 수 있는 구글 로그인 버튼
     container.innerHTML = `
       <button onclick="window.loginWithGoogle()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer">
         <i class="fa-brands fa-google text-[11px]"></i> 로그인
