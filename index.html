@@ -441,10 +441,13 @@ Virtual Idol Group
 
     <div class="grid grid-cols-2 gap-2">
       <div>
-        <label class="text-xs text-slate-400 block mb-1">분류 (직접 입력/선택)</label>
-        <input id="off-type" list="off-type-list" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-pink-500" placeholder="직접 입력 또는 선택" />
-        <datalist id="off-type-list"></datalist>
-      </div>
+  <label class="text-xs text-slate-400 block mb-1">분류 (선택 또는 직접 입력)</label>
+  <div class="space-y-1.5">
+    <select id="off-type-select" onchange="window.handleOfficialTypeSelectChange(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-pink-500">
+    </select>
+    <input id="off-type-custom" type="text" placeholder="새로운 분류 입력 (예: 영통팬싸, 생일카페)" class="w-full bg-slate-900 border border-pink-500/50 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-pink-500 hidden" />
+  </div>
+</div>
       <div>
         <label class="text-xs text-slate-400 block mb-1">내 상태</label>
         <select id="off-status" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-pink-500">
