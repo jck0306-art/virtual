@@ -9,7 +9,10 @@ import {
   renderAlbumOrders, openAlbumOrderModal, saveAlbumOrder, 
   calcOrderTotalModal, updateOrderStatus, deleteAlbumOrder 
 } from './albumOrders.js';
-import { renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, deleteGoods } from './goods.js';
+import { 
+  renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, 
+  changeGoodsQuantity, deleteGoods 
+} from './goods.js';
 import { renderPhotocards, openPhotocardModal, savePhotocard, togglePcCollected, deletePhotocard } from './photocards.js';
 import { 
   renderEvents, openEventModal, saveEvent, 
@@ -53,7 +56,7 @@ function render() {
     `).join('');
   }
 
-  // 각 뷰 안전 렌더링
+  // 각 뷰 렌더링
   try { renderProfile(currentGroup); } catch (e) { console.error("Profile render error:", e); }
   try { renderOfficialEvents(currentGroup); } catch (e) { console.error("Official events error:", e); }
   try { renderAlbums(currentGroup); } catch (e) { console.error("Albums render error:", e); }
@@ -143,10 +146,10 @@ window.switchMenu = function(menuKey) {
     const view = document.getElementById(`menu-view-${m}`);
     if (btn && view) {
       if (m === menuKey) {
-        btn.className = "px-3 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap";
+        btn.className = "px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap";
         view.classList.remove('hidden');
       } else {
-        btn.className = "px-3 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap";
+        btn.className = "px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap";
         view.classList.add('hidden');
       }
     }
@@ -178,7 +181,7 @@ window.openAlbumModal = idx => openAlbumModal(idx, currentGroup);
 window.saveAlbum = () => saveAlbum(currentGroup, render);
 window.deleteAlbum = idx => deleteAlbum(idx, currentGroup, render);
 
-// 🌟 앨범 구매 내역 & 정산 전역 바인딩
+// 앨범 구매 내역 & 정산
 window.openAlbumOrderModal = (idx = -1) => openAlbumOrderModal(idx, currentGroup);
 window.calcOrderTotalModal = calcOrderTotalModal;
 window.saveAlbumOrder = () => saveAlbumOrder(currentGroup, render);
@@ -186,12 +189,6 @@ window.updateOrderStatus = (idx, newStatus) => updateOrderStatus(idx, newStatus,
 window.deleteAlbumOrder = idx => deleteAlbumOrder(idx, currentGroup, render);
 
 // 굿즈
-import { 
-  renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, 
-  changeGoodsQuantity, deleteGoods 
-} from './goods.js';
-
-// 굿즈 전역 바인딩
 window.openGoodsModal = idx => openGoodsModal(idx, currentGroup);
 window.saveGoods = () => saveGoods(currentGroup, render);
 window.toggleGoodsOwned = idx => toggleGoodsOwned(idx, currentGroup, render);
