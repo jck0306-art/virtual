@@ -5,6 +5,10 @@ import {
   saveOfficialEvent, deleteOfficialEvent, changeCalendarMonth, goCalendarToday 
 } from './official.js';
 import { renderAlbums, openAlbumModal, saveAlbum, deleteAlbum } from './albums.js';
+import { 
+  renderAlbumOrders, openAlbumOrderModal, saveAlbumOrder, 
+  calcOrderTotalModal, updateOrderStatus, deleteAlbumOrder 
+} from './albumOrders.js';
 import { renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, deleteGoods } from './goods.js';
 import { renderPhotocards, openPhotocardModal, savePhotocard, togglePcCollected, deletePhotocard } from './photocards.js';
 import { 
@@ -53,6 +57,7 @@ function render() {
   try { renderProfile(currentGroup); } catch (e) { console.error("Profile render error:", e); }
   try { renderOfficialEvents(currentGroup); } catch (e) { console.error("Official events error:", e); }
   try { renderAlbums(currentGroup); } catch (e) { console.error("Albums render error:", e); }
+  try { renderAlbumOrders(currentGroup); } catch (e) { console.error("Album orders render error:", e); }
   try { renderGoods(currentGroup); } catch (e) { console.error("Goods render error:", e); }
   try { renderPhotocards(currentGroup); } catch (e) { console.error("Photocards render error:", e); }
   try { renderEvents(currentGroup); } catch (e) { console.error("Events render error:", e); }
@@ -132,16 +137,16 @@ window.switchGroup = function(groupKey) {
 
 window.switchMenu = function(menuKey) {
   currentMenu = menuKey;
-  const menus = ['profile', 'official', 'albums', 'goods', 'photocards', 'events', 'deliveries'];
+  const menus = ['profile', 'official', 'albums', 'album-orders', 'goods', 'photocards', 'events', 'deliveries'];
   menus.forEach(m => {
     const btn = document.getElementById(`nav-${m}`);
     const view = document.getElementById(`menu-view-${m}`);
     if (btn && view) {
       if (m === menuKey) {
-        btn.className = "px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap";
+        btn.className = "px-3 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap";
         view.classList.remove('hidden');
       } else {
-        btn.className = "px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap";
+        btn.className = "px-3 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap";
         view.classList.add('hidden');
       }
     }
@@ -150,7 +155,7 @@ window.switchMenu = function(menuKey) {
 };
 
 window.closeModals = function() {
-  document.querySelectorAll('#member-modal, #album-modal, #goods-modal, #photocard-modal, #event-modal, #delivery-modal, #applicant-manage-modal, #official-modal').forEach(m => {
+  document.querySelectorAll('#member-modal, #album-modal, #album-order-modal, #goods-modal, #photocard-modal, #event-modal, #delivery-modal, #applicant-manage-modal, #official-modal').forEach(m => {
     m.classList.replace('flex', 'hidden');
   });
 };
@@ -168,10 +173,17 @@ window.deleteOfficialEvent = idx => deleteOfficialEvent(idx, currentGroup, rende
 window.changeCalendarMonth = delta => changeCalendarMonth(delta);
 window.goCalendarToday = () => goCalendarToday();
 
-// 앨범
+// 발매 앨범
 window.openAlbumModal = idx => openAlbumModal(idx, currentGroup);
 window.saveAlbum = () => saveAlbum(currentGroup, render);
 window.deleteAlbum = idx => deleteAlbum(idx, currentGroup, render);
+
+// 🌟 앨범 구매 내역 & 정산 전역 바인딩
+window.openAlbumOrderModal = (idx = -1) => openAlbumOrderModal(idx, currentGroup);
+window.calcOrderTotalModal = calcOrderTotalModal;
+window.saveAlbumOrder = () => saveAlbumOrder(currentGroup, render);
+window.updateOrderStatus = (idx, newStatus) => updateOrderStatus(idx, newStatus, currentGroup, render);
+window.deleteAlbumOrder = idx => deleteAlbumOrder(idx, currentGroup, render);
 
 // 굿즈
 window.openGoodsModal = idx => openGoodsModal(idx, currentGroup);
@@ -198,7 +210,7 @@ window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx,
 window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, render);
 window.drawRandomWinners = () => drawRandomWinners(render);
 
-// 반택 주소록 & 엑셀 기능 바인딩
+// 반택 주소록
 window.getCurrentGroup = () => currentGroup;
 window.renderAllApp = render;
 window.openDeliveryModal = (idx = -1) => openDeliveryModal(idx, currentGroup);
@@ -210,12 +222,8 @@ window.deleteDelivery = idx => deleteDelivery(idx, currentGroup, render);
 window.downloadDeliveryTemplate = () => downloadDeliveryTemplate();
 window.handleExcelUpload = (e) => handleExcelUpload(e, currentGroup, render);
 
-// 기존 맨 끝 DOMContentLoaded 부분을 이렇게 감싸서 교체
 window.addEventListener('DOMContentLoaded', () => {
-  // 인증이 통과(false)되어야만 내부 코드가 실행됩니다.
   initAuthGuard(false, (adminUser) => {
-    // 🌟 이 자리에 원래 맨 밑에 들어있던 초기화 함수들을 넣어주시면 됩니다.
-    // (예: injectDeliveryModal?.(); setupFileListeners?.(); initFirebase(render); 등)
     setupFileListeners?.();
     initFirebase(render);
   });
