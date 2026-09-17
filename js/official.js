@@ -2,7 +2,7 @@ import { cloudData, syncData, ensureDataStructure } from './firebase.js';
 import { escapeHTML } from './security.js';
 
 let activeGroup = 'plave';
-let calCurrentDate = new Date(); // 달력 기준 날짜
+let calCurrentDate = new Date();
 
 export function calculateDDay(dateString) {
   if (!dateString) return '-';
@@ -35,14 +35,13 @@ function renderCalendarGrid(events) {
   const month = calCurrentDate.getMonth();
   titleEl.innerText = `${year}년 ${month + 1}월`;
 
-  const firstDay = new Date(year, month, 1).getDay(); // 1일의 요일 (0: 일요일)
-  const lastDate = new Date(year, month + 1, 0).getDate(); // 이번 달 마지막 일자
-  const prevLastDate = new Date(year, month, 0).getDate(); // 지난 달 마지막 일자
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+  const prevLastDate = new Date(year, month, 0).getDate();
 
   const todayStr = new Date().toISOString().slice(0, 10);
   let html = '';
 
-  // 1. 이전 달 날짜 칸
   for (let i = firstDay - 1; i >= 0; i--) {
     const d = prevLastDate - i;
     html += `
@@ -52,12 +51,10 @@ function renderCalendarGrid(events) {
     `;
   }
 
-  // 2. 이번 달 날짜 칸
   for (let day = 1; day <= lastDate; day++) {
     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     const isToday = dateStr === todayStr;
 
-    // 해당 날짜에 걸쳐 있는 이벤트 검색
     const dayEvents = events.filter(ev => {
       if (!ev.date) return false;
       const start = ev.date;
@@ -85,7 +82,6 @@ function renderCalendarGrid(events) {
           ` : ''}
         </div>
 
-        <!-- 날짜 칸 내 일정 태그 목록 -->
         <div class="space-y-1 overflow-hidden my-1">
           ${dayEvents.slice(0, 2).map(ev => `
             <div class="truncate text-[9px] md:text-[10px] px-1.5 py-0.5 rounded border bg-pink-500/10 text-pink-300 border-pink-500/30 font-semibold" title="${escapeHTML(ev.title)}">
@@ -100,7 +96,6 @@ function renderCalendarGrid(events) {
     `;
   }
 
-  // 3. 다음 달 날짜 칸
   const totalSlots = Math.ceil((firstDay + lastDate) / 7) * 7;
   const remainingSlots = totalSlots - (firstDay + lastDate);
   for (let j = 1; j <= remainingSlots; j++) {
@@ -114,48 +109,78 @@ function renderCalendarGrid(events) {
   gridEl.innerHTML = html;
 }
 
-// 🌟 누적된 분류 목록 동적 추출 및 셀렉트/데이터리스트 갱신
-function updateDynamicTypes(events) {
-  const defaultTypes = ['콘서트', '팝업', '티켓팅/굿즈'];
-  const userTypes = events.map(e => e.type).filter(Boolean);
-  const uniqueTypes = Array.from(new Set([...defaultTypes, ...userTypes]));
+// 🌟 전체 누적된 분류 목록 가져오기
+function getAllKnownTypes(events) {
+  const defaultTypes = ['콘서트', '팝업', '티켓팅', '팬미팅', '라이브방송', '앨범발매'];
+  const userTypes = (events || []).map(e => e.type && String(e.type).trim()).filter(Boolean);
+  return Array.from(new Set([...defaultTypes, ...userTypes]));
+}
 
-  // 모달 datalist 갱신
-  const datalistEl = document.getElementById('off-type-list');
-  if (datalistEl) {
-    datalistEl.innerHTML = uniqueTypes.map(t => `<option value="${escapeHTML(t)}"></option>`).join('');
-  }
+// 🌟 모달 열릴 때 드롭다운 옵션 채우기
+function populateModalTypeSelect(events, currentVal = '콘서트') {
+  const selectEl = document.getElementById('off-type-select');
+  const customInput = document.getElementById('off-type-custom');
+  if (!selectEl) return;
 
-  // 상단 필터 select 갱신
-  const filterSelect = document.getElementById('official-filter-type');
-  if (filterSelect) {
-    const currentVal = filterSelect.value;
-    filterSelect.innerHTML = `<option value="all">전체 행사</option>` + 
-      uniqueTypes.map(t => `<option value="${escapeHTML(t)}">${escapeHTML(t)}</option>`).join('');
-    if (uniqueTypes.includes(currentVal)) {
-      filterSelect.value = currentVal;
-    }
+  const types = getAllKnownTypes(events);
+  const isCustom = currentVal && !types.includes(currentVal);
+
+  selectEl.innerHTML = `
+    ${types.map(t => `<option value="${escapeHTML(t)}" ${t === currentVal ? 'selected' : ''}>${escapeHTML(t)}</option>`).join('')}
+    <option value="__custom__" ${isCustom ? 'selected' : ''}>✏️ 직접 입력하기</option>
+  `;
+
+  if (isCustom) {
+    customInput.classList.remove('hidden');
+    customInput.value = currentVal;
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
   }
 }
 
-// 📌 공식 스케줄 전체 렌더링 (달력 + 하단 카드 목록)
+// 직접 입력 토글 바인딩
+window.handleOfficialTypeSelectChange = function(val) {
+  const customInput = document.getElementById('off-type-custom');
+  if (!customInput) return;
+  if (val === '__custom__') {
+    customInput.classList.remove('hidden');
+    customInput.focus();
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+  }
+};
+
+// 상단 필터 셀렉트박스 갱신
+function updateFilterTypes(events) {
+  const filterSelect = document.getElementById('official-filter-type');
+  if (!filterSelect) return;
+
+  const types = getAllKnownTypes(events);
+  const currentVal = filterSelect.value || 'all';
+
+  filterSelect.innerHTML = `<option value="all">전체 행사</option>` +
+    types.map(t => `<option value="${escapeHTML(t)}" ${t === currentVal ? 'selected' : ''}>${escapeHTML(t)}</option>`).join('');
+
+  if (types.includes(currentVal) || currentVal === 'all') {
+    filterSelect.value = currentVal;
+  }
+}
+
+// 📌 공식 스케줄 전체 렌더링
 export function renderOfficialEvents(currentGroup) {
   if (currentGroup) activeGroup = currentGroup;
   ensureDataStructure();
   const events = (cloudData.officialEvents && cloudData.officialEvents[activeGroup]) || [];
 
-  // 분류 목록 동적 갱신
-  updateDynamicTypes(events);
-
-  // 1. 달력 렌더링
+  updateFilterTypes(events);
   renderCalendarGrid(events);
 
-  // 2. 하단 상세 카드 목록 렌더링
   const container = document.getElementById('official-event-grid');
   const filterType = document.getElementById('official-filter-type')?.value || 'all';
   if (!container) return;
 
-  // 🌟 내 상태가 '종료'인 일정은 하단 목록에서 하이드(제외) 처리
   const filtered = events
     .map((ev, idx) => ({ ...ev, originalIdx: idx }))
     .filter(ev => ev.status !== '종료') 
@@ -196,7 +221,7 @@ export function renderOfficialEvents(currentGroup) {
 
           <div>
             <span class="text-[10px] text-pink-400 font-bold block mb-0.5 font-mono">${escapeHTML(ev.type || '이벤트')}</span>
-            <h4 class="text-sm font-bold text-white leading-snug">${escapeHTML(ev.title)}</h4>
+            <h4 class="text-sm font-bold text-white leading-snug break-words">${escapeHTML(ev.title)}</h4>
           </div>
 
           <div class="text-xs text-slate-300 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800 font-mono">
@@ -207,7 +232,7 @@ export function renderOfficialEvents(currentGroup) {
           </div>
 
           ${ev.note ? `
-            <div class="text-xs text-slate-300 bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/80 whitespace-pre-wrap leading-relaxed">
+            <div class="text-xs text-slate-300 bg-slate-950/40 p-2.5 rounded-xl border border-slate-800/80 whitespace-pre-wrap leading-relaxed break-words">
               <span class="text-[10px] text-slate-500 font-bold block mb-1">비고</span>
               ${escapeHTML(ev.note)}
             </div>
@@ -222,20 +247,21 @@ export function renderOfficialEvents(currentGroup) {
 export function openOfficialModal(idx = -1, currentGroup) {
   if (currentGroup) activeGroup = currentGroup;
   document.getElementById('edit-official-idx').value = idx;
+  const events = (cloudData.officialEvents && cloudData.officialEvents[activeGroup]) || [];
   
   if (idx >= 0) {
-    const item = cloudData.officialEvents[activeGroup][idx];
+    const item = events[idx];
     document.getElementById('official-modal-title').innerText = '공식 스케줄 수정';
     document.getElementById('off-title').value = item.title || '';
-    document.getElementById('off-type').value = item.type || '콘서트';
+    populateModalTypeSelect(events, item.type || '콘서트');
     document.getElementById('off-status').value = item.status || '예정';
     document.getElementById('off-date').value = item.date || '';
     document.getElementById('off-end-date').value = item.endDate || '';
-    document.getElementById('off-note').value = item.note || item.memo || ''; // 이전 memo 호환
+    document.getElementById('off-note').value = item.note || item.memo || '';
   } else {
     document.getElementById('official-modal-title').innerText = '새 공식 스케줄 등록';
     document.getElementById('off-title').value = '';
-    document.getElementById('off-type').value = '콘서트';
+    populateModalTypeSelect(events, '콘서트');
     document.getElementById('off-status').value = '예정';
     document.getElementById('off-date').value = new Date().toISOString().slice(0, 10);
     document.getElementById('off-end-date').value = '';
@@ -253,7 +279,15 @@ export function saveOfficialEvent(currentGroup, onRender) {
   const grp = currentGroup || activeGroup;
   const idx = parseInt(document.getElementById('edit-official-idx').value);
   const title = document.getElementById('off-title').value.trim();
-  const type = document.getElementById('off-type').value.trim() || '기타';
+
+  // 드롭다운 선택값 확인 및 직접 입력 처리
+  const selectVal = document.getElementById('off-type-select').value;
+  const customVal = document.getElementById('off-type-custom').value.trim();
+  let type = selectVal;
+  if (selectVal === '__custom__' || !selectVal) {
+    type = customVal || '기타';
+  }
+
   const status = document.getElementById('off-status').value;
   const date = document.getElementById('off-date').value;
   const endDate = document.getElementById('off-end-date').value;
