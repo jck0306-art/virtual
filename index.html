@@ -340,22 +340,26 @@ Virtual Idol Group
 
     <input type="hidden" id="edit-album-order-idx" value="-1" />
 
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">판매국가</label>
-        <select id="order-country" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500">
-          <option value="국내">국내</option>
-          <option value="일본">일본</option>
-          <option value="글로벌">글로벌</option>
-          <option value="중국">중국</option>
-          <option value="기타">기타</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">판매기간</label>
-        <input id="order-period" type="text" placeholder="예: 09.01 ~ 09.15" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500" />
-      </div>
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+  <div>
+    <label class="text-xs text-slate-400 block mb-1">판매국가</label>
+    <select id="order-country" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500">
+      <option value="국내">국내</option>
+      <option value="일본">일본</option>
+      <option value="글로벌">글로벌</option>
+      <option value="중국">중국</option>
+      <option value="기타">기타</option>
+    </select>
+  </div>
+  <div class="sm:col-span-2">
+    <label class="text-xs text-slate-400 block mb-1">판매기간 (달력 선택)</label>
+    <div class="flex items-center gap-1.5">
+      <input id="order-start-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono" />
+      <span class="text-slate-500 text-xs">~</span>
+      <input id="order-end-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono" />
     </div>
+  </div>
+</div>
 
     <div class="grid grid-cols-2 gap-3">
       <div>
