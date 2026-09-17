@@ -10,7 +10,6 @@ export function renderAlbumOrders(currentGroup) {
 
   const orders = (cloudData.albumOrders && cloudData.albumOrders[currentGroup]) || [];
 
-  // 총 수량 및 총 지출액(실결제액 합산) 계산
   let totalCount = 0;
   let totalSpent = 0;
 
@@ -40,56 +39,56 @@ export function renderAlbumOrders(currentGroup) {
     const totalPrice = Number(item.totalPrice) || (unitPrice * quantity);
     const actualPrice = Number(item.actualPrice) || 0;
 
+    // 기간 포맷 생성
+    let displayPeriod = '-';
+    if (item.startDate && item.endDate) {
+      displayPeriod = `${item.startDate} ~ ${item.endDate}`;
+    } else if (item.startDate) {
+      displayPeriod = item.startDate;
+    } else if (item.period) {
+      displayPeriod = item.period;
+    }
+
     return `
       <tr class="hover:bg-slate-800/40 text-xs transition border-b border-slate-800/60">
-        <!-- 판매국가 -->
         <td class="py-3 px-3 text-center">
           <span class="px-2 py-0.5 rounded text-[10px] font-bold border ${getCountryBadgeStyle(item.country)}">
             ${escapeHTML(item.country || '국내')}
           </span>
         </td>
 
-        <!-- 판매기간 -->
-        <td class="py-3 px-3 font-mono text-[11px] text-slate-300">
-          ${escapeHTML(item.period || '-')}
+        <td class="py-3 px-3 font-mono text-[11px] text-slate-300 whitespace-nowrap">
+          ${escapeHTML(displayPeriod)}
         </td>
 
-        <!-- 버전 -->
         <td class="py-3 px-3 font-bold text-white">
           ${escapeHTML(item.version || '-')}
         </td>
 
-        <!-- 특전 여부 -->
         <td class="py-3 px-3 text-center text-slate-300">
           ${item.benefits ? `<span class="text-pink-300 font-medium">${escapeHTML(item.benefits)}</span>` : '<span class="text-slate-600">-</span>'}
         </td>
 
-        <!-- 판매처 -->
         <td class="py-3 px-3 font-semibold text-slate-200">
           ${escapeHTML(item.seller || '-')}
         </td>
 
-        <!-- 단가 -->
         <td class="py-3 px-3 text-right font-mono text-slate-300">
           ₩${unitPrice.toLocaleString()}
         </td>
 
-        <!-- 수량 -->
         <td class="py-3 px-3 text-center font-mono font-bold text-cyan-400">
           ${quantity}
         </td>
 
-        <!-- 총액 (단가 * 수량) -->
         <td class="py-3 px-3 text-right font-mono text-slate-400">
           ₩${totalPrice.toLocaleString()}
         </td>
 
-        <!-- 실결제액 -->
         <td class="py-3 px-3 text-right font-mono font-bold text-amber-300">
           ₩${actualPrice.toLocaleString()}
         </td>
 
-        <!-- 배송 상태 드롭다운 -->
         <td class="py-2 px-3 text-center">
           <select onchange="window.updateOrderStatus(${idx}, this.value)" class="bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-[11px] focus:outline-none focus:border-blue-500 font-semibold ${getStatusTextColor(item.status)}">
             <option value="주문완료" ${item.status === '주문완료' ? 'selected' : ''}>주문완료</option>
@@ -100,12 +99,10 @@ export function renderAlbumOrders(currentGroup) {
           </select>
         </td>
 
-        <!-- 비고 -->
         <td class="py-3 px-3 text-slate-400 text-[11px] break-words">
           ${escapeHTML(item.memo || '-')}
         </td>
 
-        <!-- 관리 -->
         <td class="py-3 px-3 text-center space-x-1 shrink-0">
           <button onclick="window.openAlbumOrderModal(${idx})" class="p-1 text-slate-400 hover:text-blue-400 transition" title="수정">
             <i class="fa-solid fa-pen text-[11px]"></i>
@@ -147,7 +144,6 @@ export function calcOrderTotalModal() {
   const actualEl = document.getElementById('order-actual-price');
 
   if (totalEl) totalEl.value = total;
-  // 실결제액이 비어있거나 새로 등록할 때는 총액을 기본값으로 자동 제안
   if (actualEl && (!actualEl.value || actualEl.dataset.autoSync === 'true')) {
     actualEl.value = total;
     actualEl.dataset.autoSync = 'true';
@@ -163,7 +159,8 @@ export function openAlbumOrderModal(idx = -1, currentGroup) {
     const item = cloudData.albumOrders[currentGroup][idx];
     modalTitle.innerHTML = `<i class="fa-solid fa-pen text-blue-400"></i> 앨범 구매 내역 수정`;
     document.getElementById('order-country').value = item.country || '국내';
-    document.getElementById('order-period').value = item.period || '';
+    document.getElementById('order-start-date').value = item.startDate || '';
+    document.getElementById('order-end-date').value = item.endDate || '';
     document.getElementById('order-version').value = item.version || '';
     document.getElementById('order-seller').value = item.seller || '';
     document.getElementById('order-benefits').value = item.benefits || '';
@@ -178,7 +175,8 @@ export function openAlbumOrderModal(idx = -1, currentGroup) {
   } else {
     modalTitle.innerHTML = `<i class="fa-solid fa-receipt text-blue-400"></i> 앨범 구매 내역 등록`;
     document.getElementById('order-country').value = '국내';
-    document.getElementById('order-period').value = '';
+    document.getElementById('order-start-date').value = '';
+    document.getElementById('order-end-date').value = '';
     document.getElementById('order-version').value = '';
     document.getElementById('order-seller').value = '';
     document.getElementById('order-benefits').value = '';
@@ -198,7 +196,8 @@ export function openAlbumOrderModal(idx = -1, currentGroup) {
 export function saveAlbumOrder(currentGroup, onRender) {
   const idx = parseInt(document.getElementById('edit-album-order-idx').value);
   const country = document.getElementById('order-country').value;
-  const period = document.getElementById('order-period').value.trim();
+  const startDate = document.getElementById('order-start-date').value;
+  const endDate = document.getElementById('order-end-date').value;
   const version = document.getElementById('order-version').value.trim();
   const seller = document.getElementById('order-seller').value.trim();
   const benefits = document.getElementById('order-benefits').value.trim();
@@ -217,7 +216,7 @@ export function saveAlbumOrder(currentGroup, onRender) {
 
   const payload = {
     id: idx >= 0 ? cloudData.albumOrders[currentGroup][idx].id : 'ao_' + Date.now(),
-    country, period, version, seller, benefits,
+    country, startDate, endDate, version, seller, benefits,
     unitPrice, quantity, totalPrice, actualPrice,
     status, orderDate, memo
   };
