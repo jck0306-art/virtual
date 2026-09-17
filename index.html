@@ -186,55 +186,224 @@ Virtual Idol Group
 <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- 🌟 [신규 뷰] 앨범 구매 내역 & 자동 정산 계산기 -->
-<section id="menu-view-album-orders" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-5">
-  <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-slate-800/80 pb-4">
+<!-- 🌟 [개편된 뷰] 앨범 판매처 리스트 & 구매 정산 -->
+<section id="menu-view-album-orders" class="hidden space-y-6">
+  
+  <!-- 상단 요약 통계 & 액션 바 -->
+  <div class="glass rounded-3xl p-5 md:p-6 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
     <div>
       <h2 class="text-lg md:text-xl font-black text-white flex items-center gap-2">
-        <i class="fa-solid fa-receipt text-blue-400"></i> 앨범 구매 내역 & 정산 관리
+        <i class="fa-solid fa-calculator text-blue-400"></i> 앨범 판매처 & 구매 정산 관리
       </h2>
-      <p class="text-xs text-slate-400 mt-1">판매처별 특전 및 단가, 실결제액을 기록하고 총 지출액을 자동으로 집계합니다.</p>
+      <p class="text-xs text-slate-400 mt-1">상단 리스트에서 구매할 판매처를 체크하면, 하단 [내 구매 내역]에 자동으로 연동되어 정산됩니다.</p>
     </div>
 
-    <!-- 통계 요약 카드 (총 지출액 / 총 구매 수량) -->
     <div class="flex items-center gap-3 w-full md:w-auto">
       <div class="bg-slate-900/90 border border-slate-800 px-4 py-2.5 rounded-2xl flex-1 md:flex-initial text-center">
-        <span class="text-[10px] text-slate-400 font-bold block">총 구매 수량</span>
+        <span class="text-[10px] text-slate-400 font-bold block">실구매 총 수량</span>
         <span id="order-stat-count" class="text-lg font-black text-cyan-400 font-mono">0</span><span class="text-xs text-slate-400 ml-0.5">장</span>
       </div>
       <div class="bg-slate-900/90 border border-slate-800 px-4 py-2.5 rounded-2xl flex-1 md:flex-initial text-center">
-        <span class="text-[10px] text-slate-400 font-bold block">총 지출액</span>
+        <span class="text-[10px] text-slate-400 font-bold block">총 지출액 (실결제)</span>
         <span id="order-stat-total" class="text-lg font-black text-amber-300 font-mono">₩0</span>
       </div>
-      <button onclick="window.openAlbumOrderModal()" class="px-3.5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold text-xs transition flex items-center gap-1.5 shadow-lg shadow-blue-600/20 shrink-0">
-        <i class="fa-solid fa-plus text-[10px]"></i> 구매 등록
+      <button onclick="window.openSellerModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold text-xs transition flex items-center gap-1.5 shadow-lg shadow-blue-600/20 shrink-0">
+        <i class="fa-solid fa-plus text-[10px]"></i> 판매처 등록
       </button>
     </div>
   </div>
 
-  <!-- 스프레드시트 테이블 -->
-  <div class="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900/60 shadow-inner">
-    <table class="w-full text-left text-xs border-collapse min-w-[1000px]">
-      <thead class="bg-slate-900/95 border-b border-slate-800 text-slate-300 text-[11px] select-none font-bold">
-        <tr>
-          <th class="py-3 px-3 text-center w-20">판매국가</th>
-          <th class="py-3 px-3 w-28">판매기간</th>
-          <th class="py-3 px-3 w-32">버전</th>
-          <th class="py-3 px-3 text-center w-24">특전 여부</th>
-          <th class="py-3 px-3 w-28">판매처</th>
-          <th class="py-3 px-3 text-right font-mono w-24">단가</th>
-          <th class="py-3 px-3 text-center font-mono w-16">수량</th>
-          <th class="py-3 px-3 text-right font-mono w-28">총액</th>
-          <th class="py-3 px-3 text-right font-mono w-28 text-amber-300">실결제액</th>
-          <th class="py-3 px-3 text-center w-28">배송 상태</th>
-          <th class="py-3 px-3">비고</th>
-          <th class="py-3 px-3 text-center w-16">관리</th>
-        </tr>
-      </thead>
-      <tbody id="album-orders-table-body" class="divide-y divide-slate-800/60"></tbody>
-    </table>
+  <!-- [표 1] 앨범 판매처 & 특전 리스트 (이미지 1:1 구조) -->
+  <div class="glass rounded-3xl p-5 shadow-xl space-y-3">
+    <div class="flex justify-between items-center px-1">
+      <h3 class="text-sm font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-store text-indigo-400"></i> 앨범 판매처 목록 (구매할 곳을 체크하세요)
+      </h3>
+      <span class="text-[11px] text-slate-400">체크 시 하단 구매 내역에 자동 추가</span>
+    </div>
+
+    <div class="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900/60 shadow-inner">
+      <table class="w-full text-left text-xs border-collapse min-w-[900px]">
+        <thead class="bg-slate-900/95 border-b border-slate-800 text-slate-300 text-[11px] font-bold select-none">
+          <tr>
+            <th class="py-3 px-3 text-center w-20 text-indigo-300">구매여부</th>
+            <th class="py-3 px-3 text-center w-20">판매국가</th>
+            <th class="py-3 px-3 w-28">판매기간</th>
+            <th class="py-3 px-3 w-32">버전</th>
+            <th class="py-3 px-3">특전 여부</th>
+            <th class="py-3 px-3 w-28">판매처</th>
+            <th class="py-3 px-3 text-right font-mono w-24">단가</th>
+            <th class="py-3 px-3 text-right font-mono w-24">배송비</th>
+            <th class="py-3 px-3 w-40">비고</th>
+            <th class="py-3 px-3 text-center w-16">관리</th>
+          </tr>
+        </thead>
+        <tbody id="seller-table-body" class="divide-y divide-slate-800/60"></tbody>
+      </table>
+    </div>
   </div>
+
+  <!-- [표 2] 체크된 항목들의 실구매 내역 & 정산 관리 -->
+  <div class="glass rounded-3xl p-5 shadow-xl space-y-3">
+    <div class="flex justify-between items-center px-1">
+      <h3 class="text-sm font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-cart-shopping text-cyan-400"></i> 내 앨범 실구매 & 정산 관리
+      </h3>
+      <span class="text-[11px] text-cyan-300 font-mono">수량 및 실결제액 실시간 계산</span>
+    </div>
+
+    <div class="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900/60 shadow-inner">
+      <table class="w-full text-left text-xs border-collapse min-w-[950px]">
+        <thead class="bg-slate-900/95 border-b border-slate-800 text-slate-300 text-[11px] font-bold select-none">
+          <tr>
+            <th class="py-3 px-3 w-28">판매처</th>
+            <th class="py-3 px-3 w-32">버전</th>
+            <th class="py-3 px-3 text-right font-mono w-24">단가</th>
+            <th class="py-3 px-3 text-center font-mono w-24">수량</th>
+            <th class="py-3 px-3 text-right font-mono w-28">총액(정가)</th>
+            <th class="py-3 px-3 text-right font-mono w-28 text-amber-300">실결제액</th>
+            <th class="py-3 px-3 text-center w-28">배송 상태</th>
+            <th class="py-3 px-3 w-28">결제일</th>
+            <th class="py-3 px-3">구매 메모</th>
+            <th class="py-3 px-3 text-center w-16">설정</th>
+          </tr>
+        </thead>
+        <tbody id="purchased-table-body" class="divide-y divide-slate-800/60"></tbody>
+      </table>
+    </div>
+  </div>
+
 </section>
+
+<!-- ================= 🌟 신규 모달 모음 ================= -->
+
+<!-- 1. 판매처 등록/수정 모달 -->
+<div id="seller-modal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50 overflow-y-auto">
+  <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-700 shadow-2xl space-y-4 my-8">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+      <h3 id="seller-modal-title" class="text-base font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-store text-blue-400"></i> 앨범 판매처 등록
+      </h3>
+      <button onclick="window.closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <input type="hidden" id="edit-seller-id" value="" />
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">판매국가</label>
+        <select id="seller-country" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500">
+          <option value="국내">국내</option>
+          <option value="일본">일본</option>
+          <option value="글로벌">글로벌</option>
+          <option value="중국">중국</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="sm:col-span-2">
+        <label class="text-xs text-slate-400 block mb-1">판매기간 (달력 선택)</label>
+        <div class="flex items-center gap-1.5">
+          <input id="seller-start-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono" />
+          <span class="text-slate-500 text-xs">~</span>
+          <input id="seller-end-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500 font-mono" />
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">버전 / 앨범명 *</label>
+        <input id="seller-version" type="text" placeholder="예: 미니 2집 (단품 / 세트)" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">판매처 *</label>
+        <input id="seller-name" type="text" placeholder="예: 위버스샵, 케이타운포유, 알라딘" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500" />
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">특전 여부 / 구성</label>
+      <input id="seller-benefits" type="text" placeholder="예: 미공포 5종 중 랜덤 1종 증정" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500" />
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 bg-slate-950/60 p-3 rounded-2xl border border-slate-800">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">단가 (원)</label>
+        <input id="seller-unit-price" type="number" placeholder="예: 19800" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 font-mono" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">배송비 (원)</label>
+        <input id="seller-shipping-fee" type="number" placeholder="예: 3000 (무료는 0)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 font-mono" />
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">비고 / 링크 / 메모</label>
+      <input id="seller-memo" type="text" placeholder="예: 첫날 구매 시 특전 추가 증정" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:outline-none focus:border-blue-500" />
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+      <button onclick="window.closeModals()" class="px-3.5 py-2 text-xs bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300">취소</button>
+      <button onclick="window.saveSellerItem()" class="px-4 py-2 text-xs bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-bold">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. 구매 상세 정보 수정 모달 (수량, 실결제액, 배송상태 등) -->
+<div id="purchase-edit-modal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50 overflow-y-auto">
+  <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 shadow-2xl space-y-4 my-8">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+      <h3 class="text-base font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-pen-to-square text-cyan-400"></i> 구매 내역 상세 수정
+      </h3>
+      <button onclick="window.closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <input type="hidden" id="edit-purchase-seller-id" value="" />
+
+    <div>
+      <span id="purchase-modal-seller-info" class="text-xs font-bold text-cyan-300 block mb-2"></span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2.5">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">구매 수량</label>
+        <input id="edit-purchase-qty" oninput="window.calcPurchaseModalTotal()" type="number" min="1" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white font-mono font-bold focus:border-cyan-500" />
+      </div>
+      <div>
+        <label class="text-xs text-amber-300 block mb-1 font-bold">실결제액 (원) *</label>
+        <input id="edit-purchase-actual" type="number" class="w-full bg-slate-800 border border-amber-500/50 rounded-xl p-2 text-xs text-amber-300 font-mono font-bold focus:border-amber-400" />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2.5">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">배송 상태</label>
+        <select id="edit-purchase-status" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-cyan-500">
+          <option value="주문완료">주문완료</option>
+          <option value="배송준비">배송준비</option>
+          <option value="배송중">배송중</option>
+          <option value="배송완료">배송완료</option>
+          <option value="취소/환불">취소/환불</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">결제 일자</label>
+        <input id="edit-purchase-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white font-mono focus:border-cyan-500" />
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">구매 메모 / 주문번호</label>
+      <input id="edit-purchase-memo" type="text" placeholder="예: 주문번호 123456" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-cyan-500" />
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+      <button onclick="window.closeModals()" class="px-3.5 py-2 text-xs bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300">취소</button>
+      <button onclick="window.savePurchaseDetail()" class="px-4 py-2 text-xs bg-cyan-600 hover:bg-cyan-500 rounded-xl text-white font-bold">저장하기</button>
+    </div>
+  </div>
+</div>
 
 <!-- [뷰 4] 굿즈 관리 -->
 <section id="menu-view-goods" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
