@@ -6,8 +6,9 @@ import {
 } from './official.js';
 import { renderAlbums, openAlbumModal, saveAlbum, deleteAlbum } from './albums.js';
 import { 
-  renderAlbumOrders, openAlbumOrderModal, saveAlbumOrder, 
-  calcOrderTotalModal, updateOrderStatus, deleteAlbumOrder 
+  renderAlbumOrders, openSellerModal, saveSellerItem, deleteSellerItem,
+  toggleOrderPurchased, changePurchaseQty, updatePurchaseStatus,
+  openPurchaseEditModal, calcPurchaseModalTotal, savePurchaseDetail 
 } from './albumOrders.js';
 import { 
   renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, 
@@ -56,7 +57,6 @@ function render() {
     `).join('');
   }
 
-  // 각 뷰 렌더링
   try { renderProfile(currentGroup); } catch (e) { console.error("Profile render error:", e); }
   try { renderOfficialEvents(currentGroup); } catch (e) { console.error("Official events error:", e); }
   try { renderAlbums(currentGroup); } catch (e) { console.error("Albums render error:", e); }
@@ -158,7 +158,7 @@ window.switchMenu = function(menuKey) {
 };
 
 window.closeModals = function() {
-  document.querySelectorAll('#member-modal, #album-modal, #album-order-modal, #goods-modal, #photocard-modal, #event-modal, #delivery-modal, #applicant-manage-modal, #official-modal').forEach(m => {
+  document.querySelectorAll('#member-modal, #album-modal, #seller-modal, #purchase-edit-modal, #goods-modal, #photocard-modal, #event-modal, #delivery-modal, #applicant-manage-modal, #official-modal').forEach(m => {
     m.classList.replace('flex', 'hidden');
   });
 };
@@ -167,7 +167,7 @@ window.closeModals = function() {
 window.openMemberModal = idx => openMemberModal(idx, currentGroup);
 window.saveMember = () => saveMember(currentGroup, render);
 
-// 공식 스케줄 & 달력 조작
+// 공식 스케줄
 window.renderOfficialEvents = () => renderOfficialEvents(currentGroup);
 window.openOfficialModal = (idx = -1) => openOfficialModal(idx, currentGroup);
 window.openOfficialModalWithDate = dateStr => openOfficialModalWithDate(dateStr);
@@ -181,12 +181,16 @@ window.openAlbumModal = idx => openAlbumModal(idx, currentGroup);
 window.saveAlbum = () => saveAlbum(currentGroup, render);
 window.deleteAlbum = idx => deleteAlbum(idx, currentGroup, render);
 
-// 앨범 구매 내역 & 정산
-window.openAlbumOrderModal = (idx = -1) => openAlbumOrderModal(idx, currentGroup);
-window.calcOrderTotalModal = calcOrderTotalModal;
-window.saveAlbumOrder = () => saveAlbumOrder(currentGroup, render);
-window.updateOrderStatus = (idx, newStatus) => updateOrderStatus(idx, newStatus, currentGroup, render);
-window.deleteAlbumOrder = idx => deleteAlbumOrder(idx, currentGroup, render);
+// 🌟 개편된 앨범 판매처 & 실구매 정산 전역 바인딩
+window.openSellerModal = sellerId => openSellerModal(sellerId, currentGroup);
+window.saveSellerItem = () => saveSellerItem(currentGroup, render);
+window.deleteSellerItem = sellerId => deleteSellerItem(sellerId, currentGroup, render);
+window.toggleOrderPurchased = sellerId => toggleOrderPurchased(sellerId, currentGroup, render);
+window.changePurchaseQty = (sellerId, delta) => changePurchaseQty(sellerId, delta, currentGroup, render);
+window.updatePurchaseStatus = (sellerId, status) => updatePurchaseStatus(sellerId, status, currentGroup, render);
+window.openPurchaseEditModal = sellerId => openPurchaseEditModal(sellerId, currentGroup);
+window.calcPurchaseModalTotal = calcPurchaseModalTotal;
+window.savePurchaseDetail = () => savePurchaseDetail(currentGroup, render);
 
 // 굿즈
 window.openGoodsModal = idx => openGoodsModal(idx, currentGroup);
