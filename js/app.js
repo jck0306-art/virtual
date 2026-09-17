@@ -186,9 +186,16 @@ window.updateOrderStatus = (idx, newStatus) => updateOrderStatus(idx, newStatus,
 window.deleteAlbumOrder = idx => deleteAlbumOrder(idx, currentGroup, render);
 
 // 굿즈
+import { 
+  renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, 
+  changeGoodsQuantity, deleteGoods 
+} from './goods.js';
+
+// 굿즈 전역 바인딩
 window.openGoodsModal = idx => openGoodsModal(idx, currentGroup);
 window.saveGoods = () => saveGoods(currentGroup, render);
 window.toggleGoodsOwned = idx => toggleGoodsOwned(idx, currentGroup, render);
+window.changeGoodsQuantity = (idx, delta) => changeGoodsQuantity(idx, delta, currentGroup, render);
 window.deleteGoods = idx => deleteGoods(idx, currentGroup, render);
 
 // 포카
