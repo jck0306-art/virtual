@@ -45,8 +45,9 @@ export const DEFAULT_DATA = {
       ]
     }
   },
-  officialEvents: { plave: [], wego6: [] }, // 🌟 신설
+  officialEvents: { plave: [], wego6: [] },
   albums: { plave: [], wego6: [] },
+  albumOrders: { plave: [], wego6: [] }, // 🌟 신규: 앨범 구매/정산 내역
   goods: { plave: [], wego6: [] },
   photocards: { plave: [], wego6: [] },
   events: { plave: [], wego6: [] },
@@ -72,6 +73,7 @@ export function ensureDataStructure() {
   if (!cloudData.groups) cloudData.groups = DEFAULT_DATA.groups;
   if (!cloudData.officialEvents) cloudData.officialEvents = { plave: [], wego6: [] };
   if (!cloudData.albums) cloudData.albums = { plave: [], wego6: [] };
+  if (!cloudData.albumOrders) cloudData.albumOrders = { plave: [], wego6: [] };
   if (!cloudData.goods) cloudData.goods = { plave: [], wego6: [] };
   if (!cloudData.photocards) cloudData.photocards = { plave: [], wego6: [] };
   if (!cloudData.events) cloudData.events = { plave: [], wego6: [] };
@@ -80,6 +82,7 @@ export function ensureDataStructure() {
   ['plave', 'wego6'].forEach(k => {
     if (!cloudData.officialEvents[k]) cloudData.officialEvents[k] = [];
     if (!cloudData.albums[k]) cloudData.albums[k] = [];
+    if (!cloudData.albumOrders[k]) cloudData.albumOrders[k] = [];
     if (!cloudData.goods[k]) cloudData.goods[k] = [];
     if (!cloudData.photocards[k]) cloudData.photocards[k] = [];
     if (!cloudData.events[k]) cloudData.events[k] = [];
