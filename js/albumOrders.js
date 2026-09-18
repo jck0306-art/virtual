@@ -151,19 +151,22 @@ function renderPurchasedTable(sellers) {
 
     return `
       <tr class="hover:bg-slate-800/40 text-xs transition border-b border-slate-800/60">
-        <td class="py-3 px-3 font-semibold text-slate-200">
-          <span class="text-[10px] text-indigo-300 block font-normal">${escapeHTML(item.albumTitle || '')}</span>
+        <!-- 🌟 판매처 (앨범명 없이 판매처만 표시) -->
+        <td class="py-3 px-3 font-bold text-slate-100">
           ${escapeHTML(item.seller || '-')}
         </td>
 
+        <!-- 버전 -->
         <td class="py-3 px-3 font-bold text-white">
           ${escapeHTML(item.version || '-')}
         </td>
 
+        <!-- 단가 -->
         <td class="py-3 px-3 text-right font-mono text-slate-300">
           ₩${unitPrice.toLocaleString()}
         </td>
 
+        <!-- 수량 증감 버튼 -->
         <td class="py-2 px-3 text-center font-mono">
           <div class="inline-flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5">
             <button onclick="window.changePurchaseQty('${item.id}', -1)" class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800">
@@ -176,14 +179,17 @@ function renderPurchasedTable(sellers) {
           </div>
         </td>
 
+        <!-- 총액 (정가 * 수량) -->
         <td class="py-3 px-3 text-right font-mono text-slate-400">
           ₩${totalPrice.toLocaleString()}
         </td>
 
+        <!-- 실결제액 -->
         <td class="py-3 px-3 text-right font-mono font-bold text-amber-300">
           ₩${actualPrice.toLocaleString()}
         </td>
 
+        <!-- 배송 상태 드롭다운 -->
         <td class="py-2 px-3 text-center">
           <select onchange="window.updatePurchaseStatus('${item.id}', this.value)" class="bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-[11px] focus:outline-none focus:border-cyan-500 font-semibold ${getStatusTextColor(item.status)}">
             <option value="주문완료" ${item.status === '주문완료' ? 'selected' : ''}>주문완료</option>
@@ -194,14 +200,17 @@ function renderPurchasedTable(sellers) {
           </select>
         </td>
 
+        <!-- 결제일 -->
         <td class="py-3 px-3 font-mono text-[11px] text-slate-300">
           ${escapeHTML(item.orderDate || '-')}
         </td>
 
+        <!-- 구매 메모 -->
         <td class="py-3 px-3 text-slate-400 text-[11px] break-words">
           ${escapeHTML(item.purchaseMemo || '-')}
         </td>
 
+        <!-- 상세 수정 버튼 -->
         <td class="py-3 px-3 text-center">
           <button onclick="window.openPurchaseEditModal('${item.id}')" class="p-1 text-slate-400 hover:text-cyan-400 transition" title="실결제액/상세 수정">
             <i class="fa-solid fa-sliders text-xs"></i>
@@ -275,12 +284,12 @@ window.handleSellerAlbumChange = function(val) {
   }
 };
 
-// 🌟 판매처 모달 제어 (안전 참조 처리)
+// 🌟 판매처 모달 제어
 export function openSellerModal(sellerId = null, currentGroup) {
   if (currentGroup) activeGroup = currentGroup;
 
   const modal = document.getElementById('seller-modal');
-  if (!modal) return alert('seller-modal 창을 찾을 수 없습니다. index.html을 확인해 주세요.');
+  if (!modal) return alert('seller-modal 창을 찾을 수 없습니다.');
 
   const setVal = (id, val) => {
     const el = document.getElementById(id);
@@ -437,7 +446,7 @@ export function openPurchaseEditModal(sellerId, currentGroup) {
 
   setVal('edit-purchase-seller-id', sellerId);
   const infoEl = document.getElementById('purchase-modal-seller-info');
-  if (infoEl) infoEl.innerText = `[${item.albumTitle || '앨범'}] ${item.seller} - ${item.version}`;
+  if (infoEl) infoEl.innerText = `${item.seller} (${item.version})`;
 
   setVal('edit-purchase-qty', item.quantity || 1);
   setVal('edit-purchase-actual', item.actualPrice !== undefined ? item.actualPrice : (Number(item.unitPrice) || 0) * (item.quantity || 1));
