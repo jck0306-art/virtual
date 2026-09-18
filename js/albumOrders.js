@@ -44,7 +44,6 @@ function renderSellerTable(sellers) {
     if (s.startDate && s.endDate) periodStr = `${s.startDate} ~ ${s.endDate}`;
     else if (s.startDate) periodStr = s.startDate;
 
-    // 마감 상태 판별 (사용자 지정 상태 우선, 종료일 지났으면 마감 처리)
     let saleStatus = s.saleStatus || '판매중';
     if (s.endDate && s.endDate < todayStr && saleStatus === '판매중') {
       saleStatus = '마감';
@@ -152,23 +151,19 @@ function renderPurchasedTable(sellers) {
 
     return `
       <tr class="hover:bg-slate-800/40 text-xs transition border-b border-slate-800/60">
-        <!-- 판매처 -->
         <td class="py-3 px-3 font-semibold text-slate-200">
           <span class="text-[10px] text-indigo-300 block font-normal">${escapeHTML(item.albumTitle || '')}</span>
           ${escapeHTML(item.seller || '-')}
         </td>
 
-        <!-- 버전 -->
         <td class="py-3 px-3 font-bold text-white">
           ${escapeHTML(item.version || '-')}
         </td>
 
-        <!-- 단가 -->
         <td class="py-3 px-3 text-right font-mono text-slate-300">
           ₩${unitPrice.toLocaleString()}
         </td>
 
-        <!-- 수량 증감 버튼 -->
         <td class="py-2 px-3 text-center font-mono">
           <div class="inline-flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5">
             <button onclick="window.changePurchaseQty('${item.id}', -1)" class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800">
@@ -181,17 +176,14 @@ function renderPurchasedTable(sellers) {
           </div>
         </td>
 
-        <!-- 총액 (정가 * 수량) -->
         <td class="py-3 px-3 text-right font-mono text-slate-400">
           ₩${totalPrice.toLocaleString()}
         </td>
 
-        <!-- 실결제액 -->
         <td class="py-3 px-3 text-right font-mono font-bold text-amber-300">
           ₩${actualPrice.toLocaleString()}
         </td>
 
-        <!-- 배송 상태 드롭다운 -->
         <td class="py-2 px-3 text-center">
           <select onchange="window.updatePurchaseStatus('${item.id}', this.value)" class="bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-[11px] focus:outline-none focus:border-cyan-500 font-semibold ${getStatusTextColor(item.status)}">
             <option value="주문완료" ${item.status === '주문완료' ? 'selected' : ''}>주문완료</option>
@@ -202,17 +194,14 @@ function renderPurchasedTable(sellers) {
           </select>
         </td>
 
-        <!-- 결제일 -->
         <td class="py-3 px-3 font-mono text-[11px] text-slate-300">
           ${escapeHTML(item.orderDate || '-')}
         </td>
 
-        <!-- 구매 메모 -->
         <td class="py-3 px-3 text-slate-400 text-[11px] break-words">
           ${escapeHTML(item.purchaseMemo || '-')}
         </td>
 
-        <!-- 상세 수정 버튼 -->
         <td class="py-3 px-3 text-center">
           <button onclick="window.openPurchaseEditModal('${item.id}')" class="p-1 text-slate-400 hover:text-cyan-400 transition" title="실결제액/상세 수정">
             <i class="fa-solid fa-sliders text-xs"></i>
@@ -247,7 +236,7 @@ function updateStats(sellers) {
   if (statTotalEl) statTotalEl.innerText = `₩${totalSpent.toLocaleString()}`;
 }
 
-// 🌟 발매 앨범 선택 옵션 채우기
+// 🌟 발매 앨범 선택 옵션 채우기 (null 안전 처리)
 function populateAlbumSelect(currentVal = '') {
   const selectEl = document.getElementById('seller-album-select');
   const customInput = document.getElementById('seller-album-custom');
@@ -255,7 +244,6 @@ function populateAlbumSelect(currentVal = '') {
 
   const albums = (cloudData.albums && cloudData.albums[activeGroup]) || [];
   const albumTitles = albums.map(a => a.title).filter(Boolean);
-
   const isCustom = currentVal && !albumTitles.includes(currentVal);
 
   selectEl.innerHTML = `
@@ -264,12 +252,14 @@ function populateAlbumSelect(currentVal = '') {
     <option value="__custom__" ${isCustom ? 'selected' : ''}>✏️ 직접 입력하기</option>
   `;
 
-  if (isCustom) {
-    customInput.classList.remove('hidden');
-    customInput.value = currentVal;
-  } else {
-    customInput.classList.add('hidden');
-    customInput.value = '';
+  if (customInput) {
+    if (isCustom) {
+      customInput.classList.remove('hidden');
+      customInput.value = currentVal;
+    } else {
+      customInput.classList.add('hidden');
+      customInput.value = '';
+    }
   }
 }
 
@@ -285,65 +275,78 @@ window.handleSellerAlbumChange = function(val) {
   }
 };
 
-// 🌟 판매처 모달 제어
+// 🌟 판매처 모달 제어 (안전 참조 처리)
 export function openSellerModal(sellerId = null, currentGroup) {
   if (currentGroup) activeGroup = currentGroup;
-  document.getElementById('edit-seller-id').value = sellerId || '';
+
+  const modal = document.getElementById('seller-modal');
+  if (!modal) return alert('seller-modal 창을 찾을 수 없습니다. index.html을 확인해 주세요.');
+
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = (val !== undefined && val !== null) ? val : '';
+  };
+
+  setVal('edit-seller-id', sellerId || '');
+
   const modalTitle = document.getElementById('seller-modal-title');
 
   if (sellerId) {
-    const item = cloudData.albumOrders[activeGroup].find(s => s.id === sellerId);
+    const item = (cloudData.albumOrders[activeGroup] || []).find(s => s.id === sellerId);
     if (!item) return;
-    modalTitle.innerHTML = `<i class="fa-solid fa-pen text-blue-400"></i> 판매처 정보 수정`;
+    if (modalTitle) modalTitle.innerHTML = `<i class="fa-solid fa-pen text-blue-400"></i> 판매처 정보 수정`;
     populateAlbumSelect(item.albumTitle || '');
-    document.getElementById('seller-version').value = item.version || '';
-    document.getElementById('seller-name').value = item.seller || '';
-    document.getElementById('seller-country').value = item.country || '국내';
-    document.getElementById('seller-start-date').value = item.startDate || '';
-    document.getElementById('seller-end-date').value = item.endDate || '';
-    document.getElementById('seller-sale-status').value = item.saleStatus || '판매중';
-    document.getElementById('seller-benefits').value = item.benefits || '';
-    document.getElementById('seller-unit-price').value = item.unitPrice !== undefined ? item.unitPrice : '';
-    document.getElementById('seller-shipping-fee').value = item.shippingFee !== undefined ? item.shippingFee : '';
-    document.getElementById('seller-memo').value = item.memo || '';
+    setVal('seller-version', item.version);
+    setVal('seller-name', item.seller);
+    setVal('seller-country', item.country || '국내');
+    setVal('seller-start-date', item.startDate);
+    setVal('seller-end-date', item.endDate);
+    setVal('seller-sale-status', item.saleStatus || '판매중');
+    setVal('seller-benefits', item.benefits);
+    setVal('seller-unit-price', item.unitPrice);
+    setVal('seller-shipping-fee', item.shippingFee);
+    setVal('seller-memo', item.memo);
   } else {
-    modalTitle.innerHTML = `<i class="fa-solid fa-store text-blue-400"></i> 새 판매처 등록`;
+    if (modalTitle) modalTitle.innerHTML = `<i class="fa-solid fa-store text-blue-400"></i> 새 판매처 등록`;
     populateAlbumSelect('');
-    document.getElementById('seller-version').value = '';
-    document.getElementById('seller-name').value = '';
-    document.getElementById('seller-country').value = '국내';
-    document.getElementById('seller-start-date').value = '';
-    document.getElementById('seller-end-date').value = '';
-    document.getElementById('seller-sale-status').value = '판매중';
-    document.getElementById('seller-benefits').value = '';
-    document.getElementById('seller-unit-price').value = '';
-    document.getElementById('seller-shipping-fee').value = '';
-    document.getElementById('seller-memo').value = '';
+    setVal('seller-version', '');
+    setVal('seller-name', '');
+    setVal('seller-country', '국내');
+    setVal('seller-start-date', '');
+    setVal('seller-end-date', '');
+    setVal('seller-sale-status', '판매중');
+    setVal('seller-benefits', '');
+    setVal('seller-unit-price', '');
+    setVal('seller-shipping-fee', '');
+    setVal('seller-memo', '');
   }
 
-  document.getElementById('seller-modal').classList.replace('hidden', 'flex');
+  modal.classList.replace('hidden', 'flex');
 }
 
 export function saveSellerItem(currentGroup, onRender) {
   const grp = currentGroup || activeGroup;
-  const editId = document.getElementById('edit-seller-id').value;
+  const getVal = id => (document.getElementById(id)?.value || '').trim();
 
-  const albumSelectVal = document.getElementById('seller-album-select').value;
-  const albumCustomVal = document.getElementById('seller-album-custom').value.trim();
+  const editId = getVal('edit-seller-id');
+  const albumSelectVal = getVal('seller-album-select');
+  const albumCustomVal = getVal('seller-album-custom');
   const albumTitle = (albumSelectVal === '__custom__' || !albumSelectVal) ? albumCustomVal : albumSelectVal;
 
-  const version = document.getElementById('seller-version').value.trim();
-  const seller = document.getElementById('seller-name').value.trim();
-  const country = document.getElementById('seller-country').value;
-  const startDate = document.getElementById('seller-start-date').value;
-  const endDate = document.getElementById('seller-end-date').value;
-  const saleStatus = document.getElementById('seller-sale-status').value;
-  const benefits = document.getElementById('seller-benefits').value.trim();
-  const unitPrice = Number(document.getElementById('seller-unit-price').value) || 0;
-  const shippingFee = Number(document.getElementById('seller-shipping-fee').value) || 0;
-  const memo = document.getElementById('seller-memo').value.trim();
+  const version = getVal('seller-version');
+  const seller = getVal('seller-name');
+  const country = getVal('seller-country') || '국내';
+  const startDate = getVal('seller-start-date');
+  const endDate = getVal('seller-end-date');
+  const saleStatus = getVal('seller-sale-status') || '판매중';
+  const benefits = getVal('seller-benefits');
+  const unitPrice = Number(getVal('seller-unit-price')) || 0;
+  const shippingFee = Number(getVal('seller-shipping-fee')) || 0;
+  const memo = getVal('seller-memo');
 
-  if (!albumTitle || !version || !seller) return alert('발매 앨범, 버전, 판매처는 필수 입력 항목입니다.');
+  if (!albumTitle || !version || !seller) {
+    return alert('발매 앨범, 버전, 판매처는 필수 입력 항목입니다.');
+  }
 
   if (!cloudData.albumOrders[grp]) cloudData.albumOrders[grp] = [];
 
@@ -427,39 +430,47 @@ export function openPurchaseEditModal(sellerId, currentGroup) {
   const item = cloudData.albumOrders[activeGroup].find(s => s.id === sellerId);
   if (!item) return;
 
-  document.getElementById('edit-purchase-seller-id').value = sellerId;
-  document.getElementById('purchase-modal-seller-info').innerText = `[${item.albumTitle || '앨범'}] ${item.seller} - ${item.version}`;
-  document.getElementById('edit-purchase-qty').value = item.quantity || 1;
-  document.getElementById('edit-purchase-actual').value = item.actualPrice !== undefined ? item.actualPrice : (Number(item.unitPrice) || 0) * (item.quantity || 1);
-  document.getElementById('edit-purchase-status').value = item.status || '주문완료';
-  document.getElementById('edit-purchase-date').value = item.orderDate || '';
-  document.getElementById('edit-purchase-memo').value = item.purchaseMemo || '';
+  const setVal = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.value = (val !== undefined && val !== null) ? val : '';
+  };
 
-  document.getElementById('purchase-edit-modal').classList.replace('hidden', 'flex');
+  setVal('edit-purchase-seller-id', sellerId);
+  const infoEl = document.getElementById('purchase-modal-seller-info');
+  if (infoEl) infoEl.innerText = `[${item.albumTitle || '앨범'}] ${item.seller} - ${item.version}`;
+
+  setVal('edit-purchase-qty', item.quantity || 1);
+  setVal('edit-purchase-actual', item.actualPrice !== undefined ? item.actualPrice : (Number(item.unitPrice) || 0) * (item.quantity || 1));
+  setVal('edit-purchase-status', item.status || '주문완료');
+  setVal('edit-purchase-date', item.orderDate || '');
+  setVal('edit-purchase-memo', item.purchaseMemo || '');
+
+  document.getElementById('purchase-edit-modal')?.classList.replace('hidden', 'flex');
 }
 
 export function calcPurchaseModalTotal() {
-  const sellerId = document.getElementById('edit-purchase-seller-id').value;
-  const item = cloudData.albumOrders[activeGroup].find(s => s.id === sellerId);
+  const sellerId = document.getElementById('edit-purchase-seller-id')?.value;
+  const item = cloudData.albumOrders[activeGroup]?.find(s => s.id === sellerId);
   if (!item) return;
 
-  const qty = Number(document.getElementById('edit-purchase-qty').value) || 1;
+  const qty = Number(document.getElementById('edit-purchase-qty')?.value) || 1;
   const unit = Number(item.unitPrice) || 0;
   const shipping = Number(item.shippingFee) || 0;
-  document.getElementById('edit-purchase-actual').value = (unit * qty) + shipping;
+  const actualEl = document.getElementById('edit-purchase-actual');
+  if (actualEl) actualEl.value = (unit * qty) + shipping;
 }
 
 export function savePurchaseDetail(currentGroup, onRender) {
   const grp = currentGroup || activeGroup;
-  const sellerId = document.getElementById('edit-purchase-seller-id').value;
-  const item = cloudData.albumOrders[grp].find(s => s.id === sellerId);
+  const sellerId = document.getElementById('edit-purchase-seller-id')?.value;
+  const item = cloudData.albumOrders[grp]?.find(s => s.id === sellerId);
   if (!item) return;
 
-  item.quantity = Math.max(1, parseInt(document.getElementById('edit-purchase-qty').value) || 1);
-  item.actualPrice = Number(document.getElementById('edit-purchase-actual').value) || 0;
-  item.status = document.getElementById('edit-purchase-status').value;
-  item.orderDate = document.getElementById('edit-purchase-date').value;
-  item.purchaseMemo = document.getElementById('edit-purchase-memo').value.trim();
+  item.quantity = Math.max(1, parseInt(document.getElementById('edit-purchase-qty')?.value) || 1);
+  item.actualPrice = Number(document.getElementById('edit-purchase-actual')?.value) || 0;
+  item.status = document.getElementById('edit-purchase-status')?.value || '주문완료';
+  item.orderDate = document.getElementById('edit-purchase-date')?.value || '';
+  item.purchaseMemo = (document.getElementById('edit-purchase-memo')?.value || '').trim();
 
   window.closeModals();
   syncData(onRender);
