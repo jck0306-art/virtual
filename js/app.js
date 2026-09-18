@@ -8,7 +8,8 @@ import { renderAlbums, openAlbumModal, saveAlbum, deleteAlbum } from './albums.j
 import { 
   renderAlbumOrders, openSellerModal, saveSellerItem, deleteSellerItem,
   toggleOrderPurchased, changePurchaseQty, updatePurchaseStatus,
-  openPurchaseEditModal, calcPurchaseModalTotal, savePurchaseDetail 
+  openPurchaseEditModal, calcPurchaseModalTotal, savePurchaseDetail,
+  toggleShippingIncluded // 🌟 추가
 } from './albumOrders.js';
 import { 
   renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, 
@@ -181,7 +182,6 @@ window.openAlbumModal = idx => openAlbumModal(idx, currentGroup);
 window.saveAlbum = () => saveAlbum(currentGroup, render);
 window.deleteAlbum = idx => deleteAlbum(idx, currentGroup, render);
 
-// 🌟 개편된 앨범 판매처 & 실구매 정산 전역 바인딩
 window.openSellerModal = sellerId => openSellerModal(sellerId, currentGroup);
 window.saveSellerItem = () => saveSellerItem(currentGroup, render);
 window.deleteSellerItem = sellerId => deleteSellerItem(sellerId, currentGroup, render);
@@ -191,6 +191,7 @@ window.updatePurchaseStatus = (sellerId, status) => updatePurchaseStatus(sellerI
 window.openPurchaseEditModal = sellerId => openPurchaseEditModal(sellerId, currentGroup);
 window.calcPurchaseModalTotal = calcPurchaseModalTotal;
 window.savePurchaseDetail = () => savePurchaseDetail(currentGroup, render);
+window.toggleShippingIncluded = sellerId => toggleShippingIncluded(sellerId, currentGroup, render); // 🌟 추가
 
 // 굿즈
 window.openGoodsModal = idx => openGoodsModal(idx, currentGroup);
