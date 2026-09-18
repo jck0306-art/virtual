@@ -24,7 +24,7 @@ function renderSellerTable(sellers) {
   if (sellers.length === 0) {
     container.innerHTML = `
       <tr>
-        <td colspan="10" class="py-10 text-center text-slate-500 text-xs">
+        <td colspan="12" class="py-10 text-center text-slate-500 text-xs">
           <i class="fa-solid fa-store text-2xl mb-2 block text-slate-600"></i>
           등록된 앨범 판매처가 없습니다. 우측 상단의 '판매처 등록' 버튼을 눌러 추가하세요.
         </td>
@@ -33,7 +33,9 @@ function renderSellerTable(sellers) {
     return;
   }
 
-  container.innerHTML = sellers.map((s, idx) => {
+  const todayStr = new Date().toISOString().slice(0, 10);
+
+  container.innerHTML = sellers.map((s) => {
     const isChecked = Boolean(s.isPurchased);
     const unitPrice = Number(s.unitPrice) || 0;
     const shippingFee = Number(s.shippingFee) || 0;
@@ -42,11 +44,27 @@ function renderSellerTable(sellers) {
     if (s.startDate && s.endDate) periodStr = `${s.startDate} ~ ${s.endDate}`;
     else if (s.startDate) periodStr = s.startDate;
 
+    // 마감 상태 판별 (사용자 지정 상태 우선, 종료일 지났으면 마감 처리)
+    let saleStatus = s.saleStatus || '판매중';
+    if (s.endDate && s.endDate < todayStr && saleStatus === '판매중') {
+      saleStatus = '마감';
+    }
+
     return `
       <tr class="hover:bg-slate-800/40 text-xs transition border-b border-slate-800/60 ${isChecked ? 'bg-indigo-950/20' : ''}">
         <!-- 구매 여부 체크박스 -->
         <td class="py-3 px-3 text-center">
           <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="window.toggleOrderPurchased('${s.id}')" class="w-4 h-4 accent-indigo-500 rounded cursor-pointer" title="구매 내역에 추가" />
+        </td>
+
+        <!-- 발매 앨범 구분 -->
+        <td class="py-3 px-3 font-bold text-white">
+          <span class="text-indigo-300 font-semibold block">${escapeHTML(s.albumTitle || '공통')}</span>
+        </td>
+
+        <!-- 버전 -->
+        <td class="py-3 px-3 font-medium text-slate-200">
+          ${escapeHTML(s.version || '-')}
         </td>
 
         <!-- 판매국가 -->
@@ -61,9 +79,11 @@ function renderSellerTable(sellers) {
           ${escapeHTML(periodStr)}
         </td>
 
-        <!-- 버전 -->
-        <td class="py-3 px-3 font-bold text-white">
-          ${escapeHTML(s.version || '-')}
+        <!-- 판매 상태 / 종료 여부 -->
+        <td class="py-3 px-3 text-center">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${getSaleStatusStyle(saleStatus)}">
+            ${escapeHTML(saleStatus)}
+          </span>
         </td>
 
         <!-- 특전 여부 -->
@@ -134,6 +154,7 @@ function renderPurchasedTable(sellers) {
       <tr class="hover:bg-slate-800/40 text-xs transition border-b border-slate-800/60">
         <!-- 판매처 -->
         <td class="py-3 px-3 font-semibold text-slate-200">
+          <span class="text-[10px] text-indigo-300 block font-normal">${escapeHTML(item.albumTitle || '')}</span>
           ${escapeHTML(item.seller || '-')}
         </td>
 
@@ -160,7 +181,7 @@ function renderPurchasedTable(sellers) {
           </div>
         </td>
 
-        <!-- 총액 (단가 * 수량) -->
+        <!-- 총액 (정가 * 수량) -->
         <td class="py-3 px-3 text-right font-mono text-slate-400">
           ₩${totalPrice.toLocaleString()}
         </td>
@@ -226,7 +247,133 @@ function updateStats(sellers) {
   if (statTotalEl) statTotalEl.innerText = `₩${totalSpent.toLocaleString()}`;
 }
 
-// 🌟 체크박스 토글 함수 (구매여부 전환)
+// 🌟 발매 앨범 선택 옵션 채우기
+function populateAlbumSelect(currentVal = '') {
+  const selectEl = document.getElementById('seller-album-select');
+  const customInput = document.getElementById('seller-album-custom');
+  if (!selectEl) return;
+
+  const albums = (cloudData.albums && cloudData.albums[activeGroup]) || [];
+  const albumTitles = albums.map(a => a.title).filter(Boolean);
+
+  const isCustom = currentVal && !albumTitles.includes(currentVal);
+
+  selectEl.innerHTML = `
+    <option value="" disabled ${!currentVal ? 'selected' : ''}>발매 앨범을 선택하세요</option>
+    ${albumTitles.map(t => `<option value="${escapeHTML(t)}" ${t === currentVal ? 'selected' : ''}>${escapeHTML(t)}</option>`).join('')}
+    <option value="__custom__" ${isCustom ? 'selected' : ''}>✏️ 직접 입력하기</option>
+  `;
+
+  if (isCustom) {
+    customInput.classList.remove('hidden');
+    customInput.value = currentVal;
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+  }
+}
+
+window.handleSellerAlbumChange = function(val) {
+  const customInput = document.getElementById('seller-album-custom');
+  if (!customInput) return;
+  if (val === '__custom__') {
+    customInput.classList.remove('hidden');
+    customInput.focus();
+  } else {
+    customInput.classList.add('hidden');
+    customInput.value = '';
+  }
+};
+
+// 🌟 판매처 모달 제어
+export function openSellerModal(sellerId = null, currentGroup) {
+  if (currentGroup) activeGroup = currentGroup;
+  document.getElementById('edit-seller-id').value = sellerId || '';
+  const modalTitle = document.getElementById('seller-modal-title');
+
+  if (sellerId) {
+    const item = cloudData.albumOrders[activeGroup].find(s => s.id === sellerId);
+    if (!item) return;
+    modalTitle.innerHTML = `<i class="fa-solid fa-pen text-blue-400"></i> 판매처 정보 수정`;
+    populateAlbumSelect(item.albumTitle || '');
+    document.getElementById('seller-version').value = item.version || '';
+    document.getElementById('seller-name').value = item.seller || '';
+    document.getElementById('seller-country').value = item.country || '국내';
+    document.getElementById('seller-start-date').value = item.startDate || '';
+    document.getElementById('seller-end-date').value = item.endDate || '';
+    document.getElementById('seller-sale-status').value = item.saleStatus || '판매중';
+    document.getElementById('seller-benefits').value = item.benefits || '';
+    document.getElementById('seller-unit-price').value = item.unitPrice !== undefined ? item.unitPrice : '';
+    document.getElementById('seller-shipping-fee').value = item.shippingFee !== undefined ? item.shippingFee : '';
+    document.getElementById('seller-memo').value = item.memo || '';
+  } else {
+    modalTitle.innerHTML = `<i class="fa-solid fa-store text-blue-400"></i> 새 판매처 등록`;
+    populateAlbumSelect('');
+    document.getElementById('seller-version').value = '';
+    document.getElementById('seller-name').value = '';
+    document.getElementById('seller-country').value = '국내';
+    document.getElementById('seller-start-date').value = '';
+    document.getElementById('seller-end-date').value = '';
+    document.getElementById('seller-sale-status').value = '판매중';
+    document.getElementById('seller-benefits').value = '';
+    document.getElementById('seller-unit-price').value = '';
+    document.getElementById('seller-shipping-fee').value = '';
+    document.getElementById('seller-memo').value = '';
+  }
+
+  document.getElementById('seller-modal').classList.replace('hidden', 'flex');
+}
+
+export function saveSellerItem(currentGroup, onRender) {
+  const grp = currentGroup || activeGroup;
+  const editId = document.getElementById('edit-seller-id').value;
+
+  const albumSelectVal = document.getElementById('seller-album-select').value;
+  const albumCustomVal = document.getElementById('seller-album-custom').value.trim();
+  const albumTitle = (albumSelectVal === '__custom__' || !albumSelectVal) ? albumCustomVal : albumSelectVal;
+
+  const version = document.getElementById('seller-version').value.trim();
+  const seller = document.getElementById('seller-name').value.trim();
+  const country = document.getElementById('seller-country').value;
+  const startDate = document.getElementById('seller-start-date').value;
+  const endDate = document.getElementById('seller-end-date').value;
+  const saleStatus = document.getElementById('seller-sale-status').value;
+  const benefits = document.getElementById('seller-benefits').value.trim();
+  const unitPrice = Number(document.getElementById('seller-unit-price').value) || 0;
+  const shippingFee = Number(document.getElementById('seller-shipping-fee').value) || 0;
+  const memo = document.getElementById('seller-memo').value.trim();
+
+  if (!albumTitle || !version || !seller) return alert('발매 앨범, 버전, 판매처는 필수 입력 항목입니다.');
+
+  if (!cloudData.albumOrders[grp]) cloudData.albumOrders[grp] = [];
+
+  const payload = {
+    albumTitle, version, seller, country, startDate, endDate, saleStatus,
+    benefits, unitPrice, shippingFee, memo
+  };
+
+  if (editId) {
+    const idx = cloudData.albumOrders[grp].findIndex(s => s.id === editId);
+    if (idx !== -1) {
+      cloudData.albumOrders[grp][idx] = { ...cloudData.albumOrders[grp][idx], ...payload };
+    }
+  } else {
+    cloudData.albumOrders[grp].unshift({
+      id: 'sel_' + Date.now(),
+      isPurchased: false,
+      ...payload,
+      quantity: 1,
+      actualPrice: unitPrice + shippingFee,
+      status: '주문완료',
+      orderDate: new Date().toISOString().slice(0, 10),
+      purchaseMemo: ''
+    });
+  }
+
+  window.closeModals();
+  syncData(onRender);
+}
+
 export function toggleOrderPurchased(sellerId, currentGroup, onRender) {
   const grp = currentGroup || activeGroup;
   const item = cloudData.albumOrders[grp].find(s => s.id === sellerId);
@@ -244,7 +391,6 @@ export function toggleOrderPurchased(sellerId, currentGroup, onRender) {
   }
 }
 
-// 🌟 수량 증감
 export function changePurchaseQty(sellerId, delta, currentGroup, onRender) {
   const grp = currentGroup || activeGroup;
   const item = cloudData.albumOrders[grp].find(s => s.id === sellerId);
@@ -254,14 +400,12 @@ export function changePurchaseQty(sellerId, delta, currentGroup, onRender) {
     const unit = Number(item.unitPrice) || 0;
     const shipping = Number(item.shippingFee) || 0;
 
-    // 수량 변경 시 실결제액도 단가 비율에 맞게 비례 조정
     item.quantity = newQty;
     item.actualPrice = (unit * newQty) + shipping;
     syncData(onRender);
   }
 }
 
-// 🌟 배송 상태 변경
 export function updatePurchaseStatus(sellerId, newStatus, currentGroup, onRender) {
   const grp = currentGroup || activeGroup;
   const item = cloudData.albumOrders[grp].find(s => s.id === sellerId);
@@ -271,83 +415,6 @@ export function updatePurchaseStatus(sellerId, newStatus, currentGroup, onRender
   }
 }
 
-// 🌟 판매처 모달 제어
-export function openSellerModal(sellerId = null, currentGroup) {
-  if (currentGroup) activeGroup = currentGroup;
-  document.getElementById('edit-seller-id').value = sellerId || '';
-  const modalTitle = document.getElementById('seller-modal-title');
-
-  if (sellerId) {
-    const item = cloudData.albumOrders[activeGroup].find(s => s.id === sellerId);
-    if (!item) return;
-    modalTitle.innerHTML = `<i class="fa-solid fa-pen text-blue-400"></i> 판매처 정보 수정`;
-    document.getElementById('seller-country').value = item.country || '국내';
-    document.getElementById('seller-start-date').value = item.startDate || '';
-    document.getElementById('seller-end-date').value = item.endDate || '';
-    document.getElementById('seller-version').value = item.version || '';
-    document.getElementById('seller-name').value = item.seller || '';
-    document.getElementById('seller-benefits').value = item.benefits || '';
-    document.getElementById('seller-unit-price').value = item.unitPrice !== undefined ? item.unitPrice : '';
-    document.getElementById('seller-shipping-fee').value = item.shippingFee !== undefined ? item.shippingFee : '';
-    document.getElementById('seller-memo').value = item.memo || '';
-  } else {
-    modalTitle.innerHTML = `<i class="fa-solid fa-store text-blue-400"></i> 새 판매처 등록`;
-    document.getElementById('seller-country').value = '국내';
-    document.getElementById('seller-start-date').value = '';
-    document.getElementById('seller-end-date').value = '';
-    document.getElementById('seller-version').value = '';
-    document.getElementById('seller-name').value = '';
-    document.getElementById('seller-benefits').value = '';
-    document.getElementById('seller-unit-price').value = '';
-    document.getElementById('seller-shipping-fee').value = '';
-    document.getElementById('seller-memo').value = '';
-  }
-
-  document.getElementById('seller-modal').classList.replace('hidden', 'flex');
-}
-
-export function saveSellerItem(currentGroup, onRender) {
-  const grp = currentGroup || activeGroup;
-  const editId = document.getElementById('edit-seller-id').value;
-  const country = document.getElementById('seller-country').value;
-  const startDate = document.getElementById('seller-start-date').value;
-  const endDate = document.getElementById('seller-end-date').value;
-  const version = document.getElementById('seller-version').value.trim();
-  const seller = document.getElementById('seller-name').value.trim();
-  const benefits = document.getElementById('seller-benefits').value.trim();
-  const unitPrice = Number(document.getElementById('seller-unit-price').value) || 0;
-  const shippingFee = Number(document.getElementById('seller-shipping-fee').value) || 0;
-  const memo = document.getElementById('seller-memo').value.trim();
-
-  if (!version || !seller) return alert('버전과 판매처는 필수 입력 항목입니다.');
-
-  if (!cloudData.albumOrders[grp]) cloudData.albumOrders[grp] = [];
-
-  if (editId) {
-    const idx = cloudData.albumOrders[grp].findIndex(s => s.id === editId);
-    if (idx !== -1) {
-      cloudData.albumOrders[grp][idx] = {
-        ...cloudData.albumOrders[grp][idx],
-        country, startDate, endDate, version, seller, benefits, unitPrice, shippingFee, memo
-      };
-    }
-  } else {
-    cloudData.albumOrders[grp].unshift({
-      id: 'sel_' + Date.now(),
-      isPurchased: false,
-      country, startDate, endDate, version, seller, benefits, unitPrice, shippingFee, memo,
-      quantity: 1,
-      actualPrice: unitPrice + shippingFee,
-      status: '주문완료',
-      orderDate: new Date().toISOString().slice(0, 10),
-      purchaseMemo: ''
-    });
-  }
-
-  window.closeModals();
-  syncData(onRender);
-}
-
 export function deleteSellerItem(sellerId, currentGroup, onRender) {
   const grp = currentGroup || activeGroup;
   if (!confirm('이 판매처 항목을 삭제하시겠습니까? (구매 내역에서도 함께 삭제됩니다)')) return;
@@ -355,14 +422,13 @@ export function deleteSellerItem(sellerId, currentGroup, onRender) {
   syncData(onRender);
 }
 
-// 🌟 구매 상세 정보 모달
 export function openPurchaseEditModal(sellerId, currentGroup) {
   if (currentGroup) activeGroup = currentGroup;
   const item = cloudData.albumOrders[activeGroup].find(s => s.id === sellerId);
   if (!item) return;
 
   document.getElementById('edit-purchase-seller-id').value = sellerId;
-  document.getElementById('purchase-modal-seller-info').innerText = `[${item.seller}] ${item.version}`;
+  document.getElementById('purchase-modal-seller-info').innerText = `[${item.albumTitle || '앨범'}] ${item.seller} - ${item.version}`;
   document.getElementById('edit-purchase-qty').value = item.quantity || 1;
   document.getElementById('edit-purchase-actual').value = item.actualPrice !== undefined ? item.actualPrice : (Number(item.unitPrice) || 0) * (item.quantity || 1);
   document.getElementById('edit-purchase-status').value = item.status || '주문완료';
@@ -405,6 +471,16 @@ function getCountryBadgeStyle(country) {
     case '일본': return 'bg-rose-500/20 text-rose-300 border-rose-500/40';
     case '글로벌': return 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40';
     case '중국': return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+    default: return 'bg-slate-800 text-slate-300 border-slate-700';
+  }
+}
+
+function getSaleStatusStyle(status) {
+  switch (status) {
+    case '판매중': return 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40';
+    case '마감': return 'bg-slate-800 text-slate-400 border-slate-700 line-through';
+    case '품절': return 'bg-rose-500/20 text-rose-400 border-rose-500/40';
+    case '예약중': return 'bg-purple-500/20 text-purple-300 border-purple-500/40';
     default: return 'bg-slate-800 text-slate-300 border-slate-700';
   }
 }
