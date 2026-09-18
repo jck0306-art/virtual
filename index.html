@@ -187,96 +187,102 @@ Virtual Idol Group
 <div id="album-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- 🌟 [개편된 뷰] 앨범 판매처 리스트 & 구매 정산 -->
-<section id="menu-view-album-orders" class="hidden space-y-6">
-  
-  <!-- 상단 요약 통계 & 액션 바 -->
-  <div class="glass rounded-3xl p-5 md:p-6 shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+<!-- ================= 🌟 신규 모달 모음 ================= -->
+
+<!-- 1. 판매처 등록/수정 모달 -->
+<div id="seller-modal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50 overflow-y-auto">
+  <div class="bg-slate-900 rounded-2xl max-w-lg w-full p-6 border border-slate-700 shadow-2xl space-y-4 my-8">
+    <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+      <h3 id="seller-modal-title" class="text-base font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-store text-blue-400"></i> 앨범 판매처 등록
+      </h3>
+      <button onclick="window.closeModals()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <input type="hidden" id="edit-seller-id" value="" />
+
+    <!-- 발매 앨범 구분 -->
     <div>
-      <h2 class="text-lg md:text-xl font-black text-white flex items-center gap-2">
-        <i class="fa-solid fa-calculator text-blue-400"></i> 앨범 판매처 & 구매 정산 관리
-      </h2>
-      <p class="text-xs text-slate-400 mt-1">상단 리스트에서 구매할 판매처를 체크하면, 하단 [내 구매 내역]에 자동으로 연동되어 정산됩니다.</p>
-    </div>
-
-    <div class="flex items-center gap-3 w-full md:w-auto">
-      <div class="bg-slate-900/90 border border-slate-800 px-4 py-2.5 rounded-2xl flex-1 md:flex-initial text-center">
-        <span class="text-[10px] text-slate-400 font-bold block">실구매 총 수량</span>
-        <span id="order-stat-count" class="text-lg font-black text-cyan-400 font-mono">0</span><span class="text-xs text-slate-400 ml-0.5">장</span>
+      <label class="text-xs text-slate-400 block mb-1">발매 앨범 구분 *</label>
+      <div class="flex gap-2">
+        <select id="seller-album-select" onchange="window.handleSellerAlbumChange(this.value)" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-blue-500">
+        </select>
       </div>
-      <div class="bg-slate-900/90 border border-slate-800 px-4 py-2.5 rounded-2xl flex-1 md:flex-initial text-center">
-        <span class="text-[10px] text-slate-400 font-bold block">총 지출액 (실결제)</span>
-        <span id="order-stat-total" class="text-lg font-black text-amber-300 font-mono">₩0</span>
+      <input id="seller-album-custom" type="text" placeholder="직접 입력 시 앨범명 기재" class="w-full mt-1.5 bg-slate-950 border border-blue-500/50 rounded-xl p-2 text-xs text-white hidden" />
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">앨범 버전 *</label>
+        <input id="seller-version" type="text" placeholder="예: 단품, 세트, PLLI반, A/B버전" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-blue-500" />
       </div>
-      <button onclick="window.openSellerModal()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold text-xs transition flex items-center gap-1.5 shadow-lg shadow-blue-600/20 shrink-0">
-        <i class="fa-solid fa-plus text-[10px]"></i> 판매처 등록
-      </button>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">판매처 명칭 *</label>
+        <input id="seller-name" type="text" placeholder="예: 위버스샵, 케이타운포유, 알라딘" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-blue-500" />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">판매국가</label>
+        <select id="seller-country" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-blue-500">
+          <option value="국내">국내</option>
+          <option value="일본">일본</option>
+          <option value="글로벌">글로벌</option>
+          <option value="중국">중국</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="sm:col-span-2">
+        <label class="text-xs text-slate-400 block mb-1">판매기간 (달력 선택)</label>
+        <div class="flex items-center gap-1.5">
+          <input id="seller-start-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-blue-500 font-mono" />
+          <span class="text-slate-500 text-xs">~</span>
+          <input id="seller-end-date" type="date" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-blue-500 font-mono" />
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">판매/종료 상태 구분</label>
+        <select id="seller-sale-status" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-blue-500">
+          <option value="판매중">판매중</option>
+          <option value="마감">판매종료 (마감)</option>
+          <option value="품절">품절 (일시품절)</option>
+          <option value="예약중">사전예약중</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">특전 여부 / 구성</label>
+        <input id="seller-benefits" type="text" placeholder="예: 미공포 5종 중 랜덤 1종" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-blue-500" />
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 bg-slate-950/60 p-3 rounded-2xl border border-slate-800">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">단가 (원)</label>
+        <input id="seller-unit-price" type="number" placeholder="예: 19800" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 font-mono" />
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">배송비 (원)</label>
+        <input id="seller-shipping-fee" type="number" placeholder="예: 3000 (무료는 0)" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2 text-xs text-white focus:border-blue-500 font-mono" />
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">비고 / 링크 / 메모</label>
+      <input id="seller-memo" type="text" placeholder="예: 영수증 인증 이벤트 대상처" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-2 text-xs text-white focus:border-blue-500" />
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+      <button onclick="window.closeModals()" class="px-3.5 py-2 text-xs bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-300">취소</button>
+      <button onclick="window.saveSellerItem()" class="px-4 py-2 text-xs bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-bold">저장하기</button>
     </div>
   </div>
+</div>
 
-  <!-- [표 1] 앨범 판매처 & 특전 리스트 (이미지 1:1 구조) -->
-  <div class="glass rounded-3xl p-5 shadow-xl space-y-3">
-    <div class="flex justify-between items-center px-1">
-      <h3 class="text-sm font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-store text-indigo-400"></i> 앨범 판매처 목록 (구매할 곳을 체크하세요)
-      </h3>
-      <span class="text-[11px] text-slate-400">체크 시 하단 구매 내역에 자동 추가</span>
-    </div>
-
-    <div class="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900/60 shadow-inner">
-      <table class="w-full text-left text-xs border-collapse min-w-[900px]">
-        <thead class="bg-slate-900/95 border-b border-slate-800 text-slate-300 text-[11px] font-bold select-none">
-          <tr>
-            <th class="py-3 px-3 text-center w-20 text-indigo-300">구매여부</th>
-            <th class="py-3 px-3 w-32">발매 앨범</th>
-            <th class="py-3 px-3 w-28">버전</th>
-            <th class="py-3 px-3 text-center w-20">판매국가</th>
-            <th class="py-3 px-3 w-28">판매기간</th>
-            <th class="py-3 px-3 text-center w-24">판매 상태</th>
-            <th class="py-3 px-3">특전 여부</th>
-            <th class="py-3 px-3 w-24">판매처</th>
-            <th class="py-3 px-3 text-right font-mono w-20">단가</th>
-            <th class="py-3 px-3 text-right font-mono w-20">배송비</th>
-            <th class="py-3 px-3 w-36">비고</th>
-            <th class="py-3 px-3 text-center w-16">관리</th>
-          </tr>
-        </thead>
-        <tbody id="seller-table-body" class="divide-y divide-slate-800/60"></tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- [표 2] 체크된 항목들의 실구매 내역 & 정산 관리 -->
-  <div class="glass rounded-3xl p-5 shadow-xl space-y-3">
-    <div class="flex justify-between items-center px-1">
-      <h3 class="text-sm font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-cart-shopping text-cyan-400"></i> 내 앨범 실구매 & 정산 관리
-      </h3>
-      <span class="text-[11px] text-cyan-300 font-mono">수량 및 실결제액 실시간 계산</span>
-    </div>
-
-    <div class="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900/60 shadow-inner">
-      <table class="w-full text-left text-xs border-collapse min-w-[950px]">
-        <thead class="bg-slate-900/95 border-b border-slate-800 text-slate-300 text-[11px] font-bold select-none">
-          <tr>
-            <th class="py-3 px-3 w-28">판매처</th>
-            <th class="py-3 px-3 w-32">버전</th>
-            <th class="py-3 px-3 text-right font-mono w-24">단가</th>
-            <th class="py-3 px-3 text-center font-mono w-24">수량</th>
-            <th class="py-3 px-3 text-right font-mono w-28">총액(정가)</th>
-            <th class="py-3 px-3 text-right font-mono w-28 text-amber-300">실결제액</th>
-            <th class="py-3 px-3 text-center w-28">배송 상태</th>
-            <th class="py-3 px-3 w-28">결제일</th>
-            <th class="py-3 px-3">구매 메모</th>
-            <th class="py-3 px-3 text-center w-16">설정</th>
-          </tr>
-        </thead>
-        <tbody id="purchased-table-body" class="divide-y divide-slate-800/60"></tbody>
-      </table>
-    </div>
-  </div>
-
-</section>
+<!-- 2. 구매 상세 정보 수정 모달 (수량, 실결제액, 배송상태 등) -->
 
 <!-- ================= 🌟 신규 모달 모음 ================= -->
 
