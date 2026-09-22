@@ -222,20 +222,23 @@ Virtual Idol Group
 
     <div class="overflow-x-auto border border-slate-800 rounded-2xl bg-slate-900/60 shadow-inner">
       <table class="w-full text-left text-xs border-collapse min-w-[900px]">
-        <thead class="bg-slate-900/95 border-b border-slate-800 text-slate-300 text-[11px] font-bold select-none">
+       <thead class="bg-slate-900/95 border-b border-slate-800 text-slate-300 text-[11px] font-bold select-none">
           <tr>
-            <th class="py-3 px-3 text-center w-20 text-indigo-300">구매여부</th>
-            <th class="py-3 px-3 w-32">발매 앨범</th>
-            <th class="py-3 px-3 w-28">버전</th>
-            <th class="py-3 px-3 text-center w-20">판매국가</th>
-            <th class="py-3 px-3 w-28">판매기간</th>
-            <th class="py-3 px-3 text-center w-24">판매 상태</th>
-            <th class="py-3 px-3">특전 여부</th>
+            <th class="py-3 px-3 text-center w-14 text-indigo-300">구매여부</th>
+            <th class="py-3 px-3 w-28">발매 앨범</th>
+            <!-- 🌟 버전 칸 슬림화 (w-28 -> w-20) -->
+            <th class="py-3 px-3 w-20">버전</th>
+            <th class="py-3 px-3 text-center w-16">판매국가</th>
+            <!-- 🌟 판매기간 폭 축소 (2줄 배치로 w-24 적용) -->
+            <th class="py-3 px-3 w-24">판매기간</th>
+            <th class="py-3 px-3 text-center w-20">판매 상태</th>
+            <!-- 🌟 특전 여부 칸 넓게 확보 (min-w 설정) -->
+            <th class="py-3 px-3 min-w-[140px]">특전 여부</th>
             <th class="py-3 px-3 w-24">판매처</th>
             <th class="py-3 px-3 text-right font-mono w-20">단가</th>
-            <th class="py-3 px-3 text-right font-mono w-20">배송비</th>
-            <th class="py-3 px-3 w-36">비고</th>
-            <th class="py-3 px-3 text-center w-16">관리</th>
+            <th class="py-3 px-3 text-right font-mono w-16">배송비</th>
+            <th class="py-3 px-3 w-32">비고</th>
+            <th class="py-3 px-3 text-center w-14">관리</th>
           </tr>
         </thead>
         <tbody id="seller-table-body" class="divide-y divide-slate-800/60"></tbody>
