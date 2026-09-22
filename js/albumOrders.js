@@ -40,7 +40,6 @@ function renderSellerTable(sellers) {
     const unitPrice = Number(s.unitPrice) || 0;
     const shippingFee = Number(s.shippingFee) || 0;
 
-    // 🌟 판매기간 2줄 레이아웃 및 폰트 선명화
     let periodHtml = '<span class="text-slate-500">-</span>';
     if (s.startDate && s.endDate) {
       periodHtml = `
@@ -58,113 +57,70 @@ function renderSellerTable(sellers) {
       saleStatus = '마감';
     }
 
-    // 📌 renderSellerTable 내부
-return `
-  <tr class="hover:bg-slate-800/40 text-xs transition border-b border-slate-800/60 ${isChecked ? 'bg-indigo-950/20' : ''}">
-    <td class="py-3 px-2.5 text-center">
-      <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="window.toggleOrderPurchased('${s.id}')" class="w-4 h-4 accent-indigo-500 rounded cursor-pointer" />
-    </td>
-    <td class="py-3 px-2.5 font-bold text-white">
-      <span class="text-indigo-300 font-semibold block leading-tight break-words">${escapeHTML(s.albumTitle || '공통')}</span>
-    </td>
-    <td class="py-3 px-2.5 font-medium text-slate-200 whitespace-nowrap">
-      ${escapeHTML(s.version || '-')}
-    </td>
-    <td class="py-3 px-2 text-center whitespace-nowrap">
-      <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border inline-block ${getCountryBadgeStyle(s.country)}">
-        ${escapeHTML(s.country || '국내')}
-      </span>
-    </td>
-    <td class="py-3 px-2.5 whitespace-nowrap">
-      ${periodHtml}
-    </td>
-    <td class="py-3 px-2 text-center whitespace-nowrap">
-      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${getSaleStatusStyle(saleStatus)}">
-        ${escapeHTML(saleStatus)}
-      </span>
-    </td>
-    <!-- 🌟 특전 배지가 한 줄로 시원하게 표시되도록 설정 -->
-    <td class="py-3 px-3 whitespace-nowrap">
-      ${s.benefits ? `<span class="text-pink-300 font-medium bg-pink-500/10 px-2.5 py-1 rounded-lg border border-pink-500/30 inline-block text-[11px]">${escapeHTML(s.benefits)}</span>` : '<span class="text-slate-600">-</span>'}
-    </td>
-    <td class="py-3 px-3 font-semibold text-slate-200 whitespace-nowrap">
-      ${escapeHTML(s.seller || '-')}
-    </td>
-    <td class="py-3 px-2.5 text-right font-mono text-slate-300 whitespace-nowrap">
-      ₩${unitPrice.toLocaleString()}
-    </td>
-    <td class="py-3 px-2 text-right font-mono text-slate-400 whitespace-nowrap">
-      ${shippingFee > 0 ? `₩${shippingFee.toLocaleString()}` : '무료'}
-    </td>
-    <td class="py-3 px-3 text-slate-400 text-[11px] leading-relaxed break-words">
-      ${escapeHTML(s.memo || '-')}
-    </td>
-    <td class="py-3 px-2 text-center space-x-1 shrink-0 whitespace-nowrap">
-      <button onclick="window.openSellerModal('${s.id}')" class="p-1 text-slate-400 hover:text-blue-400 transition"><i class="fa-solid fa-pen text-[11px]"></i></button>
-      <button onclick="window.deleteSellerItem('${s.id}')" class="p-1 text-slate-500 hover:text-rose-400 transition"><i class="fa-solid fa-trash text-[11px]"></i></button>
-    </td>
-  </tr>
-`;
+    return `
+      <tr class="hover:bg-slate-800/40 text-xs transition border-b border-slate-800/60 ${isChecked ? 'bg-indigo-950/20' : ''}">
+        <td class="py-3 px-2.5 text-center">
+          <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="window.toggleOrderPurchased('${s.id}')" class="w-4 h-4 accent-indigo-500 rounded cursor-pointer" />
+        </td>
+        <td class="py-3 px-2.5 font-bold text-white">
+          <span class="text-indigo-300 font-semibold block leading-tight break-words">${escapeHTML(s.albumTitle || '공통')}</span>
+        </td>
+        <td class="py-3 px-2.5 font-medium text-slate-200 whitespace-nowrap">
+          ${escapeHTML(s.version || '-')}
+        </td>
+        <td class="py-3 px-2 text-center whitespace-nowrap">
+          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border inline-block ${getCountryBadgeStyle(s.country)}">
+            ${escapeHTML(s.country || '국내')}
+          </span>
+        </td>
+        <td class="py-3 px-2.5 whitespace-nowrap">
+          ${periodHtml}
+        </td>
+        <td class="py-3 px-2 text-center whitespace-nowrap">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${getSaleStatusStyle(saleStatus)}">
+            ${escapeHTML(saleStatus)}
+          </span>
+        </td>
+        <td class="py-3 px-3 whitespace-nowrap">
+          ${s.benefits ? `<span class="text-pink-300 font-medium bg-pink-500/10 px-2.5 py-1 rounded-lg border border-pink-500/30 inline-block text-[11px]">${escapeHTML(s.benefits)}</span>` : '<span class="text-slate-600">-</span>'}
+        </td>
+        <td class="py-3 px-3 font-semibold text-slate-200 whitespace-nowrap">
+          ${escapeHTML(s.seller || '-')}
+        </td>
+        <td class="py-3 px-2.5 text-right font-mono text-slate-300 whitespace-nowrap">
+          ₩${unitPrice.toLocaleString()}
+        </td>
+        <td class="py-3 px-2 text-right font-mono text-slate-400 whitespace-nowrap">
+          ${shippingFee > 0 ? `₩${shippingFee.toLocaleString()}` : '무료'}
+        </td>
+        <td class="py-3 px-3 text-slate-400 text-[11px] leading-relaxed break-words">
+          ${escapeHTML(s.memo || '-')}
+        </td>
+        <td class="py-3 px-2 text-center space-x-1 shrink-0 whitespace-nowrap">
+          <button onclick="window.openSellerModal('${s.id}')" class="p-1 text-slate-400 hover:text-blue-400 transition"><i class="fa-solid fa-pen text-[11px]"></i></button>
+          <button onclick="window.deleteSellerItem('${s.id}')" class="p-1 text-slate-500 hover:text-rose-400 transition"><i class="fa-solid fa-trash text-[11px]"></i></button>
+        </td>
+      </tr>
+    `;
   }).join('');
 }
 
 // 📌 2. 하단 [내 앨범 실구매 & 정산] 테이블 렌더링
-// 📌 renderPurchasedTable 내부
-return `
-  <tr class="hover:bg-slate-800/40 text-xs transition border-b border-slate-800/60">
-    <!-- 판매처 -->
-    <td class="py-3 px-3 font-bold text-slate-100 whitespace-nowrap">
-      ${escapeHTML(item.seller || '-')}
-    </td>
-    <!-- 버전 -->
-    <td class="py-3 px-3 font-bold text-white whitespace-nowrap">
-      ${escapeHTML(item.version || '-')}
-    </td>
-    <td class="py-3 px-3 text-right font-mono text-slate-300 whitespace-nowrap">
-      ₩${unitPrice.toLocaleString()}
-    </td>
-    <td class="py-2 px-2.5 text-center font-mono whitespace-nowrap">
-      <div class="inline-flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5">
-        <button onclick="window.changePurchaseQty('${item.id}', -1)" class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800"><i class="fa-solid fa-minus text-[9px]"></i></button>
-        <span class="px-2 font-bold text-cyan-400">${qty}</span>
-        <button onclick="window.changePurchaseQty('${item.id}', 1)" class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800"><i class="fa-solid fa-plus text-[9px]"></i></button>
-      </div>
-    </td>
-    <td class="py-3 px-3 text-right font-mono text-slate-400 whitespace-nowrap">
-      ₩${totalPrice.toLocaleString()}
-    </td>
-    <td class="py-3 px-2.5 text-center font-mono whitespace-nowrap">
-      <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
-        <input type="checkbox" ${includeShipping ? 'checked' : ''} onchange="window.toggleShippingIncluded('${item.id}')" class="w-3.5 h-3.5 accent-cyan-500 rounded cursor-pointer" />
-        <span class="text-[11px] ${includeShipping ? 'text-cyan-300 font-bold' : 'text-slate-500 line-through'}">
-          ${shippingFee > 0 ? `+₩${shippingFee.toLocaleString()}` : '무료'}
-        </span>
-      </label>
-    </td>
-    <td class="py-3 px-3 text-right font-mono font-bold text-amber-300 whitespace-nowrap">
-      ₩${actualPrice.toLocaleString()}
-    </td>
-    <td class="py-2 px-2.5 text-center whitespace-nowrap">
-      <select onchange="window.updatePurchaseStatus('${item.id}', this.value)" class="bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-[11px] focus:outline-none focus:border-cyan-500 font-semibold ${getStatusTextColor(item.status)}">
-        <option value="주문완료" ${item.status === '주문완료' ? 'selected' : ''}>주문완료</option>
-        <option value="배송준비" ${item.status === '배송준비' ? 'selected' : ''}>배송준비</option>
-        <option value="배송중" ${item.status === '배송중' ? 'selected' : ''}>배송중</option>
-        <option value="배송완료" ${item.status === '배송완료' ? 'selected' : ''}>배송완료</option>
-        <option value="취소/환불" ${item.status === '취소/환불' ? 'selected' : ''}>취소/환불</option>
-      </select>
-    </td>
-    <td class="py-3 px-2.5 font-mono text-[11px] text-slate-300 whitespace-nowrap">
-      ${escapeHTML(item.orderDate || '-')}
-    </td>
-    <!-- 🌟 구매 메모: 단어가 쪼개지지 않고 깔끔하게 출력 -->
-    <td class="py-3 px-3 text-slate-400 text-[11px] leading-relaxed break-words whitespace-normal min-w-[120px]">
-      ${escapeHTML(item.purchaseMemo || '-')}
-    </td>
-    <td class="py-3 px-2 text-center whitespace-nowrap">
-      <button onclick="window.openPurchaseEditModal('${item.id}')" class="p-1 text-slate-400 hover:text-cyan-400 transition"><i class="fa-solid fa-sliders text-xs"></i></button>
-    </td>
-  </tr>
-`;
+function renderPurchasedTable(sellers) {
+  const container = document.getElementById('purchased-table-body');
+  if (!container) return;
+
+  const purchasedList = sellers.filter(s => s.isPurchased);
+
+  if (purchasedList.length === 0) {
+    container.innerHTML = `
+      <tr>
+        <td colspan="11" class="py-10 text-center text-slate-500 text-xs">
+          <i class="fa-solid fa-cart-shopping text-2xl mb-2 block text-slate-600"></i>
+          위 판매처 목록에서 구매한 항목의 체크박스를 선택하면 이곳에 나타납니다.
+        </td>
+      </tr>
+    `;
     return;
   }
 
@@ -183,32 +139,23 @@ return `
         <td class="py-3 px-3 font-bold text-slate-100 whitespace-nowrap">
           ${escapeHTML(item.seller || '-')}
         </td>
-
         <td class="py-3 px-3 font-bold text-white whitespace-nowrap">
           ${escapeHTML(item.version || '-')}
         </td>
-
         <td class="py-3 px-3 text-right font-mono text-slate-300 whitespace-nowrap">
           ₩${unitPrice.toLocaleString()}
         </td>
-
-        <td class="py-2 px-3 text-center font-mono whitespace-nowrap">
+        <td class="py-2 px-2.5 text-center font-mono whitespace-nowrap">
           <div class="inline-flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5">
-            <button onclick="window.changePurchaseQty('${item.id}', -1)" class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800">
-              <i class="fa-solid fa-minus text-[9px]"></i>
-            </button>
+            <button onclick="window.changePurchaseQty('${item.id}', -1)" class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800"><i class="fa-solid fa-minus text-[9px]"></i></button>
             <span class="px-2 font-bold text-cyan-400">${qty}</span>
-            <button onclick="window.changePurchaseQty('${item.id}', 1)" class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800">
-              <i class="fa-solid fa-plus text-[9px]"></i>
-            </button>
+            <button onclick="window.changePurchaseQty('${item.id}', 1)" class="w-5 h-5 flex items-center justify-center rounded text-slate-400 hover:text-white hover:bg-slate-800"><i class="fa-solid fa-plus text-[9px]"></i></button>
           </div>
         </td>
-
         <td class="py-3 px-3 text-right font-mono text-slate-400 whitespace-nowrap">
           ₩${totalPrice.toLocaleString()}
         </td>
-
-        <td class="py-3 px-3 text-center font-mono whitespace-nowrap">
+        <td class="py-3 px-2.5 text-center font-mono whitespace-nowrap">
           <label class="inline-flex items-center gap-1.5 cursor-pointer select-none">
             <input type="checkbox" ${includeShipping ? 'checked' : ''} onchange="window.toggleShippingIncluded('${item.id}')" class="w-3.5 h-3.5 accent-cyan-500 rounded cursor-pointer" />
             <span class="text-[11px] ${includeShipping ? 'text-cyan-300 font-bold' : 'text-slate-500 line-through'}">
@@ -216,12 +163,10 @@ return `
             </span>
           </label>
         </td>
-
         <td class="py-3 px-3 text-right font-mono font-bold text-amber-300 whitespace-nowrap">
           ₩${actualPrice.toLocaleString()}
         </td>
-
-        <td class="py-2 px-3 text-center whitespace-nowrap">
+        <td class="py-2 px-2.5 text-center whitespace-nowrap">
           <select onchange="window.updatePurchaseStatus('${item.id}', this.value)" class="bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1 text-[11px] focus:outline-none focus:border-cyan-500 font-semibold ${getStatusTextColor(item.status)}">
             <option value="주문완료" ${item.status === '주문완료' ? 'selected' : ''}>주문완료</option>
             <option value="배송준비" ${item.status === '배송준비' ? 'selected' : ''}>배송준비</option>
@@ -230,19 +175,14 @@ return `
             <option value="취소/환불" ${item.status === '취소/환불' ? 'selected' : ''}>취소/환불</option>
           </select>
         </td>
-
-        <td class="py-3 px-3 font-mono text-[11px] text-slate-300 whitespace-nowrap">
+        <td class="py-3 px-2.5 font-mono text-[11px] text-slate-300 whitespace-nowrap">
           ${escapeHTML(item.orderDate || '-')}
         </td>
-
-        <td class="py-3 px-3 text-slate-400 text-[11px] break-words">
+        <td class="py-3 px-3 text-slate-400 text-[11px] leading-relaxed break-words whitespace-normal min-w-[120px]">
           ${escapeHTML(item.purchaseMemo || '-')}
         </td>
-
-        <td class="py-3 px-3 text-center whitespace-nowrap">
-          <button onclick="window.openPurchaseEditModal('${item.id}')" class="p-1 text-slate-400 hover:text-cyan-400 transition" title="실결제액/상세 수정">
-            <i class="fa-solid fa-sliders text-xs"></i>
-          </button>
+        <td class="py-3 px-2 text-center whitespace-nowrap">
+          <button onclick="window.openPurchaseEditModal('${item.id}')" class="p-1 text-slate-400 hover:text-cyan-400 transition"><i class="fa-solid fa-sliders text-xs"></i></button>
         </td>
       </tr>
     `;
