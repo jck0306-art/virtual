@@ -40,17 +40,17 @@ function renderSellerTable(sellers) {
     const unitPrice = Number(s.unitPrice) || 0;
     const shippingFee = Number(s.shippingFee) || 0;
 
-    // 🌟 판매기간 2줄 레이아웃
-    let periodHtml = '<span class="text-slate-600">-</span>';
+    // 🌟 판매기간 2줄 레이아웃 및 폰트 선명화
+    let periodHtml = '<span class="text-slate-500">-</span>';
     if (s.startDate && s.endDate) {
       periodHtml = `
-        <div class="flex flex-col text-[11px] leading-tight font-mono text-slate-300">
+        <div class="flex flex-col text-[11px] leading-snug font-mono text-slate-200">
           <span>${escapeHTML(s.startDate)}</span>
-          <span class="text-[10px] text-slate-500">~ ${escapeHTML(s.endDate)}</span>
+          <span class="text-[10px] text-slate-400 font-medium">~ ${escapeHTML(s.endDate)}</span>
         </div>
       `;
     } else if (s.startDate) {
-      periodHtml = `<span class="font-mono text-[11px] text-slate-300">${escapeHTML(s.startDate)}</span>`;
+      periodHtml = `<span class="font-mono text-[11px] text-slate-200">${escapeHTML(s.startDate)}</span>`;
     }
 
     let saleStatus = s.saleStatus || '판매중';
@@ -65,36 +65,36 @@ function renderSellerTable(sellers) {
           <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="window.toggleOrderPurchased('${s.id}')" class="w-4 h-4 accent-indigo-500 rounded cursor-pointer" title="구매 내역에 추가" />
         </td>
 
-        <!-- 발매 앨범 구분 -->
+        <!-- 🌟 발매 앨범 (자연스러운 2줄 허용) -->
         <td class="py-3 px-3 font-bold text-white">
-          <span class="text-indigo-300 font-semibold block truncate max-w-[130px]" title="${escapeHTML(s.albumTitle || '공통')}">${escapeHTML(s.albumTitle || '공통')}</span>
+          <span class="text-indigo-300 font-semibold block leading-snug break-words">${escapeHTML(s.albumTitle || '공통')}</span>
         </td>
 
-        <!-- 버전 (슬림화) -->
-        <td class="py-3 px-3 font-medium text-slate-200 truncate max-w-[90px]" title="${escapeHTML(s.version || '')}">
+        <!-- 버전 -->
+        <td class="py-3 px-3 font-medium text-slate-200 break-words">
           ${escapeHTML(s.version || '-')}
         </td>
 
-        <!-- 판매국가 -->
-        <td class="py-3 px-3 text-center">
-          <span class="px-1.5 py-0.5 rounded text-[10px] font-bold border ${getCountryBadgeStyle(s.country)}">
+        <!-- 🌟 판매국가 (줄바꿈 방지) -->
+        <td class="py-3 px-3 text-center whitespace-nowrap">
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold border inline-block ${getCountryBadgeStyle(s.country)}">
             ${escapeHTML(s.country || '국내')}
           </span>
         </td>
 
-        <!-- 판매기간 (2줄) -->
+        <!-- 🌟 판매기간 (2줄 & 선명한 색상) -->
         <td class="py-3 px-3 whitespace-nowrap">
           ${periodHtml}
         </td>
 
-        <!-- 판매 상태 / 종료 여부 -->
-        <td class="py-3 px-3 text-center">
+        <!-- 판매 상태 -->
+        <td class="py-3 px-3 text-center whitespace-nowrap">
           <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${getSaleStatusStyle(saleStatus)}">
             ${escapeHTML(saleStatus)}
           </span>
         </td>
 
-        <!-- 🌟 특전 여부 (줄바꿈 없이 한 줄로 시원하게 표시) -->
+        <!-- 특전 여부 -->
         <td class="py-3 px-3 text-slate-200 whitespace-nowrap">
           ${s.benefits ? `<span class="text-pink-300 font-medium bg-pink-500/10 px-2 py-0.5 rounded-lg border border-pink-500/20 inline-block">${escapeHTML(s.benefits)}</span>` : '<span class="text-slate-600">-</span>'}
         </td>
