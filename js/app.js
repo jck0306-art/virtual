@@ -15,7 +15,10 @@ import {
   renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, 
   changeGoodsQuantity, deleteGoods 
 } from './goods.js';
-import { renderPhotocards, openPhotocardModal, savePhotocard, togglePcCollected, deletePhotocard } from './photocards.js';
+import { 
+  renderPhotocards, openPhotocardModal, savePhotocard, togglePcCollected, 
+  deletePhotocard, setPcCategory, setPcFilter, changePcQty, handlePcModalCollectedChange 
+} from './photocards.js';
 import { 
   renderEvents, openEventModal, saveEvent, 
   openApplicantManageModal, renderApplicantListTable, setAppFilter, 
@@ -200,11 +203,15 @@ window.toggleGoodsOwned = idx => toggleGoodsOwned(idx, currentGroup, render);
 window.changeGoodsQuantity = (idx, delta) => changeGoodsQuantity(idx, delta, currentGroup, render);
 window.deleteGoods = idx => deleteGoods(idx, currentGroup, render);
 
-// 포카
+// 포카 도감 관련 전역 바인딩
 window.openPhotocardModal = idx => openPhotocardModal(idx, currentGroup);
 window.savePhotocard = () => savePhotocard(currentGroup, render);
 window.togglePcCollected = idx => togglePcCollected(idx, currentGroup, render);
+window.changePcQty = (idx, delta) => changePcQty(idx, delta, currentGroup, render);
 window.deletePhotocard = idx => deletePhotocard(idx, currentGroup, render);
+window.setPcCategory = cat => setPcCategory(cat);
+window.setPcFilter = filterType => setPcFilter(filterType);
+window.handlePcModalCollectedChange = val => handlePcModalCollectedChange(val);
 
 // 나눔 & 이벤트
 window.openEventModal = idx => openEventModal(idx, currentGroup);
