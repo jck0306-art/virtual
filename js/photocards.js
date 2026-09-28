@@ -84,9 +84,9 @@ export function renderPhotocards(currentGroup) {
             </div>
           `}
 
+          <!-- 🌟 멤버명 제거 후 버전/명칭을 단독 타이틀로 강조 -->
           <div class="p-3 text-center">
-            <h5 class="text-xs font-bold text-white">${escapeHTML(pc.member)}</h5>
-            <p class="text-[11px] text-slate-400 mt-0.5 line-clamp-1" title="${escapeHTML(pc.version)}">${escapeHTML(pc.version)}</p>
+            <h5 class="text-xs font-bold text-white line-clamp-2" title="${escapeHTML(pc.version)}">${escapeHTML(pc.version)}</h5>
           </div>
         </div>
 
@@ -179,7 +179,6 @@ export function openPhotocardModal(idx, currentGroup) {
     const item = pcs[idx];
     document.getElementById('pc-modal-title').innerHTML = '<i class="fa-solid fa-pen text-pink-400"></i> 포토카드 정보 수정';
     document.getElementById('pc-category').value = item.category || '';
-    document.getElementById('pc-member').value = item.member || '';
     document.getElementById('pc-version').value = item.version || '';
     document.getElementById('pc-collected').value = item.collected ? 'true' : 'false';
     document.getElementById('pc-quantity').value = item.quantity !== undefined ? item.quantity : (item.collected ? 1 : 0);
@@ -194,7 +193,6 @@ export function openPhotocardModal(idx, currentGroup) {
   } else {
     document.getElementById('pc-modal-title').innerHTML = '<i class="fa-solid fa-id-badge text-pink-400"></i> 새 포토카드 등록';
     document.getElementById('pc-category').value = activeCategory !== 'all' ? activeCategory : '';
-    document.getElementById('pc-member').value = '';
     document.getElementById('pc-version').value = '';
     document.getElementById('pc-collected').value = 'true';
     document.getElementById('pc-quantity').value = '1';
@@ -218,18 +216,17 @@ export function handlePcModalCollectedChange(val) {
 export function savePhotocard(currentGroup, onRender) {
   const idx = parseInt(document.getElementById('edit-pc-idx').value);
   const category = (document.getElementById('pc-category').value || '').trim();
-  const member = (document.getElementById('pc-member').value || '').trim();
   const version = (document.getElementById('pc-version').value || '').trim();
   const img = document.getElementById('pc-img-base64').value;
   let quantity = Math.max(0, parseInt(document.getElementById('pc-quantity').value) || 0);
   const collected = document.getElementById('pc-collected').value === 'true' && quantity > 0;
 
-  if (!member || !version) return alert('멤버와 포카 버전/출처를 입력해주세요.');
+  if (!version) return alert('포카 버전 / 출처 / 명칭을 입력해주세요.');
   if (!cloudData.photocards[currentGroup]) cloudData.photocards[currentGroup] = [];
 
-  const payload = { category: category || '기타', member, version, img, collected, quantity };
+  const payload = { category: category || '기타', version, img, collected, quantity };
 
-  if (idx >= 0) cloudData.photocards[currentGroup][idx] = payload;
+  if (idx >= 0) cloudData.photocards[currentGroup][idx] = { ...cloudData.photocards[currentGroup][idx], ...payload };
   else cloudData.photocards[currentGroup].unshift(payload);
 
   window.closeModals();
