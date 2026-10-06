@@ -23,7 +23,7 @@ export function sanitizeHandle(handle) {
   return String(handle).trim().replace(/^@/, '');
 }
 
-// 🌟 Google 팝업 로그인 (안정화 버전)
+// 🌟 Google 로그인 (충돌 방지 표준 팝업 방식)
 export async function loginWithGoogle() {
   if (!window.firebase || !window.firebase.auth) {
     alert("Firebase Auth 라이브러리를 불러오는 중입니다. 잠시 후 다시 눌러주세요.");
@@ -45,7 +45,6 @@ export async function loginWithGoogle() {
     }
   } catch (error) {
     console.error("로그인 에러:", error);
-    // 사용자가 직접 창을 닫았을 때는 알림창 띄우지 않고 조용히 복귀
     if (error.code === 'auth/popup-closed-by-user') {
       return;
     }
