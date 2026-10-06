@@ -18,29 +18,23 @@ export function sanitizeURL(url) {
   return '#';
 }
 
-// 🌟 events.js에서 요구하는 sanitizeHandle 함수 추가
 export function sanitizeHandle(handle) {
   if (!handle) return '';
   return String(handle).trim().replace(/^@/, '');
 }
 
-// 🌟 Google 팝업 로그인
+// 🌟 팝업 차단 및 쿠키 오류를 방지하는 리다이렉트 로그인
 export async function loginWithGoogle() {
   if (!window.firebase || !window.firebase.auth) {
     alert("Firebase Auth 라이브러리를 불러오는 중입니다. 잠시 후 다시 눌러주세요.");
     return;
   }
   const provider = new window.firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
+
   try {
-    const result = await window.firebase.auth().signInWithPopup(provider);
-    const user = result.user;
-    if (user.email !== ADMIN_EMAIL) {
-      alert(`접근 권한이 없는 계정입니다 (${user.email}). ${ADMIN_EMAIL} 계정으로 로그인해 주세요.`);
-      await window.firebase.auth().signOut();
-      location.reload();
-    } else {
-      location.reload();
-    }
+    // 팝업 에러 방지를 위해 리다이렉트 방식으로 이동
+    await window.firebase.auth().signInWithRedirect(provider);
   } catch (error) {
     console.error("로그인 에러:", error);
     alert(`로그인 실패: ${error.message}`);
@@ -55,8 +49,22 @@ export async function logoutAdmin() {
   location.reload();
 }
 
-// 🌟 보안 가드 (리다이렉트 없이 중앙에 잠금창 유지)
+// 🌟 보안 가드 및 리다이렉트 결과 처리
 export function initAuthGuard(isPortal = false, onAuthorized = null) {
+  // 1. 리다이렉트 로그인 후 돌아왔을 때 결과 검증
+  if (window.firebase && window.firebase.auth) {
+    window.firebase.auth().getRedirectResult().then(result => {
+      if (result && result.user) {
+        if (result.user.email !== ADMIN_EMAIL) {
+          alert(`접근 권한이 없는 계정입니다 (${result.user.email}).${ADMIN_EMAIL} 계정으로 로그인해 주세요.`);
+          window.firebase.auth().signOut();
+        }
+      }
+    }).catch(error => {
+      console.error("Redirect 로그인 에러:", error);
+    });
+  }
+
   if (isPortal) {
     waitForAuth((user) => {
       renderHeaderAuthUI(user, true);
@@ -150,9 +158,4 @@ function renderHeaderAuthUI(user, isPortal) {
     `;
   } else {
     container.innerHTML = `
-      <button onclick="window.loginWithGoogle()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer">
-        <i class="fa-brands fa-google text-[11px]"></i> 로그인
-      </button>
-    `;
-  }
-}
+      <button onclick="window.loginWithGoogle()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold
