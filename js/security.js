@@ -33,7 +33,6 @@ export async function loginWithGoogle() {
   provider.setCustomParameters({ prompt: 'select_account' });
 
   try {
-    // 팝업 에러 방지를 위해 리다이렉트 방식으로 이동
     await window.firebase.auth().signInWithRedirect(provider);
   } catch (error) {
     console.error("로그인 에러:", error);
@@ -51,12 +50,12 @@ export async function logoutAdmin() {
 
 // 🌟 보안 가드 및 리다이렉트 결과 처리
 export function initAuthGuard(isPortal = false, onAuthorized = null) {
-  // 1. 리다이렉트 로그인 후 돌아왔을 때 결과 검증
+  // 리다이렉트 로그인 후 복귀 시 인증 결과 검증
   if (window.firebase && window.firebase.auth) {
     window.firebase.auth().getRedirectResult().then(result => {
       if (result && result.user) {
         if (result.user.email !== ADMIN_EMAIL) {
-          alert(`접근 권한이 없는 계정입니다 (${result.user.email}).${ADMIN_EMAIL} 계정으로 로그인해 주세요.`);
+          alert(`접근 권한이 없는 계정입니다 (${result.user.email}). ${ADMIN_EMAIL} 계정으로 로그인해 주세요.`);
           window.firebase.auth().signOut();
         }
       }
@@ -104,7 +103,10 @@ export function initAuthGuard(isPortal = false, onAuthorized = null) {
     `;
     document.body.appendChild(overlay);
 
-    document.getElementById('btn-guard-login').onclick = () => loginWithGoogle();
+    const btnGuard = document.getElementById('btn-guard-login');
+    if (btnGuard) {
+      btnGuard.onclick = () => loginWithGoogle();
+    }
   }
 
   waitForAuth((user) => {
@@ -158,4 +160,9 @@ function renderHeaderAuthUI(user, isPortal) {
     `;
   } else {
     container.innerHTML = `
-      <button onclick="window.loginWithGoogle()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold
+      <button onclick="window.loginWithGoogle()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer">
+        <i class="fa-brands fa-google text-[11px]"></i> 로그인
+      </button>
+    `;
+  }
+}
