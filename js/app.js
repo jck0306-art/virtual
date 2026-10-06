@@ -48,6 +48,17 @@ function render() {
   const badgeEl = document.getElementById('group-badge');
   const fandomEl = document.getElementById('group-fandom');
   const linksEl = document.getElementById('quick-links');
+  const DELIVERY_PIN_HASH = "a374ba82c9749df67d64b54e7d1d293d052636a0f4438df3775b8a53e83b8b6a";
+let previousMenu = 'profile';
+
+// 브라우저 내장 SHA-256 암호화 헬퍼 함수
+async function hashSHA256(text) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
   if (titleEl) titleEl.innerText = g.name;
   if (badgeEl) badgeEl.innerText = g.company;
@@ -227,6 +238,77 @@ window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(origin
 window.drawRandomWinners = () => drawRandomWinners(render);
 
 // 반택 주소록
+// 🌟 메뉴 전환 로직 (2차 보안 가드 적용)
+window.switchMenu = function(menuKey) {
+  if (menuKey === 'deliveries') {
+    const isVerified = sessionStorage.getItem('delivery_unlocked') === 'true';
+    if (!isVerified) {
+      openDeliveryAuthModal();
+      return;
+    }
+  }
+
+  previousMenu = currentMenu;
+  currentMenu = menuKey;
+  const menus = ['profile', 'official', 'albums', 'album-orders', 'goods', 'photocards', 'events', 'deliveries'];
+  menus.forEach(m => {
+    const btn = document.getElementById(`nav-${m}`);
+    const view = document.getElementById(`menu-view-${m}`);
+    if (btn && view) {
+      if (m === menuKey) {
+        btn.className = "px-3.5 py-2.5 rounded-t-xl transition menu-active flex items-center gap-1.5 whitespace-nowrap";
+        view.classList.remove('hidden');
+      } else {
+        btn.className = "px-3.5 py-2.5 rounded-t-xl transition text-slate-400 hover:text-white flex items-center gap-1.5 whitespace-nowrap";
+        view.classList.add('hidden');
+      }
+    }
+  });
+  render();
+};
+
+// 🔒 2차 비밀번호 인증 모달 열기
+function openDeliveryAuthModal() {
+  const modal = document.getElementById('delivery-auth-modal');
+  const pinInput = document.getElementById('delivery-auth-pin');
+  const errEl = document.getElementById('delivery-auth-error');
+  if (!modal || !pinInput) return;
+
+  pinInput.value = '';
+  if (errEl) errEl.classList.add('hidden');
+  modal.classList.replace('hidden', 'flex');
+  pinInput.focus();
+}
+
+// 🔒 2차 비밀번호 확인 (입력값 해싱 후 비교)
+window.verifyDeliveryPin = async function() {
+  const pinInput = document.getElementById('delivery-auth-pin');
+  const errEl = document.getElementById('delivery-auth-error');
+  const modal = document.getElementById('delivery-auth-modal');
+  
+  if (!pinInput) return;
+  const val = pinInput.value.trim();
+
+  // 입력된 평문을 SHA-256으로 해싱하여 저장된 해시값과 비교
+  const inputHash = await hashSHA256(val);
+
+  if (inputHash === DELIVERY_PIN_HASH) {
+    sessionStorage.setItem('delivery_unlocked', 'true');
+    modal.classList.replace('flex', 'hidden');
+    window.switchMenu('deliveries');
+  } else {
+    if (errEl) errEl.classList.remove('hidden');
+    pinInput.value = '';
+    pinInput.focus();
+  }
+};
+
+// 🔒 인증 취소 시 이전 메뉴로 복귀
+window.cancelDeliveryAuth = function() {
+  const modal = document.getElementById('delivery-auth-modal');
+  if (modal) modal.classList.replace('flex', 'hidden');
+  window.switchMenu(previousMenu || 'profile');
+};
 window.getCurrentGroup = () => currentGroup;
 window.renderAllApp = render;
 window.openDeliveryModal = (idx = -1) => openDeliveryModal(idx, currentGroup);
