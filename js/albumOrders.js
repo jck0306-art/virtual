@@ -189,15 +189,17 @@ function renderPurchasedTable(sellers) {
   }).join('');
 }
 
-// 📌 3. 실구매 총 수량 & 총 지출액 자동 계산
+// 📌 3. 실구매 총 수량, 버전별 수량 & 총 지출액 자동 계산
 function updateStats(sellers) {
   const statCountEl = document.getElementById('order-stat-count');
   const statTotalEl = document.getElementById('order-stat-total');
+  const statVersionsEl = document.getElementById('order-stat-versions');
 
   const purchasedList = sellers.filter(s => s.isPurchased);
 
   let totalCount = 0;
   let totalSpent = 0;
+  const versionMap = {}; // { 'PLBBUU': 10, 'RACER': 20 }
 
   purchasedList.forEach(item => {
     const qty = Number(item.quantity) || 1;
@@ -210,12 +212,30 @@ function updateStats(sellers) {
 
     totalCount += qty;
     totalSpent += actual;
+
+    // 버전별 수량 집계
+    const verName = (item.version || '미지정').trim();
+    versionMap[verName] = (versionMap[verName] || 0) + qty;
   });
 
   if (statCountEl) statCountEl.innerText = totalCount.toLocaleString();
   if (statTotalEl) statTotalEl.innerText = `₩${totalSpent.toLocaleString()}`;
-}
 
+  // 🌟 버전별 수량 칩 렌더링
+  if (statVersionsEl) {
+    const verKeys = Object.keys(versionMap);
+    if (verKeys.length === 0) {
+      statVersionsEl.innerHTML = `<span class="text-[11px] text-slate-500">구매 체크된 내역이 없습니다.</span>`;
+    } else {
+      statVersionsEl.innerHTML = verKeys.map(ver => `
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-lg bg-slate-900 border border-slate-700/80 text-xs">
+          <span class="text-slate-300 font-semibold">${escapeHTML(ver)}</span>
+          <span class="font-mono font-bold text-cyan-400">${versionMap[ver]}장</span>
+        </span>
+      `).join('');
+    }
+  }
+}
 export function toggleShippingIncluded(sellerId, currentGroup, onRender) {
   const grp = currentGroup || activeGroup;
   const item = cloudData.albumOrders[grp].find(s => s.id === sellerId);
