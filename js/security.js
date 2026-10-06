@@ -23,19 +23,32 @@ export function sanitizeHandle(handle) {
   return String(handle).trim().replace(/^@/, '');
 }
 
-// 🌟 팝업 차단 및 쿠키 오류를 방지하는 리다이렉트 로그인
+// 🌟 Google 팝업 로그인 (안정화 버전)
 export async function loginWithGoogle() {
   if (!window.firebase || !window.firebase.auth) {
     alert("Firebase Auth 라이브러리를 불러오는 중입니다. 잠시 후 다시 눌러주세요.");
     return;
   }
+  
+  const auth = window.firebase.auth();
   const provider = new window.firebase.auth.GoogleAuthProvider();
-  provider.setCustomParameters({ prompt: 'select_account' });
 
   try {
-    await window.firebase.auth().signInWithRedirect(provider);
+    const result = await auth.signInWithPopup(provider);
+    const user = result.user;
+    if (user.email !== ADMIN_EMAIL) {
+      alert(`접근 권한이 없는 계정입니다 (${user.email}). ${ADMIN_EMAIL} 계정으로 로그인해 주세요.`);
+      await auth.signOut();
+      location.reload();
+    } else {
+      location.reload();
+    }
   } catch (error) {
     console.error("로그인 에러:", error);
+    // 사용자가 직접 창을 닫았을 때는 알림창 띄우지 않고 조용히 복귀
+    if (error.code === 'auth/popup-closed-by-user') {
+      return;
+    }
     alert(`로그인 실패: ${error.message}`);
   }
 }
@@ -48,22 +61,8 @@ export async function logoutAdmin() {
   location.reload();
 }
 
-// 🌟 보안 가드 및 리다이렉트 결과 처리
+// 🌟 보안 가드
 export function initAuthGuard(isPortal = false, onAuthorized = null) {
-  // 리다이렉트 로그인 후 복귀 시 인증 결과 검증
-  if (window.firebase && window.firebase.auth) {
-    window.firebase.auth().getRedirectResult().then(result => {
-      if (result && result.user) {
-        if (result.user.email !== ADMIN_EMAIL) {
-          alert(`접근 권한이 없는 계정입니다 (${result.user.email}). ${ADMIN_EMAIL} 계정으로 로그인해 주세요.`);
-          window.firebase.auth().signOut();
-        }
-      }
-    }).catch(error => {
-      console.error("Redirect 로그인 에러:", error);
-    });
-  }
-
   if (isPortal) {
     waitForAuth((user) => {
       renderHeaderAuthUI(user, true);
