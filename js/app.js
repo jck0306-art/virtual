@@ -153,8 +153,25 @@ window.switchGroup = function(groupKey) {
   render();
 };
 
+// 🌟 변수 선언 추가 (상단 또는 switchMenu 바로 위에 추가)
+let previousMenu = 'profile';
+
 window.switchMenu = function(menuKey) {
+  // 🔒 반택 주소록 진입 시 2차 비밀번호 확인
+  if (menuKey === 'deliveries') {
+    const isVerified = sessionStorage.getItem('delivery_unlocked') === 'true';
+    if (!isVerified) {
+      if (typeof openDeliveryAuthModal === 'function') {
+        openDeliveryAuthModal();
+      }
+      return;
+    }
+  }
+
+  // 이전 메뉴 저장 후 현재 메뉴 갱신
+  previousMenu = typeof currentMenu !== 'undefined' ? currentMenu : 'profile';
   currentMenu = menuKey;
+
   const menus = ['profile', 'official', 'albums', 'album-orders', 'goods', 'photocards', 'events', 'deliveries'];
   menus.forEach(m => {
     const btn = document.getElementById(`nav-${m}`);
@@ -169,7 +186,10 @@ window.switchMenu = function(menuKey) {
       }
     }
   });
-  render();
+
+  if (typeof render === 'function') {
+    render();
+  }
 };
 
 window.closeModals = function() {
