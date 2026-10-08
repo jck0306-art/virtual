@@ -1,3 +1,12 @@
+// 🌟 SHA-256 hashfunctie voor wachtwoordverificatie
+async function hashSHA256(text) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 import { initFirebase, cloudData, processImageFile } from './firebase.js';
 import { renderProfile, openMemberModal, saveMember } from './profile.js';
 import { 
@@ -32,7 +41,7 @@ import {
   injectDeliveryModal, openDeliveryModal, closeDeliveryModal, saveDelivery,
   downloadDeliveryTemplate, handleExcelUpload 
 } from './deliveryModal.js';
-import { initAuthGuard, logoutAdmin } from './security.js';
+import { hashSHA256 } from './security.js';
 
 window.logoutAdmin = logoutAdmin;
 
