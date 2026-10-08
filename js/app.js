@@ -32,7 +32,7 @@ import {
   injectDeliveryModal, openDeliveryModal, closeDeliveryModal, saveDelivery,
   downloadDeliveryTemplate, handleExcelUpload 
 } from './deliveryModal.js';
-import { hashSHA256 } from './security.js';
+import { hashSHA256, logoutAdmin, loginWithGoogle } from './security.js';
 
 window.logoutAdmin = logoutAdmin;
 
