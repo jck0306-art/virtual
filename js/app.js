@@ -1,12 +1,3 @@
-// 브라우저 내장 SHA-256 암호화 헬퍼 함수
-async function hashSHA256(text) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
 import { initFirebase, cloudData, processImageFile } from './firebase.js';
 import { renderProfile, openMemberModal, saveMember } from './profile.js';
 import { 
@@ -18,7 +9,7 @@ import {
   renderAlbumOrders, openSellerModal, saveSellerItem, deleteSellerItem,
   toggleOrderPurchased, changePurchaseQty, updatePurchaseStatus,
   openPurchaseEditModal, calcPurchaseModalTotal, savePurchaseDetail,
-  toggleShippingIncluded // 🌟 추가
+  toggleShippingIncluded
 } from './albumOrders.js';
 import { 
   renderGoods, openGoodsModal, saveGoods, toggleGoodsOwned, 
