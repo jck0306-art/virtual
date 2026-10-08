@@ -1,5 +1,9 @@
 export const ADMIN_EMAIL = "jck0306@gmail.com";
 
+// 🌟 반택 주소록 2차 비밀번호 해시값 (예: '1234'의 SHA-256 해시값)
+// 만약 다른 비밀번호를 쓰고 계셨다면 해당 해시값으로 변경하시면 됩니다.
+export const DELIVERY_PIN_HASH = "7e831593833c68e3f2f6323a7d176d98fe2dd518e6847f813f528a513679333d"; 
+
 // 🌟 반택 주소록 핀번호 검증용 SHA-256 해시 함수
 export async function hashSHA256(text) {
   const encoder = new TextEncoder();
