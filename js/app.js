@@ -1,4 +1,4 @@
-// 🌟 SHA-256 hashfunctie voor wachtwoordverificatie
+// 브라우저 내장 SHA-256 암호화 헬퍼 함수
 async function hashSHA256(text) {
   const encoder = new TextEncoder();
   const data = encoder.encode(text);
@@ -60,14 +60,6 @@ function render() {
   const DELIVERY_PIN_HASH = "a374ba82c9749df67d64b54e7d1d293d052636a0f4438df3775b8a53e83b8b6a";
 let previousMenu = 'profile';
 
-// 브라우저 내장 SHA-256 암호화 헬퍼 함수
-async function hashSHA256(text) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
   if (titleEl) titleEl.innerText = g.name;
   if (badgeEl) badgeEl.innerText = g.company;
