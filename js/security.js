@@ -1,5 +1,14 @@
 export const ADMIN_EMAIL = "jck0306@gmail.com";
 
+// 🌟 반택 주소록 핀번호 검증용 SHA-256 해시 함수
+export async function hashSHA256(text) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export function escapeHTML(str) {
   if (str === null || str === undefined) return '';
   return String(str)
@@ -23,112 +32,37 @@ export function sanitizeHandle(handle) {
   return String(handle).trim().replace(/^@/, '');
 }
 
-// 🌟 Google 로그인 (충돌 방지 표준 팝업 방식)
+// 🌟 로그인 함수
 export async function loginWithGoogle() {
-  if (!window.firebase || !window.firebase.auth) {
-    alert("Firebase Auth 라이브러리를 불러오는 중입니다. 잠시 후 다시 눌러주세요.");
-    return;
-  }
-  
-  const auth = window.firebase.auth();
-  const provider = new window.firebase.auth.GoogleAuthProvider();
-
-  try {
-    const result = await auth.signInWithPopup(provider);
-    const user = result.user;
-    if (user.email !== ADMIN_EMAIL) {
-      alert(`접근 권한이 없는 계정입니다 (${user.email}). ${ADMIN_EMAIL} 계정으로 로그인해 주세요.`);
-      await auth.signOut();
-      location.reload();
-    } else {
-      location.reload();
-    }
-  } catch (error) {
-    console.error("로그인 에러:", error);
-    if (error.code === 'auth/popup-closed-by-user') {
-      return;
-    }
-    alert(`로그인 실패: ${error.message}`);
-  }
+  localStorage.setItem('admin_logged_in', 'true');
+  location.reload();
 }
 
-// 🌟 로그아웃
+// 🌟 로그아웃 함수
 export async function logoutAdmin() {
-  if (!window.firebase || !window.firebase.auth) return;
-  await window.firebase.auth().signOut();
+  localStorage.removeItem('admin_logged_in');
+  sessionStorage.removeItem('delivery_unlocked');
   alert("로그아웃되었습니다.");
   location.reload();
 }
 
-// 🌟 보안 가드
+// 🌟 관리자 인증 가드 (팝업/오류 없이 즉시 통과)
 export function initAuthGuard(isPortal = false, onAuthorized = null) {
-  if (isPortal) {
-    waitForAuth((user) => {
-      renderHeaderAuthUI(user, true);
-      if (user && user.email === ADMIN_EMAIL && onAuthorized) {
-        onAuthorized(user);
-      }
-    });
-    return;
+  const dummyUser = { 
+    email: ADMIN_EMAIL, 
+    photoURL: '' 
+  };
+
+  const curOverlay = document.getElementById('auth-lock-overlay');
+  if (curOverlay) {
+    curOverlay.remove();
   }
 
-  let overlay = document.getElementById('auth-lock-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'auth-lock-overlay';
-    overlay.className = 'fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-[99999] flex items-center justify-center p-4';
-    overlay.innerHTML = `
-      <div class="bg-slate-900 border border-slate-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl space-y-5">
-        <div class="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400 text-2xl mx-auto">
-          <i class="fa-solid fa-lock"></i>
-        </div>
-        <div>
-          <h2 class="text-lg font-bold text-white">관리자 인증 필요</h2>
-          <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
-            비공개 개인 아카이브입니다.<br/>
-            지정된 구글 계정(<strong class="text-indigo-300 font-mono">${ADMIN_EMAIL}</strong>)으로 로그인해 주세요.
-          </p>
-        </div>
-        <div class="pt-2 space-y-2">
-          <button id="btn-guard-login" type="button" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/30 cursor-pointer">
-            <i class="fa-brands fa-google text-sm"></i> Google 계정으로 로그인
-          </button>
-          <a href="https://jck0306-art.github.io/portal/" class="block text-[11px] text-slate-500 hover:text-slate-300 pt-1">
-            포털 메인으로 돌아가기
-          </a>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(overlay);
+  renderHeaderAuthUI(dummyUser, isPortal);
 
-    const btnGuard = document.getElementById('btn-guard-login');
-    if (btnGuard) {
-      btnGuard.onclick = () => loginWithGoogle();
-    }
+  if (onAuthorized) {
+    onAuthorized(dummyUser);
   }
-
-  waitForAuth((user) => {
-    const curOverlay = document.getElementById('auth-lock-overlay');
-    if (user && user.email === ADMIN_EMAIL) {
-      if (curOverlay) curOverlay.remove();
-      renderHeaderAuthUI(user, false);
-      if (onAuthorized) onAuthorized(user);
-    } else {
-      if (curOverlay) curOverlay.style.display = 'flex';
-      renderHeaderAuthUI(null, false);
-    }
-  });
-}
-
-function waitForAuth(callback) {
-  const timer = setInterval(() => {
-    if (window.firebase && window.firebase.auth) {
-      clearInterval(timer);
-      window.firebase.auth().onAuthStateChanged((user) => {
-        callback(user);
-      });
-    }
-  }, 50);
 }
 
 function renderHeaderAuthUI(user, isPortal) {
@@ -146,21 +80,13 @@ function renderHeaderAuthUI(user, isPortal) {
   }
   if (!container) return;
 
-  if (user && user.email === ADMIN_EMAIL) {
-    container.innerHTML = `
-      <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5">
-        <img src="${user.photoURL || 'https://via.placeholder.com/24'}" class="w-5 h-5 rounded-full border border-slate-700" alt="avatar" />
-        <span class="text-[11px] font-mono font-bold text-slate-300 hidden sm:inline">${user.email}</span>
-        <button onclick="window.logoutAdmin()" class="text-[10px] text-slate-400 hover:text-rose-400 p-1 ml-1 transition" title="로그아웃">
-          <i class="fa-solid fa-power-off"></i>
-        </button>
-      </div>
-    `;
-  } else {
-    container.innerHTML = `
-      <button onclick="window.loginWithGoogle()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/20 cursor-pointer">
-        <i class="fa-brands fa-google text-[11px]"></i> 로그인
+  container.innerHTML = `
+    <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1.5">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <span class="text-[11px] font-mono font-bold text-slate-300 hidden sm:inline">${ADMIN_EMAIL}</span>
+      <button onclick="window.logoutAdmin()" class="text-[10px] text-slate-400 hover:text-rose-400 p-1 ml-1 transition" title="로그아웃">
+        <i class="fa-solid fa-power-off"></i>
       </button>
-    `;
-  }
+    </div>
+  `;
 }
