@@ -35,7 +35,30 @@ function renderSellerTable(sellers) {
 
   const todayStr = new Date().toISOString().slice(0, 10);
 
-  container.innerHTML = sellers.map((s) => {
+  // 🌟 [추가된 정렬 로직] 판매중인 항목 우선 배치, 기간 마감된 항목은 맨 아래로 정렬
+  const sortedSellers = [...sellers].sort((a, b) => {
+    const isClosedA = (a.saleStatus === '마감') || (a.endDate && a.endDate < todayStr);
+    const isClosedB = (b.saleStatus === '마감') || (b.endDate && b.endDate < todayStr);
+
+    // 1) 판매중(false) 항목이 마감(true) 항목보다 위로 오도록 정렬
+    if (isClosedA !== isClosedB) {
+      return isClosedA ? 1 : -1;
+    }
+
+    // 2) 둘 다 마감 항목일 경우: 최근에 마감된 순서(종료일 내림차순)로 정렬
+    if (isClosedA && isClosedB) {
+      return (b.endDate || '').localeCompare(a.endDate || '');
+    }
+
+    // 3) 둘 다 판매중일 경우: 마감 임박 순서(종료일 오름차순)로 우선 정렬
+    if (a.endDate && b.endDate) {
+      return a.endDate.localeCompare(b.endDate);
+    }
+    return 0;
+  });
+
+  // sellers.map(...) 대신 sortedSellers.map(...)을 사용합니다.
+  container.innerHTML = sortedSellers.map((s) => {
     const isChecked = Boolean(s.isPurchased);
     const unitPrice = Number(s.unitPrice) || 0;
     const shippingFee = Number(s.shippingFee) || 0;
