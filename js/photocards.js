@@ -14,21 +14,17 @@ const MEMBER_COLORS = {
   '단체': 'bg-amber-500/20 text-amber-300 border-amber-500/40'
 };
 
-// 📌 1. 메인 렌더링 함수
+// 📌 1. 포토카드 메뉴 렌더링 메인 함수
 export function renderPhotocards(currentGroup) {
   const grp = currentGroup || 'plave';
   if (!cloudData.photocards) cloudData.photocards = { plave: [], wego6: [] };
   if (!cloudData.photocards[grp]) cloudData.photocards[grp] = [];
 
   const pcs = cloudData.photocards[grp];
+  const pcGrid = document.getElementById('photocard-grid');
+  if (!pcGrid) return;
 
-  renderPhotocardStats(pcs);
-  renderFilterBar(pcs, grp);
-  renderPhotocardGrid(pcs, grp);
-}
-
-// 📌 2. 수집률 대시보드
-function renderPhotocardStats(pcs) {
+  // 상단 통계 수치 계산
   const totalCount = pcs.length;
   const collectedList = pcs.filter(p => p.collected);
   const collectedCount = collectedList.length;
@@ -36,10 +32,24 @@ function renderPhotocardStats(pcs) {
   const duplicatesCount = collectedList.filter(p => (Number(p.quantity) || 1) > 1).length;
   const rate = totalCount > 0 ? Math.round((collectedCount / totalCount) * 100) : 0;
 
-  const statContainer = document.getElementById('pc-stat-dashboard');
-  if (!statContainer) return;
+  // 멤버 및 카테고리 목록 추출
+  const members = ['all', ...new Set(pcs.map(p => p.member).filter(Boolean))];
+  const categories = ['all', ...new Set(pcs.map(p => p.category || '앨범').filter(Boolean))];
 
-  statContainer.innerHTML = `
+  // 필터링 적용
+  const filtered = pcs.map((pc, originalIdx) => ({ ...pc, originalIdx })).filter(pc => {
+    if (activeMemberFilter !== 'all' && pc.member !== activeMemberFilter) return false;
+    if (activeCategoryFilter !== 'all' && (pc.category || '앨범') !== activeCategoryFilter) return false;
+    if (activeStatusFilter === 'collected' && !pc.collected) return false;
+    if (activeStatusFilter === 'missing' && pc.collected) return false;
+    if (activeStatusFilter === 'duplicate' && (!pc.collected || (Number(pc.quantity) || 1) <= 1)) return false;
+    return true;
+  });
+
+  // HTML 조립 (상단 대시보드 + 필터바 + 카드 그리드)
+  pcGrid.className = "space-y-4";
+  pcGrid.innerHTML = `
+    <!-- 🌟 수집률 대시보드 -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
         <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
@@ -78,26 +88,15 @@ function renderPhotocardStats(pcs) {
         <div class="text-[11px] text-slate-500 mt-1">남은 목표 포카</div>
       </div>
     </div>
-  `;
-}
 
-// 📌 3. 멤버 및 카테고리 필터바
-function renderFilterBar(pcs, currentGroup) {
-  const container = document.getElementById('pc-filter-bar');
-  if (!container) return;
-
-  const members = ['all', ...new Set(pcs.map(p => p.member).filter(Boolean))];
-  const categories = ['all', ...new Set(pcs.map(p => p.category || '앨범').filter(Boolean))];
-
-  container.innerHTML = `
+    <!-- 🌟 멤버 및 카테고리 퀵 필터바 -->
     <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 space-y-2.5">
       <!-- 멤버 탭 -->
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
         <span class="text-[11px] font-bold text-slate-500 mr-1 shrink-0">멤버</span>
         ${members.map(m => {
           const isAct = activeMemberFilter === m;
           const label = m === 'all' ? '전체 멤버' : m;
-          const badgeClass = m !== 'all' && MEMBER_COLORS[m] ? MEMBER_COLORS[m] : 'border-slate-700 text-slate-300';
           return `
             <button onclick="window.setPcFilter('member', '${escapeHTML(m)}')" 
               class="px-3 py-1 rounded-xl text-xs font-bold transition whitespace-nowrap ${
@@ -114,81 +113,4 @@ function renderFilterBar(pcs, currentGroup) {
       <!-- 카테고리 & 보유 여부 토글 -->
       <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
         <div class="flex items-center gap-1.5 overflow-x-auto">
-          <span class="text-[11px] font-bold text-slate-500 mr-1 shrink-0">분류</span>
-          ${categories.map(c => {
-            const isAct = activeCategoryFilter === c;
-            const label = c === 'all' ? '전체' : c;
-            return `
-              <button onclick="window.setPcFilter('category', '${escapeHTML(c)}')" 
-                class="px-2.5 py-0.5 rounded-lg text-xs font-medium transition ${
-                  isAct 
-                    ? 'bg-pink-600 text-white font-bold' 
-                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                }">
-                ${escapeHTML(label)}
-              </button>
-            `;
-          }).join('')}
-        </div>
-
-        <div class="flex items-center gap-1 bg-slate-950 p-0.5 rounded-xl border border-slate-800">
-          <button onclick="window.setPcFilter('status', 'all')" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold transition ${activeStatusFilter === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400'}">전체</button>
-          <button onclick="window.setPcFilter('status', 'collected')" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold transition ${activeStatusFilter === 'collected' ? 'bg-pink-600/30 text-pink-300 border border-pink-500/40' : 'text-slate-400'}">보유</button>
-          <button onclick="window.setPcFilter('status', 'missing')" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold transition ${activeStatusFilter === 'missing' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'text-slate-400'}">미보유</button>
-          <button onclick="window.setPcFilter('status', 'duplicate')" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold transition ${activeStatusFilter === 'duplicate' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'text-slate-400'}">중복</button>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// 📌 4. 포카 그리드 렌더링
-function renderPhotocardGrid(pcs, currentGroup) {
-  const pcGrid = document.getElementById('photocard-grid');
-  if (!pcGrid) return;
-
-  const filtered = pcs.map((pc, originalIdx) => ({ ...pc, originalIdx })).filter(pc => {
-    if (activeMemberFilter !== 'all' && pc.member !== activeMemberFilter) return false;
-    if (activeCategoryFilter !== 'all' && (pc.category || '앨범') !== activeCategoryFilter) return false;
-    if (activeStatusFilter === 'collected' && !pc.collected) return false;
-    if (activeStatusFilter === 'missing' && pc.collected) return false;
-    if (activeStatusFilter === 'duplicate' && (!pc.collected || (Number(pc.quantity) || 1) <= 1)) return false;
-    return true;
-  });
-
-  if (filtered.length === 0) {
-    pcGrid.innerHTML = `
-      <div class="col-span-full py-16 text-center text-slate-500 text-xs border border-dashed border-slate-800 rounded-3xl bg-slate-900/30">
-        <i class="fa-solid fa-id-badge text-3xl mb-2 block text-slate-600"></i>
-        조건에 맞는 포토카드가 없습니다.
-      </div>
-    `;
-    return;
-  }
-
-  pcGrid.innerHTML = filtered.map(pc => {
-    const isCollected = Boolean(pc.collected);
-    const qty = Number(pc.quantity) || 1;
-    const memberColor = MEMBER_COLORS[pc.member] || 'bg-slate-800 text-slate-300 border-slate-700';
-
-    return `
-      <div class="bg-slate-900 border rounded-2xl overflow-hidden shadow-xl flex flex-col justify-between transition-all duration-200 group relative ${
-        isCollected 
-          ? 'border-pink-500/40 hover:border-pink-400 hover:shadow-pink-950/30 ring-1 ring-pink-500/20' 
-          : 'border-slate-800/80 hover:border-slate-700 opacity-70 hover:opacity-90'
-      }">
-        <!-- 상단 액션 오버레이 버튼 -->
-        <div class="absolute top-2 right-2 z-20 flex gap-1 bg-slate-950/80 p-1 rounded-xl backdrop-blur-md opacity-0 group-hover:opacity-100 transition shadow">
-          <button onclick="window.openPhotocardModal(${pc.originalIdx})" class="text-slate-400 hover:text-indigo-300 p-1 text-xs" title="수정"><i class="fa-solid fa-pen"></i></button>
-          <button onclick="window.deletePhotocard(${pc.originalIdx})" class="text-slate-400 hover:text-rose-400 p-1 text-xs" title="삭제"><i class="fa-solid fa-trash"></i></button>
-        </div>
-
-        <!-- 이미지 영역 (원클릭 보유 토글) -->
-        <div onclick="window.togglePcCollected(${pc.originalIdx})" class="cursor-pointer relative overflow-hidden aspect-[2/3] bg-slate-950 select-none">
-          ${pc.img ? `
-            <img src="${pc.img}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 ${isCollected ? '' : 'grayscale contrast-75 brightness-75'}" alt="${escapeHTML(pc.version)}" />
-          ` : `
-            <div class="w-full h-full flex flex-col items-center justify-center text-slate-600 gap-1.5">
-              <i class="fa-solid fa-id-badge text-3xl"></i>
-              <span class="text-[10px] text-slate-500 font-medium">이미지 미등록</span>
-            </div>
+          <span class="text-[11px] font-
