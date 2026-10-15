@@ -16,15 +16,8 @@ import {
   changeGoodsQuantity, deleteGoods 
 } from './goods.js';
 import { 
-  renderPhotocards, 
-  switchPcSubTab, 
-  submitAddPhotocard, 
-  setPcFilter, 
-  changePcQty, 
-  togglePcCollected, 
-  deletePhotocard,
-  openPhotocardModal,
-  savePhotocard
+  renderPhotocards, switchPcMode, downloadTradeBoard, setPcFilter, changePcQty, togglePcCollected, 
+  openPhotocardModal, savePhotocard, deletePhotocard 
 } from './photocards.js';
 import { 
   renderEvents, openEventModal, saveEvent, 
@@ -262,6 +255,9 @@ window.addBulkApplicants = () => addBulkApplicants(render);
 window.toggleWinnerFromModal = originalIdx => toggleWinnerFromModal(originalIdx, render);
 window.deleteApplicantFromModal = originalIdx => deleteApplicantFromModal(originalIdx, render);
 window.drawRandomWinners = () => drawRandomWinners(render);
+window.switchPcMode = switchPcMode;
+window.downloadTradeBoard = downloadTradeBoard;
+window.setPcFilter = (type, val) => setPcFilter(type, val, currentGroup);
 
 // 반택 주소록
 // 🌟 메뉴 전환 로직 (2차 보안 가드 적용)
