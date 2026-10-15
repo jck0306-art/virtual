@@ -238,7 +238,9 @@ window.changeGoodsQuantity = (idx, delta) => changeGoodsQuantity(idx, delta, cur
 window.deleteGoods = idx => deleteGoods(idx, currentGroup, render);
 
 // 포카 도감 관련 전역 바인딩
-window.switchPcSubTab = switchPcSubTab;
+window.switchPcMode = switchPcMode;
+window.downloadTradeBoard = downloadTradeBoard;
+window.setPcFilter = (type, val) => setPcFilter(type, val, currentGroup);
 window.submitAddPhotocard = () => submitAddPhotocard(currentGroup, render);
 window.handlePcUpload = (e) => {
   const file = e.target.files[0];
