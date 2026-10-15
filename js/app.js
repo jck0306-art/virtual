@@ -17,12 +17,14 @@ import {
 } from './goods.js';
 import { 
   renderPhotocards, 
-  openPhotocardModal, 
-  savePhotocard, 
+  switchPcSubTab, 
+  submitAddPhotocard, 
+  setPcFilter, 
+  changePcQty, 
   togglePcCollected, 
   deletePhotocard,
-  setPcFilter,
-  changePcQty
+  openPhotocardModal,
+  savePhotocard
 } from './photocards.js';
 import { 
   renderEvents, openEventModal, saveEvent, 
@@ -234,14 +236,19 @@ window.changeGoodsQuantity = (idx, delta) => changeGoodsQuantity(idx, delta, cur
 window.deleteGoods = idx => deleteGoods(idx, currentGroup, render);
 
 // 포카 도감 관련 전역 바인딩
-window.openPhotocardModal = idx => openPhotocardModal(idx, currentGroup);
-window.savePhotocard = () => savePhotocard(currentGroup, render);
-window.togglePcCollected = idx => togglePcCollected(idx, currentGroup, render);
-window.changePcQty = (idx, delta) => changePcQty(idx, delta, currentGroup, render);
-window.deletePhotocard = idx => deletePhotocard(idx, currentGroup, render);
-window.setPcCategory = cat => setPcCategory(cat);
-window.setPcFilter = (type, val) => setPcFilter(type, val, currentGroup, render);
-window.changePcQty = (idx, delta) => changePcQty(idx, delta, currentGroup, render);
+window.switchPcSubTab = switchPcSubTab;
+window.submitAddPhotocard = () => submitAddPhotocard(currentGroup, render);
+window.handlePcUpload = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    document.getElementById('add-pc-img-base64').value = ev.target.result;
+    document.getElementById('add-pc-preview-img').src = ev.target.result;
+    document.getElementById('add-pc-preview-wrap').classList.remove('hidden');
+  };
+  reader.readAsDataURL(file);
+};
 
 // 나눔 & 이벤트
 window.openEventModal = idx => openEventModal(idx, currentGroup);
