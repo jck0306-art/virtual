@@ -7,7 +7,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💿</text></svg>">
-
+  
 <!-- Firebase SDK 호환 버전 일치 -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -79,6 +79,9 @@ V-ARCHIVE
 <i class="fa-solid fa-truck text-cyan-400"></i> 반택 주소록
 </button>
 </nav>
+
+<!-- HTML2Canvas (이미지 캡처 라이브러리) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </header>
 
 <main class="max-w-6xl mx-auto px-4 mt-6 space-y-6">
@@ -305,99 +308,88 @@ Virtual Idol Group
 <div id="goods-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- [메뉴] 포카 앨범 -->
+<!-- [메뉴] 포토카드 도감 & 교환판 -->
 <section id="menu-view-photocards" class="hidden space-y-4">
-  <!-- 상단 헤더 & 서브 탭 네비게이션 -->
-  <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
+  <!-- 상단 컨트롤 헤더 -->
+  <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl shadow-xl">
     <div>
       <h3 class="text-base font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-id-badge text-pink-400"></i> 포토카드 아카이브
+        <i class="fa-solid fa-id-badge text-pink-400"></i> 포토카드 도감 & 교환 트래커
       </h3>
-      <p class="text-xs text-slate-400 mt-0.5">보유 현황 도감 조회 및 새 포토카드를 등록/관리합니다.</p>
+      <p class="text-xs text-slate-400 mt-0.5">앨범·이벤트별 수집 현황을 기록하고 원클릭 교환판을 생성합니다.</p>
     </div>
 
-    <!-- 🌟 서브 메뉴 탭 (도감 vs 등록) -->
-    <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
-      <button id="pc-subtab-view" onclick="window.switchPcSubTab('view')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-pink-600 text-white shadow-sm">
-        <i class="fa-solid fa-table-cells"></i> 도감 & 보유 현황
-      </button>
-      <button id="pc-subtab-add" onclick="window.switchPcSubTab('add')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white">
-        <i class="fa-solid fa-plus text-pink-400"></i> 포카 등록하기
+    <div class="flex items-center gap-2">
+      <!-- 서브 탭 (도감 vs 교환판) -->
+      <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <button id="pc-tab-catalog" onclick="window.switchPcMode('catalog')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-pink-600 text-white shadow-sm">
+          <i class="fa-solid fa-table-cells"></i> 수집 도감
+        </button>
+        <button id="pc-tab-trade" onclick="window.switchPcMode('trade')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white">
+          <i class="fa-solid fa-right-left text-amber-400"></i> 교환판 모아보기
+        </button>
+      </div>
+
+      <button onclick="window.openPhotocardModal(-1)" class="text-xs bg-indigo-600 hover:bg-indigo-500 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-indigo-600/20">
+        <i class="fa-solid fa-plus text-xs"></i> 새 포카 등록
       </button>
     </div>
   </div>
 
-  <!-- [서브 탭 1] 도감 및 보유 현황 뷰 -->
-  <div id="pc-subview-view" class="space-y-4">
+  <!-- [서브 뷰 1] 수집 도감 뷰 -->
+  <div id="pc-view-catalog" class="space-y-4">
     <div id="photocard-grid"></div>
   </div>
 
-  <!-- [서브 탭 2] 포카 등록 뷰 -->
-  <div id="pc-subview-add" class="hidden max-w-xl mx-auto bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
-    <div class="border-b border-slate-800 pb-3">
-      <h4 class="text-sm font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-wand-magic-sparkles text-pink-400"></i> 새로운 포토카드 정보 등록
-      </h4>
-      <p class="text-[11px] text-slate-400 mt-0.5">등록된 카드는 보유 현황 도감에 즉시 반영됩니다.</p>
-    </div>
-
-    <input type="hidden" id="add-pc-img-base64" />
-
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">멤버 *</label>
-        <select id="add-pc-member" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none">
-          <option value="예준">예준 💙</option>
-          <option value="노아">노아 💜</option>
-          <option value="밤비">밤비 💗</option>
-          <option value="은호">은호 ❤️</option>
-          <option value="하민">하민 🖤</option>
-          <option value="단체">단체 / 유닛 ✨</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">카테고리 구분 *</label>
-        <input id="add-pc-category" type="text" placeholder="예: 미니 2집, 팝업스토어, 영통팬싸" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
-      </div>
-    </div>
-
-    <div>
-      <label class="text-xs text-slate-400 block mb-1">포카 버전 / 출처 / 명칭 *</label>
-      <input id="add-pc-version" type="text" placeholder="예: 예준 A버전, 노아 미공포 버프즈 등" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
-    </div>
-
-    <div class="grid grid-cols-2 gap-3">
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">보유 상태</label>
-        <select id="add-pc-collected" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none">
-          <option value="true">있어요 (보유)</option>
-          <option value="false">없어요 (미보유 / 위시)</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-xs text-slate-400 block mb-1">보유 수량</label>
-        <input id="add-pc-quantity" type="number" min="1" value="1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none font-mono" />
-      </div>
-    </div>
-
-    <div>
-      <label class="text-xs text-slate-400 block mb-1">포카 이미지 (선택)</label>
-      <input id="add-pc-file" type="file" accept="image/*" onchange="window.handlePcUpload(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer" />
-      <div id="add-pc-preview-wrap" class="hidden mt-2 flex items-center gap-3 bg-slate-950 p-2 rounded-xl border border-slate-800">
-        <img id="add-pc-preview-img" src="" class="w-12 h-16 object-cover rounded-lg border border-slate-700" />
-        <span class="text-[11px] text-slate-400">이미지 첨부됨</span>
-      </div>
-    </div>
-
-    <div>
-      <label class="text-xs text-slate-400 block mb-1">메모 (시세, 교환 여부 등)</label>
-      <input id="add-pc-memo" type="text" placeholder="예: 양도 불가, 하민 럭드 교환 구함" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
-    </div>
-
-    <div class="pt-2">
-      <button onclick="window.submitAddPhotocard()" class="w-full py-2.5 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-pink-600/30 flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-plus"></i> 포토카드 등록 완료
+  <!-- [서브 뷰 2] 교환판 뷰 -->
+  <div id="pc-view-trade" class="hidden space-y-4">
+    <div class="flex justify-between items-center bg-slate-900/60 p-3 rounded-2xl border border-slate-800">
+      <span class="text-xs text-slate-400">
+        💡 중복 수량(2장 이상)이 있는 카드는 <strong>[보낼 수 있어요]</strong>로, 미보유 카드는 <strong>[구하고 있어요]</strong>로 자동 분류됩니다.
+      </span>
+      <button onclick="window.downloadTradeBoard()" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow">
+        <i class="fa-solid fa-image"></i> 교환판 이미지 저장
       </button>
+    </div>
+
+    <!-- 캡처 대상 교환 보드 컨테이너 -->
+    <div id="trade-board-canvas-area" class="p-5 bg-slate-950 rounded-3xl border border-slate-800 space-y-5">
+      <div class="border-b border-slate-800 pb-3 flex justify-between items-center">
+        <div>
+          <h4 class="text-base font-black text-white flex items-center gap-2">
+            PLAVE 포토카드 교환판 <span class="text-xs text-pink-400 font-mono">@jck0306</span>
+          </h4>
+          <span class="text-[11px] text-slate-500 font-mono" id="trade-board-date"></span>
+        </div>
+        <div class="flex gap-2 text-[10px] font-bold">
+          <span class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">HAVE : 양도/교환</span>
+          <span class="px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">WANT : 위시/구함</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- 보낼 수 있어요 (HAVE) -->
+        <div class="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-box-open"></i> 보낼 수 있어요 (HAVE)
+            </span>
+            <span id="trade-have-count" class="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">0</span>
+          </div>
+          <div id="trade-have-list" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+        </div>
+
+        <!-- 구하고 있어요 (WANT) -->
+        <div class="bg-slate-900/80 border border-rose-500/30 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-rose-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-heart"></i> 구하고 있어요 (WANT)
+            </span>
+            <span id="trade-want-count" class="text-xs font-mono font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20">0</span>
+          </div>
+          <div id="trade-want-list" class="grid grid-cols-2 sm:grid-cols-3 gap-2.5"></div>
+        </div>
+      </div>
     </div>
   </div>
 </section>
