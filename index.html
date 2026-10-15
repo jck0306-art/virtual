@@ -305,30 +305,101 @@ Virtual Idol Group
 <div id="goods-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
 </section>
 
-<!-- [뷰 5] 포카 도감 -->
-<!-- [뷰 5] 포카 도감 -->
+<!-- [메뉴] 포카 앨범 -->
 <section id="menu-view-photocards" class="hidden space-y-4">
-  <!-- 상단 타이틀 & 등록 버튼 -->
-  <div class="flex flex-wrap items-center justify-between gap-3">
+  <!-- 상단 헤더 & 서브 탭 네비게이션 -->
+  <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-4 rounded-2xl">
     <div>
       <h3 class="text-base font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-id-badge text-pink-400"></i> 포토카드 도감 & 수집 트래커
+        <i class="fa-solid fa-id-badge text-pink-400"></i> 포토카드 아카이브
       </h3>
-      <p class="text-xs text-slate-400 mt-0.5">카드를 클릭하여 보유 여부와 중복 수량을 손쉽게 기록하세요.</p>
+      <p class="text-xs text-slate-400 mt-0.5">보유 현황 도감 조회 및 새 포토카드를 등록/관리합니다.</p>
     </div>
-    <button onclick="window.openPhotocardModal(-1)" class="text-xs bg-pink-600 hover:bg-pink-500 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-pink-600/20">
-      <i class="fa-solid fa-plus text-xs"></i> 새 포카 등록
-    </button>
+
+    <!-- 🌟 서브 메뉴 탭 (도감 vs 등록) -->
+    <div class="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800">
+      <button id="pc-subtab-view" onclick="window.switchPcSubTab('view')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-pink-600 text-white shadow-sm">
+        <i class="fa-solid fa-table-cells"></i> 도감 & 보유 현황
+      </button>
+      <button id="pc-subtab-add" onclick="window.switchPcSubTab('add')" class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white">
+        <i class="fa-solid fa-plus text-pink-400"></i> 포카 등록하기
+      </button>
+    </div>
   </div>
 
-  <!-- 🌟 수집률 대시보드 (통계) -->
-  <div id="pc-stat-dashboard"></div>
+  <!-- [서브 탭 1] 도감 및 보유 현황 뷰 -->
+  <div id="pc-subview-view" class="space-y-4">
+    <div id="photocard-grid"></div>
+  </div>
 
-  <!-- 🌟 멤버 및 카테고리 퀵 필터바 -->
-  <div id="pc-filter-bar"></div>
+  <!-- [서브 탭 2] 포카 등록 뷰 -->
+  <div id="pc-subview-add" class="hidden max-w-xl mx-auto bg-slate-900/90 border border-slate-800 rounded-3xl p-6 shadow-2xl space-y-4">
+    <div class="border-b border-slate-800 pb-3">
+      <h4 class="text-sm font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-wand-magic-sparkles text-pink-400"></i> 새로운 포토카드 정보 등록
+      </h4>
+      <p class="text-[11px] text-slate-400 mt-0.5">등록된 카드는 보유 현황 도감에 즉시 반영됩니다.</p>
+    </div>
 
-  <!-- 포카 카드 그리드 -->
-  <div id="photocard-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5"></div>
+    <input type="hidden" id="add-pc-img-base64" />
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">멤버 *</label>
+        <select id="add-pc-member" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none">
+          <option value="예준">예준 💙</option>
+          <option value="노아">노아 💜</option>
+          <option value="밤비">밤비 💗</option>
+          <option value="은호">은호 ❤️</option>
+          <option value="하민">하민 🖤</option>
+          <option value="단체">단체 / 유닛 ✨</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">카테고리 구분 *</label>
+        <input id="add-pc-category" type="text" placeholder="예: 미니 2집, 팝업스토어, 영통팬싸" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">포카 버전 / 출처 / 명칭 *</label>
+      <input id="add-pc-version" type="text" placeholder="예: 예준 A버전, 노아 미공포 버프즈 등" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">보유 상태</label>
+        <select id="add-pc-collected" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none">
+          <option value="true">있어요 (보유)</option>
+          <option value="false">없어요 (미보유 / 위시)</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">보유 수량</label>
+        <input id="add-pc-quantity" type="number" min="1" value="1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none font-mono" />
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">포카 이미지 (선택)</label>
+      <input id="add-pc-file" type="file" accept="image/*" onchange="window.handlePcUpload(event)" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer" />
+      <div id="add-pc-preview-wrap" class="hidden mt-2 flex items-center gap-3 bg-slate-950 p-2 rounded-xl border border-slate-800">
+        <img id="add-pc-preview-img" src="" class="w-12 h-16 object-cover rounded-lg border border-slate-700" />
+        <span class="text-[11px] text-slate-400">이미지 첨부됨</span>
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">메모 (시세, 교환 여부 등)</label>
+      <input id="add-pc-memo" type="text" placeholder="예: 양도 불가, 하민 럭드 교환 구함" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
+    </div>
+
+    <div class="pt-2">
+      <button onclick="window.submitAddPhotocard()" class="w-full py-2.5 bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-pink-600/30 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-plus"></i> 포토카드 등록 완료
+      </button>
+    </div>
+  </div>
 </section>
   
 <!-- [뷰 6] 나눔 & 이벤트 -->
