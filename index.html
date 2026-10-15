@@ -306,36 +306,31 @@ Virtual Idol Group
 </section>
 
 <!-- [뷰 5] 포카 도감 -->
-<section id="menu-view-photocards" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-5">
-  <div class="flex flex-wrap justify-between items-center gap-3">
+<!-- [뷰 5] 포카 도감 -->
+<section id="menu-view-photocards" class="hidden space-y-4">
+  <!-- 상단 타이틀 & 등록 버튼 -->
+  <div class="flex flex-wrap items-center justify-between gap-3">
     <div>
-      <h3 class="text-sm font-bold text-white flex items-center gap-2">
-        <i class="fa-solid fa-id-badge text-pink-400"></i> 포토카드 도감 & 교환 체크리스트
+      <h3 class="text-base font-bold text-white flex items-center gap-2">
+        <i class="fa-solid fa-id-badge text-pink-400"></i> 포토카드 도감 & 수집 트래커
       </h3>
-      <p class="text-xs text-slate-400 mt-0.5">카테고리별, 보유 여부별로 분류하여 교환 리스트를 한눈에 확인하세요.</p>
+      <p class="text-xs text-slate-400 mt-0.5">카드를 클릭하여 보유 여부와 중복 수량을 손쉽게 기록하세요.</p>
     </div>
-    <button onclick="window.openPhotocardModal()" class="text-xs bg-pink-600 hover:bg-pink-500 text-white px-3.5 py-2 rounded-xl font-bold flex items-center gap-1.5 shadow-md shadow-pink-600/20 transition">
-      <i class="fa-solid fa-plus text-[10px]"></i> 새 포카 추가
+    <button onclick="window.openPhotocardModal(-1)" class="text-xs bg-pink-600 hover:bg-pink-500 text-white font-bold px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-lg shadow-pink-600/20">
+      <i class="fa-solid fa-plus text-xs"></i> 새 포카 등록
     </button>
   </div>
 
-  <!-- 🌟 상단 1: 카테고리 탭 바 -->
-  <div class="flex items-center gap-1.5 overflow-x-auto pb-1" id="pc-category-tabs"></div>
+  <!-- 🌟 수집률 대시보드 (통계) -->
+  <div id="pc-stat-dashboard"></div>
 
-  <!-- 🌟 상단 2: 서브 필터 (전체 / 있어요 / 없어요 / 교환가능) & 요약 카운트 -->
-  <div class="flex flex-wrap items-center justify-between gap-3 bg-slate-900/80 p-2.5 rounded-2xl border border-slate-800">
-    <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
-      <button onclick="window.setPcFilter('all')" id="btn-pc-filter-all" class="px-3 py-1 rounded-lg font-bold bg-slate-800 text-white transition">전체보기</button>
-      <button onclick="window.setPcFilter('have')" id="btn-pc-filter-have" class="px-3 py-1 rounded-lg text-emerald-400 font-semibold hover:text-white transition">있어요 (보유)</button>
-      <button onclick="window.setPcFilter('wish')" id="btn-pc-filter-wish" class="px-3 py-1 rounded-lg text-rose-400 font-semibold hover:text-white transition">없어요 (위시)</button>
-      <button onclick="window.setPcFilter('trade')" id="btn-pc-filter-trade" class="px-3 py-1 rounded-lg text-amber-300 font-semibold hover:text-white transition">교환/양도 (2장+)</button>
-    </div>
-    <div id="pc-summary-stats" class="text-xs font-mono text-slate-400 pr-2"></div>
-  </div>
+  <!-- 🌟 멤버 및 카테고리 퀵 필터바 -->
+  <div id="pc-filter-bar"></div>
 
+  <!-- 포카 카드 그리드 -->
   <div id="photocard-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5"></div>
 </section>
-
+  
 <!-- [뷰 6] 나눔 & 이벤트 -->
 <section id="menu-view-events" class="hidden glass rounded-3xl p-5 md:p-6 shadow-xl space-y-4">
 <div class="flex justify-between items-center">
@@ -739,26 +734,86 @@ Virtual Idol Group
 </div>
 </div>
 
-<!-- 포토카드 등록 & 수정 모달 -->
+<!-- 포토카드 등록/수정 모달 -->
 <div id="photocard-modal" class="fixed inset-0 bg-black/75 hidden items-center justify-center p-4 z-50 overflow-y-auto">
-  <div class="bg-slate-900 rounded-2xl max-w-sm w-full p-6 border border-slate-700 shadow-2xl space-y-4 my-8">
+  <div class="bg-slate-900 rounded-3xl max-w-md w-full p-6 border border-slate-800 shadow-2xl space-y-4 my-8">
     <div class="flex justify-between items-center border-b border-slate-800 pb-3">
       <h3 id="pc-modal-title" class="text-base font-bold text-white flex items-center gap-2">
         <i class="fa-solid fa-id-badge text-pink-400"></i> 포토카드 등록
       </h3>
-      <button onclick="window.closeModals()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+      <button onclick="window.closeModals()" class="text-slate-400 hover:text-white p-1">
+        <i class="fa-solid fa-xmark text-lg"></i>
+      </button>
     </div>
 
-    <input type="hidden" id="edit-pc-idx" value="-1" />
+    <input type="hidden" id="edit-pc-idx" />
+    <input type="hidden" id="pc-img-base64" />
 
-    <div>
-      <label class="text-xs text-slate-400 block mb-1">포토카드 사진 업로드</label>
-      <input id="pc-file-input" type="file" accept="image/*" class="w-full text-xs text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-pink-600 file:text-white hover:file:bg-pink-500 cursor-pointer bg-slate-800 rounded-lg border border-slate-700 p-1" />
-      <input type="hidden" id="pc-img-base64" />
-      <div id="pc-preview-wrap" class="mt-2 hidden">
-        <img id="pc-img-preview" src="" class="w-16 h-24 object-cover rounded-lg border border-slate-700" />
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">멤버 *</label>
+        <select id="pc-member" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none">
+          <option value="예준">예준 💙</option>
+          <option value="노아">노아 💜</option>
+          <option value="밤비">밤비 💗</option>
+          <option value="은호">은호 ❤️</option>
+          <option value="하민">하민 🖤</option>
+          <option value="단체">단체 / 유닛 ✨</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">분류(카테고리)</label>
+        <select id="pc-category" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none">
+          <option value="앨범">앨범 일반/한정</option>
+          <option value="미공포/특전">미공포 / 예약특전</option>
+          <option value="콘서트/팬미팅">콘서트 / 팬미팅</option>
+          <option value="팝업/콜라보">팝업 / 콜라보</option>
+          <option value="시그/MD">시즌그리팅 / MD</option>
+          <option value="기타">기타</option>
+        </select>
       </div>
     </div>
+
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">포토카드 명칭 / 버전 *</label>
+      <input id="pc-version" type="text" placeholder="예: Mini 2nd Asterum 럭키드로우 Ver.A" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
+    </div>
+
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">보유 상태</label>
+        <select id="pc-collected" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none">
+          <option value="true">보유</option>
+          <option value="false">미보유</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-xs text-slate-400 block mb-1">보유 수량</label>
+        <input id="pc-quantity" type="number" min="1" value="1" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none font-mono" />
+      </div>
+    </div>
+
+    <!-- 이미지 파일 업로드 -->
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">포카 이미지 (선택)</label>
+      <input id="pc-file-input" type="file" accept="image/*" onchange="window.handleImageUpload(event, 'pc-img-base64', 'pc-img-preview', 'pc-preview-wrap')" class="w-full text-xs text-slate-400 file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-slate-800 file:text-slate-300 hover:file:bg-slate-700 cursor-pointer" />
+      <div id="pc-preview-wrap" class="hidden mt-2 flex items-center gap-3 bg-slate-950 p-2 rounded-xl border border-slate-800">
+        <img id="pc-img-preview" src="" class="w-12 h-16 object-cover rounded-lg border border-slate-700" />
+        <span class="text-[11px] text-slate-400">이미지 미리보기</span>
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs text-slate-400 block mb-1">메모 (시세, 교환 여부 등)</label>
+      <input id="pc-memo" type="text" placeholder="예: 하민 럭드 교환 구함" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:border-pink-500 focus:outline-none" />
+    </div>
+
+    <div class="flex justify-end gap-2 pt-2 border-t border-slate-800">
+      <button onclick="window.closeModals()" class="px-4 py-2 text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl transition">취소</button>
+      <button onclick="window.savePhotocard()" class="px-5 py-2 text-xs bg-pink-600 hover:bg-pink-500 text-white font-bold rounded-xl transition shadow">저장하기</button>
+    </div>
+  </div>
+</div>
 
     <!-- 카테고리 직접 입력 & 기존 항목 선택 자동완성 지원 -->
     <div>
