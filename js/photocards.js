@@ -14,6 +14,62 @@ const MEMBER_COLORS = {
   '단체': 'bg-amber-500/20 text-amber-300 border-amber-500/40'
 };
 
+// 🌟 서브 탭 전환 함수
+export function switchPcSubTab(tab) {
+  const btnView = document.getElementById('pc-subtab-view');
+  const btnAdd = document.getElementById('pc-subtab-add');
+  const viewArea = document.getElementById('pc-subview-view');
+  const addArea = document.getElementById('pc-subview-add');
+
+  if (!btnView || !btnAdd || !viewArea || !addArea) return;
+
+  if (tab === 'view') {
+    btnView.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-pink-600 text-white shadow-sm";
+    btnAdd.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white";
+    viewArea.classList.remove('hidden');
+    addArea.classList.add('hidden');
+  } else {
+    btnAdd.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-pink-600 text-white shadow-sm";
+    btnView.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white";
+    addArea.classList.remove('hidden');
+    viewArea.classList.add('hidden');
+  }
+}
+
+// 🌟 서브 탭 등록 폼 제출 함수
+export function submitAddPhotocard(currentGroup, onRender) {
+  const grp = currentGroup || (window.currentGroup || 'plave');
+  const member = document.getElementById('add-pc-member')?.value.trim();
+  const category = (document.getElementById('add-pc-category')?.value || '앨범').trim();
+  const version = document.getElementById('add-pc-version')?.value.trim();
+  const quantity = Math.max(1, parseInt(document.getElementById('add-pc-quantity')?.value) || 1);
+  const memo = (document.getElementById('add-pc-memo')?.value || '').trim();
+  const img = document.getElementById('add-pc-img-base64')?.value || '';
+  const collected = document.getElementById('add-pc-collected')?.value === 'true';
+
+  if (!member || !version) {
+    return alert('멤버와 포카 명칭/버전은 필수 입력값입니다.');
+  }
+
+  if (!cloudData.photocards[grp]) cloudData.photocards[grp] = [];
+
+  cloudData.photocards[grp].unshift({
+    member, category, version, quantity, memo, img, collected
+  });
+
+  // 폼 초기화
+  document.getElementById('add-pc-version').value = '';
+  document.getElementById('add-pc-memo').value = '';
+  document.getElementById('add-pc-img-base64').value = '';
+  document.getElementById('add-pc-file').value = '';
+  document.getElementById('add-pc-preview-wrap')?.classList.add('hidden');
+
+  alert('새로운 포토카드가 도감에 등록되었습니다!');
+  syncData(() => {
+    switchPcSubTab('view');
+    if (onRender) onRender();
+  });
+}
 export function renderPhotocards(currentGroup) {
   const grp = currentGroup || (window.currentGroup || 'plave');
   if (!cloudData.photocards) cloudData.photocards = { plave: [], wego6: [] };
