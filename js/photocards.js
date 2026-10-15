@@ -2,8 +2,9 @@ import { cloudData, syncData } from './firebase.js';
 import { escapeHTML } from './security.js';
 
 let activeMemberFilter = 'all';
+let activeAlbumFilter = 'all';     // 🌟 앨범/이벤트 필터 추가
 let activeCategoryFilter = 'all';
-let activeStatusFilter = 'all';
+let activeStatusFilter = 'all';    // 'all' | 'collected' | 'missing' | 'duplicate'
 
 const MEMBER_COLORS = {
   '예준': 'bg-blue-500/20 text-blue-300 border-blue-500/40',
@@ -14,62 +15,7 @@ const MEMBER_COLORS = {
   '단체': 'bg-amber-500/20 text-amber-300 border-amber-500/40'
 };
 
-// 🌟 서브 탭 전환 함수
-export function switchPcSubTab(tab) {
-  const btnView = document.getElementById('pc-subtab-view');
-  const btnAdd = document.getElementById('pc-subtab-add');
-  const viewArea = document.getElementById('pc-subview-view');
-  const addArea = document.getElementById('pc-subview-add');
-
-  if (!btnView || !btnAdd || !viewArea || !addArea) return;
-
-  if (tab === 'view') {
-    btnView.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-pink-600 text-white shadow-sm";
-    btnAdd.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white";
-    viewArea.classList.remove('hidden');
-    addArea.classList.add('hidden');
-  } else {
-    btnAdd.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 bg-pink-600 text-white shadow-sm";
-    btnView.className = "px-3.5 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 text-slate-400 hover:text-white";
-    addArea.classList.remove('hidden');
-    viewArea.classList.add('hidden');
-  }
-}
-
-// 🌟 서브 탭 등록 폼 제출 함수
-export function submitAddPhotocard(currentGroup, onRender) {
-  const grp = currentGroup || (window.currentGroup || 'plave');
-  const member = document.getElementById('add-pc-member')?.value.trim();
-  const category = (document.getElementById('add-pc-category')?.value || '앨범').trim();
-  const version = document.getElementById('add-pc-version')?.value.trim();
-  const quantity = Math.max(1, parseInt(document.getElementById('add-pc-quantity')?.value) || 1);
-  const memo = (document.getElementById('add-pc-memo')?.value || '').trim();
-  const img = document.getElementById('add-pc-img-base64')?.value || '';
-  const collected = document.getElementById('add-pc-collected')?.value === 'true';
-
-  if (!member || !version) {
-    return alert('멤버와 포카 명칭/버전은 필수 입력값입니다.');
-  }
-
-  if (!cloudData.photocards[grp]) cloudData.photocards[grp] = [];
-
-  cloudData.photocards[grp].unshift({
-    member, category, version, quantity, memo, img, collected
-  });
-
-  // 폼 초기화
-  document.getElementById('add-pc-version').value = '';
-  document.getElementById('add-pc-memo').value = '';
-  document.getElementById('add-pc-img-base64').value = '';
-  document.getElementById('add-pc-file').value = '';
-  document.getElementById('add-pc-preview-wrap')?.classList.add('hidden');
-
-  alert('새로운 포토카드가 도감에 등록되었습니다!');
-  syncData(() => {
-    switchPcSubTab('view');
-    if (onRender) onRender();
-  });
-}
+// 📌 1. 포토카드 도감 렌더링
 export function renderPhotocards(currentGroup) {
   const grp = currentGroup || (window.currentGroup || 'plave');
   if (!cloudData.photocards) cloudData.photocards = { plave: [], wego6: [] };
@@ -79,6 +25,7 @@ export function renderPhotocards(currentGroup) {
   const pcGrid = document.getElementById('photocard-grid');
   if (!pcGrid) return;
 
+  // 통계 계산
   const totalCount = pcs.length;
   const collectedList = pcs.filter(p => p.collected);
   const collectedCount = collectedList.length;
@@ -86,12 +33,18 @@ export function renderPhotocards(currentGroup) {
   const duplicatesCount = collectedList.filter(p => (Number(p.quantity) || 1) > 1).length;
   const rate = totalCount > 0 ? Math.round((collectedCount / totalCount) * 100) : 0;
 
-  const members = ['all', ...new Set(pcs.map(p => p.member).filter(Boolean))];
-  const categories = ['all', ...new Set(pcs.map(p => p.category || '앨범').filter(Boolean))];
+  // 🌟 고유 앨범/이벤트명 목록 자동 추출
+  const albumList = ['all', ...new Set(pcs.map(p => p.album || p.category).filter(Boolean))];
+  const members = ['all', '예준', '노아', '밤비', '은호', '하민', '단체'];
 
+  // 필터링 적용
   const filtered = pcs.map((pc, originalIdx) => ({ ...pc, originalIdx })).filter(pc => {
     if (activeMemberFilter !== 'all' && pc.member !== activeMemberFilter) return false;
-    if (activeCategoryFilter !== 'all' && (pc.category || '앨범') !== activeCategoryFilter) return false;
+    
+    // 앨범명 또는 이벤트 카테고리 매칭
+    const itemAlbum = pc.album || pc.category || '기타';
+    if (activeAlbumFilter !== 'all' && itemAlbum !== activeAlbumFilter) return false;
+
     if (activeStatusFilter === 'collected' && !pc.collected) return false;
     if (activeStatusFilter === 'missing' && pc.collected) return false;
     if (activeStatusFilter === 'duplicate' && (!pc.collected || (Number(pc.quantity) || 1) <= 1)) return false;
@@ -100,6 +53,7 @@ export function renderPhotocards(currentGroup) {
 
   pcGrid.className = "space-y-4";
   pcGrid.innerHTML = `
+    <!-- 🌟 수집률 대시보드 -->
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
         <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
@@ -118,79 +72,82 @@ export function renderPhotocards(currentGroup) {
           <i class="fa-solid fa-check-double text-indigo-400"></i> 보유 카드
         </div>
         <div class="text-2xl font-bold text-white font-mono">${collectedCount} <span class="text-xs font-normal text-slate-400">종</span></div>
-        <div class="text-[11px] text-slate-500 mt-1 font-mono">총 보유 수량: <strong class="text-indigo-300 font-bold">${totalQuantity}</strong>장</div>
+        <div class="text-[11px] text-slate-500 mt-1 font-mono">총 보유 장수: <strong class="text-indigo-300 font-bold">${totalQuantity}</strong>장</div>
       </div>
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
         <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
-          <i class="fa-solid fa-clone text-amber-400"></i> 여분/중복
+          <i class="fa-solid fa-clone text-amber-400"></i> 교환가능(중복)
         </div>
         <div class="text-2xl font-bold text-amber-300 font-mono">${duplicatesCount} <span class="text-xs font-normal text-slate-400">종</span></div>
-        <div class="text-[11px] text-slate-500 mt-1">교환 가능한 카드</div>
+        <div class="text-[11px] text-slate-500 mt-1">2장 이상 소장</div>
       </div>
       <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4">
         <div class="text-xs text-slate-400 mb-1 flex items-center gap-1.5">
-          <i class="fa-solid fa-heart-crack text-rose-400"></i> 위시/미보유
+          <i class="fa-solid fa-heart text-rose-400"></i> 위시/구함
         </div>
         <div class="text-2xl font-bold text-rose-300 font-mono">${totalCount - collectedCount} <span class="text-xs font-normal text-slate-400">종</span></div>
-        <div class="text-[11px] text-slate-500 mt-1">남은 목표 포카</div>
+        <div class="text-[11px] text-slate-500 mt-1">미소장 카드</div>
       </div>
     </div>
 
-    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3 space-y-2.5">
-      <div class="flex items-center gap-1.5 overflow-x-auto pb-1">
-        <span class="text-[11px] font-bold text-slate-500 mr-1 shrink-0">멤버</span>
+    <!-- 🌟 필터 컨트롤 바 (앨범/이벤트 + 멤버 + 보유상태) -->
+    <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-3.5 space-y-3">
+      
+      <!-- 1) 앨범명 / 이벤트명 드롭다운 & 상태 필터 -->
+      <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-slate-800/70">
+        <div class="flex items-center gap-2 flex-1 min-w-[240px]">
+          <span class="text-xs font-bold text-slate-400 flex items-center gap-1.5 shrink-0">
+            <i class="fa-solid fa-compact-disc text-indigo-400"></i> 앨범/이벤트
+          </span>
+          <select onchange="window.setPcFilter('album', this.value)" class="w-full sm:w-64 bg-slate-950 border border-slate-800 hover:border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-pink-500 font-medium cursor-pointer">
+            ${albumList.map(alb => `
+              <option value="${escapeHTML(alb)}" ${activeAlbumFilter === alb ? 'selected' : ''}>
+                ${alb === 'all' ? '✨ 전체 앨범 / 전체 이벤트 보기' : escapeHTML(alb)}
+              </option>
+            `).join('')}
+          </select>
+        </div>
+
+        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+          <button onclick="window.setPcFilter('status', 'all')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition ${activeStatusFilter === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400'}">전체</button>
+          <button onclick="window.setPcFilter('status', 'collected')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition ${activeStatusFilter === 'collected' ? 'bg-pink-600/30 text-pink-300 border border-pink-500/40' : 'text-slate-400'}">보유</button>
+          <button onclick="window.setPcFilter('status', 'missing')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition ${activeStatusFilter === 'missing' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'text-slate-400'}">미보유</button>
+          <button onclick="window.setPcFilter('status', 'duplicate')" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition ${activeStatusFilter === 'duplicate' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'text-slate-400'}">교환가능(중복)</button>
+        </div>
+      </div>
+
+      <!-- 2) 멤버 탭 -->
+      <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+        <span class="text-xs font-bold text-slate-500 mr-1 shrink-0">멤버</span>
         ${members.map(m => {
           const isAct = activeMemberFilter === m;
-          const label = m === 'all' ? '전체 멤버' : m;
+          const label = m === 'all' ? '전체' : m;
           return `
             <button onclick="window.setPcFilter('member', '${escapeHTML(m)}')" 
               class="px-3 py-1 rounded-xl text-xs font-bold transition whitespace-nowrap ${
                 isAct 
                   ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/30' 
-                  : 'bg-slate-950/80 hover:bg-slate-800 text-slate-400 border border-slate-800'
+                  : 'bg-slate-950 hover:bg-slate-800 text-slate-400 border border-slate-800'
               }">
               ${escapeHTML(label)}
             </button>
           `;
         }).join('')}
       </div>
-      <div class="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-800/60">
-        <div class="flex items-center gap-1.5 overflow-x-auto">
-          <span class="text-[11px] font-bold text-slate-500 mr-1 shrink-0">분류</span>
-          ${categories.map(c => {
-            const isAct = activeCategoryFilter === c;
-            const label = c === 'all' ? '전체' : c;
-            return `
-              <button onclick="window.setPcFilter('category', '${escapeHTML(c)}')" 
-                class="px-2.5 py-0.5 rounded-lg text-xs font-medium transition ${
-                  isAct 
-                    ? 'bg-pink-600 text-white font-bold' 
-                    : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'
-                }">
-                ${escapeHTML(label)}
-              </button>
-            `;
-          }).join('')}
-        </div>
-        <div class="flex items-center gap-1 bg-slate-950 p-0.5 rounded-xl border border-slate-800">
-          <button onclick="window.setPcFilter('status', 'all')" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold transition ${activeStatusFilter === 'all' ? 'bg-slate-800 text-white' : 'text-slate-400'}">전체</button>
-          <button onclick="window.setPcFilter('status', 'collected')" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold transition ${activeStatusFilter === 'collected' ? 'bg-pink-600/30 text-pink-300 border border-pink-500/40' : 'text-slate-400'}">보유</button>
-          <button onclick="window.setPcFilter('status', 'missing')" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold transition ${activeStatusFilter === 'missing' ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40' : 'text-slate-400'}">미보유</button>
-          <button onclick="window.setPcFilter('status', 'duplicate')" class="px-2 py-0.5 rounded-lg text-[11px] font-semibold transition ${activeStatusFilter === 'duplicate' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40' : 'text-slate-400'}">중복</button>
-        </div>
-      </div>
     </div>
 
+    <!-- 🌟 포토카드 그리드 -->
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3.5 pt-1">
       ${filtered.length === 0 ? `
         <div class="col-span-full py-16 text-center text-slate-500 text-xs border border-dashed border-slate-800 rounded-3xl bg-slate-900/30">
           <i class="fa-solid fa-id-badge text-3xl mb-2 block text-slate-600"></i>
-          조건에 맞는 포토카드가 없습니다.
+          선택한 조건(앨범/멤버)에 등록된 포토카드가 없습니다.
         </div>
       ` : filtered.map(pc => {
         const isCollected = Boolean(pc.collected);
         const qty = Number(pc.quantity) || 1;
         const memberColor = MEMBER_COLORS[pc.member] || 'bg-slate-800 text-slate-300 border-slate-700';
+        const displayAlbum = pc.album || pc.category || '기타';
 
         return `
           <div class="bg-slate-900 border rounded-2xl overflow-hidden shadow-xl flex flex-col justify-between transition-all duration-200 group relative ${
@@ -198,10 +155,13 @@ export function renderPhotocards(currentGroup) {
               ? 'border-pink-500/40 hover:border-pink-400 hover:shadow-pink-950/30 ring-1 ring-pink-500/20' 
               : 'border-slate-800/80 hover:border-slate-700 opacity-60 hover:opacity-90'
           }">
+            <!-- 수정/삭제 -->
             <div class="absolute top-2 right-2 z-20 flex gap-1 bg-slate-950/80 p-1 rounded-xl backdrop-blur-md opacity-0 group-hover:opacity-100 transition shadow">
               <button onclick="window.openPhotocardModal(${pc.originalIdx})" class="text-slate-400 hover:text-indigo-300 p-1 text-xs" title="수정"><i class="fa-solid fa-pen"></i></button>
               <button onclick="window.deletePhotocard(${pc.originalIdx})" class="text-slate-400 hover:text-rose-400 p-1 text-xs" title="삭제"><i class="fa-solid fa-trash"></i></button>
             </div>
+
+            <!-- 이미지 및 보유 토글 -->
             <div onclick="window.togglePcCollected(${pc.originalIdx})" class="cursor-pointer relative overflow-hidden aspect-[2/3] bg-slate-950 select-none">
               ${pc.img ? `
                 <img src="${pc.img}" class="w-full h-full object-cover transition duration-300 group-hover:scale-105 ${isCollected ? '' : 'grayscale contrast-75 brightness-75'}" alt="${escapeHTML(pc.version)}" />
@@ -211,15 +171,20 @@ export function renderPhotocards(currentGroup) {
                   <span class="text-[10px] text-slate-500 font-medium">사진 없음</span>
                 </div>
               `}
+
               ${isCollected ? `
                 <div class="absolute top-2 left-2 w-6 h-6 rounded-full bg-pink-600 text-white flex items-center justify-center text-xs font-bold shadow-md shadow-pink-600/50">
                   <i class="fa-solid fa-check text-[10px]"></i>
                 </div>
               ` : ''}
-              <span class="absolute bottom-2 left-2 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-950/80 backdrop-blur-sm text-slate-300 border border-slate-800">
-                ${escapeHTML(pc.category || '앨범')}
+
+              <!-- 앨범/이벤트 라벨 뱃지 -->
+              <span class="absolute bottom-2 left-2 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-slate-950/80 backdrop-blur-sm text-slate-300 border border-slate-800 max-w-[85%] truncate">
+                ${escapeHTML(displayAlbum)}
               </span>
             </div>
+
+            <!-- 정보 영역 -->
             <div class="p-3">
               <div class="flex items-center justify-between mb-1">
                 <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${memberColor}">
@@ -227,7 +192,7 @@ export function renderPhotocards(currentGroup) {
                 </span>
                 ${isCollected && qty > 1 ? `
                   <span class="text-[10px] font-mono font-bold text-amber-300 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
-                    x${qty}
+                    x${qty} (중복)
                   </span>
                 ` : ''}
               </div>
@@ -236,6 +201,8 @@ export function renderPhotocards(currentGroup) {
               </h4>
               ${pc.memo ? `<p class="text-[10px] text-slate-500 truncate mt-0.5">${escapeHTML(pc.memo)}</p>` : ''}
             </div>
+
+            <!-- 수량 조절 버튼 -->
             <div class="p-2.5 pt-0 flex items-center gap-1.5">
               <button onclick="window.togglePcCollected(${pc.originalIdx})" class="flex-1 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 border cursor-pointer ${
                 isCollected 
@@ -260,14 +227,16 @@ export function renderPhotocards(currentGroup) {
   `;
 }
 
-export function setPcFilter(type, value, currentGroup, onRender) {
+// 📌 필터 토글
+export function setPcFilter(type, value, currentGroup) {
   if (type === 'member') activeMemberFilter = value;
-  if (type === 'category') activeCategoryFilter = value;
+  if (type === 'album') activeAlbumFilter = value;
   if (type === 'status') activeStatusFilter = value;
   const grp = currentGroup || (window.currentGroup || 'plave');
   renderPhotocards(grp);
 }
 
+// 📌 수량 변경 (Firebase 실시간 저장)
 export function changePcQty(idx, delta, currentGroup, onRender) {
   const grp = currentGroup || (window.currentGroup || 'plave');
   const item = cloudData.photocards[grp][idx];
@@ -286,6 +255,7 @@ export function changePcQty(idx, delta, currentGroup, onRender) {
   syncData(onRender);
 }
 
+// 📌 보유 상태 토글 (Firebase 실시간 저장)
 export function togglePcCollected(idx, currentGroup, onRender) {
   const grp = currentGroup || (window.currentGroup || 'plave');
   const item = cloudData.photocards[grp][idx];
@@ -298,6 +268,7 @@ export function togglePcCollected(idx, currentGroup, onRender) {
   syncData(onRender);
 }
 
+// 📌 모달 열기
 export function openPhotocardModal(idx, currentGroup) {
   const grp = currentGroup || (window.currentGroup || 'plave');
   const editInput = document.getElementById('edit-pc-idx');
@@ -317,7 +288,7 @@ export function openPhotocardModal(idx, currentGroup) {
     if (title) title.innerText = '포토카드 정보 수정';
     setVal('pc-member', item.member);
     setVal('pc-version', item.version);
-    setVal('pc-category', item.category || '앨범');
+    setVal('pc-category', item.album || item.category || '미니 2집');
     setVal('pc-quantity', item.quantity || 1);
     setVal('pc-memo', item.memo || '');
     setVal('pc-collected', item.collected ? 'true' : 'false');
@@ -336,7 +307,7 @@ export function openPhotocardModal(idx, currentGroup) {
     if (title) title.innerText = '새 포토카드 등록';
     setVal('pc-member', '예준');
     setVal('pc-version', '');
-    setVal('pc-category', '앨범');
+    setVal('pc-category', '미니 2집');
     setVal('pc-quantity', 1);
     setVal('pc-memo', '');
     setVal('pc-collected', 'false');
@@ -348,12 +319,13 @@ export function openPhotocardModal(idx, currentGroup) {
   document.getElementById('photocard-modal')?.classList.replace('hidden', 'flex');
 }
 
+// 📌 포토카드 저장 (Firestore DB 저장)
 export function savePhotocard(currentGroup, onRender) {
   const grp = currentGroup || (window.currentGroup || 'plave');
   const idx = parseInt(document.getElementById('edit-pc-idx').value);
   const member = document.getElementById('pc-member').value.trim();
   const version = document.getElementById('pc-version').value.trim();
-  const category = (document.getElementById('pc-category')?.value || '앨범').trim();
+  const album = (document.getElementById('pc-category')?.value || '기타').trim();
   const quantity = Math.max(1, parseInt(document.getElementById('pc-quantity')?.value) || 1);
   const memo = (document.getElementById('pc-memo')?.value || '').trim();
   const img = document.getElementById('pc-img-base64').value;
@@ -362,7 +334,7 @@ export function savePhotocard(currentGroup, onRender) {
   if (!member || !version) return alert('멤버와 포카 명칭을 입력해주세요.');
   if (!cloudData.photocards[grp]) cloudData.photocards[grp] = [];
 
-  const payload = { member, version, category, quantity, memo, img, collected };
+  const payload = { member, version, album, category: album, quantity, memo, img, collected };
 
   if (idx >= 0) {
     cloudData.photocards[grp][idx] = { ...cloudData.photocards[grp][idx], ...payload };
@@ -374,6 +346,7 @@ export function savePhotocard(currentGroup, onRender) {
   syncData(onRender);
 }
 
+// 📌 포토카드 삭제
 export function deletePhotocard(idx, currentGroup, onRender) {
   const grp = currentGroup || (window.currentGroup || 'plave');
   if (!confirm('이 포토카드를 삭제하시겠습니까?')) return;
