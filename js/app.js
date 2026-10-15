@@ -24,10 +24,8 @@ import {
   togglePcCollected, 
   deletePhotocard, 
   setPcFilter, 
-  setPcCategory, 
   changePcQty, 
-  handlePcModalCollectedChange 
-} from './photocards.js';
+  } from './photocards.js';
 import { 
   renderEvents, openEventModal, saveEvent, 
   openApplicantManageModal, renderApplicantListTable, setAppFilter, 
