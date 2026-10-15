@@ -16,8 +16,13 @@ import {
   changeGoodsQuantity, deleteGoods 
 } from './goods.js';
 import { 
-  renderPhotocards, openPhotocardModal, savePhotocard, togglePcCollected, 
-  deletePhotocard, setPcCategory, setPcFilter, changePcQty, handlePcModalCollectedChange 
+  renderPhotocards, 
+  openPhotocardModal, 
+  savePhotocard, 
+  togglePcCollected, 
+  deletePhotocard,
+  setPcFilter,
+  changePcQty
 } from './photocards.js';
 import { 
   renderEvents, openEventModal, saveEvent, 
@@ -235,8 +240,8 @@ window.togglePcCollected = idx => togglePcCollected(idx, currentGroup, render);
 window.changePcQty = (idx, delta) => changePcQty(idx, delta, currentGroup, render);
 window.deletePhotocard = idx => deletePhotocard(idx, currentGroup, render);
 window.setPcCategory = cat => setPcCategory(cat);
-window.setPcFilter = filterType => setPcFilter(filterType);
-window.handlePcModalCollectedChange = val => handlePcModalCollectedChange(val);
+window.setPcFilter = (type, val) => setPcFilter(type, val, currentGroup, render);
+window.changePcQty = (idx, delta) => changePcQty(idx, delta, currentGroup, render);
 
 // 나눔 & 이벤트
 window.openEventModal = idx => openEventModal(idx, currentGroup);
