@@ -16,8 +16,17 @@ import {
   changeGoodsQuantity, deleteGoods 
 } from './goods.js';
 import { 
-  renderPhotocards, switchPcMode, downloadTradeBoard, setPcFilter, changePcQty, togglePcCollected, 
-  openPhotocardModal, savePhotocard, deletePhotocard 
+  renderPhotocards, 
+  switchPcMode, 
+  downloadTradeBoard,
+  openPhotocardModal, 
+  savePhotocard, 
+  togglePcCollected, 
+  deletePhotocard, 
+  setPcFilter, 
+  setPcCategory, 
+  changePcQty, 
+  handlePcModalCollectedChange 
 } from './photocards.js';
 import { 
   renderEvents, openEventModal, saveEvent, 
