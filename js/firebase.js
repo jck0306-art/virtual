@@ -47,7 +47,7 @@ export const DEFAULT_DATA = {
   },
   officialEvents: { plave: [], wego6: [] },
   albums: { plave: [], wego6: [] },
-  albumOrders: { plave: [], wego6: [] }, // 🌟 신규: 앨범 구매/정산 내역
+  albumOrders: { plave: [], wego6: [] },
   goods: { plave: [], wego6: [] },
   photocards: { plave: [], wego6: [] },
   events: { plave: [], wego6: [] },
@@ -59,7 +59,9 @@ let isFirebaseReady = false;
 
 if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "내_API_KEY") {
   try {
-    firebase.initializeApp(firebaseConfig);
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
     db = firebase.firestore();
     isFirebaseReady = true;
   } catch (e) {
@@ -67,7 +69,24 @@ if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "내_API_KEY") {
   }
 }
 
-export let cloudData = JSON.parse(localStorage.getItem('v_archive_cloud_data_v7')) || DEFAULT_DATA;
+// 🌟 로컬 스토리지에 남아있을 수 있는 이전 버전 캐시들(v7, v6, v5 등) 탐색 및 복원
+function loadCachedData() {
+  const keys = ['v_archive_cloud_data_v7', 'v_archive_cloud_data_v6', 'v_archive_cloud_data_v5', 'virtual_cloud_data'];
+  for (const k of keys) {
+    const raw = localStorage.getItem(k);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed && (parsed.albums?.plave?.length || parsed.albumOrders?.plave?.length || parsed.goods?.plave?.length)) {
+          return parsed;
+        }
+      } catch(e) {}
+    }
+  }
+  return DEFAULT_DATA;
+}
+
+export let cloudData = loadCachedData();
 
 export function ensureDataStructure() {
   if (!cloudData.groups) cloudData.groups = DEFAULT_DATA.groups;
@@ -92,24 +111,59 @@ export function ensureDataStructure() {
 
 export function initFirebase(onDataUpdate) {
   ensureDataStructure();
+  onDataUpdate(); // 캐시 데이터로 먼저 즉시 화면 표시
+
   if (isFirebaseReady) {
-    db.collection('fandom_archive').doc('main_data_v7').onSnapshot(doc => {
+    // 🌟 v7 문서 구독
+    db.collection('fandom_archive').doc('main_data_v7').onSnapshot(async (doc) => {
       if (doc.exists) {
         cloudData = doc.data();
         ensureDataStructure();
+        updateCloudStatus('클라우드 연결됨', 'emerald');
+        onDataUpdate();
       } else {
-        db.collection('fandom_archive').doc('main_data_v7').set(DEFAULT_DATA);
+        // 🌟 혹시 main_data_v6 문서에 이전 데이터가 있는지 자동 탐색하여 복구
+        try {
+          const prevDoc = await db.collection('fandom_archive').doc('main_data_v6').get();
+          if (prevDoc.exists) {
+            cloudData = prevDoc.data();
+            ensureDataStructure();
+            // 복구된 데이터를 새 v7 문서에 저장
+            await db.collection('fandom_archive').doc('main_data_v7').set(cloudData);
+            updateCloudStatus('이전 데이터 복구 완료', 'emerald');
+            onDataUpdate();
+            return;
+          }
+        } catch(err) {
+          console.warn("이전 문서 복구 확인 실패:", err);
+        }
+
+        // 이전 문서도 없으면 현재 cloudData(로컬 캐시)를 기준으로 v7 생성
+        db.collection('fandom_archive').doc('main_data_v7').set(cloudData);
+        updateCloudStatus('클라우드 동기화', 'emerald');
+        onDataUpdate();
       }
+    }, (error) => {
+      console.error("Firestore Listen Error:", error);
+      updateCloudStatus('DB 권한/연결 오류 (로컬 모드)', 'amber');
       onDataUpdate();
     });
   } else {
-    const statusEl = document.getElementById('cloud-status');
-    if (statusEl) {
-      statusEl.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> 로컬 모드`;
-      statusEl.className = "text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 flex items-center gap-1";
-    }
+    updateCloudStatus('로컬 모드', 'slate');
     onDataUpdate();
   }
+}
+
+function updateCloudStatus(text, color) {
+  const statusEl = document.getElementById('cloud-status');
+  if (!statusEl) return;
+  const colorMap = {
+    emerald: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30',
+    amber: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    slate: 'bg-slate-800 text-slate-400 border-slate-700'
+  };
+  statusEl.className = `text-[10px] px-2.5 py-1 rounded-full border flex items-center gap-1.5 font-mono ${colorMap[color] || colorMap.slate}`;
+  statusEl.innerHTML = `<i class="fa-solid fa-cloud"></i> ${text}`;
 }
 
 export function syncData(onRender) {
